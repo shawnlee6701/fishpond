@@ -1,4 +1,6 @@
-[gd_scene format=3]
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/after_contract_choice.gd" id="1_after_contract_choice"]
 
 [node name="AfterContractChoice" type="Control"]
 layout_mode = 3
@@ -7,20 +9,68 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+script = ExtResource("1_after_contract_choice")
 
-[node name="Label" type="Label" parent="."]
+[node name="Panel" type="PanelContainer" parent="."]
 layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -300.0
-offset_top = -40.0
-offset_right = 300.0
-offset_bottom = 40.0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 72.0
+offset_top = 120.0
+offset_right = -72.0
+offset_bottom = -120.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_font_sizes/font_size = 42
-text = "承包后三选一占位"
+
+[node name="Margin" type="MarginContainer" parent="Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 32
+theme_override_constants/margin_top = 32
+theme_override_constants/margin_right = 32
+theme_override_constants/margin_bottom = 32
+
+[node name="Content" type="VBoxContainer" parent="Panel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 30
+
+[node name="TitleLabel" type="Label" parent="Panel/Margin/Content"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 58
+text = "承包成功"
 horizontal_alignment = 1
+
+[node name="PondNameLabel" type="Label" parent="Panel/Margin/Content"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 38
+text = "当前鱼塘：-"
+horizontal_alignment = 1
+
+[node name="CashLabel" type="Label" parent="Panel/Margin/Content"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 34
+text = "当前现金：0 元"
+horizontal_alignment = 1
+
+[node name="ChoiceButtons" type="VBoxContainer" parent="Panel/Margin/Content"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 20
+
+[node name="TransferButton" type="Button" parent="Panel/Margin/Content/ChoiceButtons"]
+custom_minimum_size = Vector2(0, 90)
+layout_mode = 2
+theme_override_font_sizes/font_size = 36
+text = "转包"
+
+[node name="SellOneNetButton" type="Button" parent="Panel/Margin/Content/ChoiceButtons"]
+custom_minimum_size = Vector2(0, 90)
+layout_mode = 2
+theme_override_font_sizes/font_size = 36
+text = "卖一网"
+
+[node name="HarvestSelfButton" type="Button" parent="Panel/Margin/Content/ChoiceButtons"]
+custom_minimum_size = Vector2(0, 90)
+layout_mode = 2
+theme_override_font_sizes/font_size = 36
+text = "自己捞"
