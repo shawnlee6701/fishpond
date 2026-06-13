@@ -1,0 +1,23 @@
+[
+  {
+    "id": "observe",
+    "name": "目测水面",
+    "cost": 0,
+    "description": "看看水色、鱼花和塘边痕迹，免费但不太准。",
+    "accuracy": 0.35
+  },
+  {
+    "id": "fish_finder",
+    "name": "探鱼器",
+    "cost": 300,
+    "description": "用设备扫一遍水下情况，能看出大致鱼群密度。",
+    "accuracy": 0.65
+  },
+  {
+    "id": "master",
+    "name": "请老师傅",
+    "cost": 800,
+    "description": "请经验丰富的老师傅验塘，费用高但判断更靠谱。",
+    "accuracy": 0.85
+  }
+]

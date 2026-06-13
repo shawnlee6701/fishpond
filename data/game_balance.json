@@ -1,0 +1,8 @@
+{
+  "initial_cash": 10000,
+  "min_working_capital": 1000,
+  "ponds_per_day": 3,
+  "low_work_cost": 500,
+  "standard_work_cost": 1200,
+  "full_work_cost": 2500
+}

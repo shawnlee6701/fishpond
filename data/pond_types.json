@@ -1,0 +1,29 @@
+[
+  {
+    "id": "artificial_pond",
+    "name": "人工塘",
+    "description": "管理规整、鱼情稳定，适合新手承包。",
+    "big_fish_modifier": 0.9,
+    "fish_king_modifier": 0.7,
+    "difficulty_modifier": 0.8,
+    "risk_description": "鱼获稳定，但惊喜较少。"
+  },
+  {
+    "id": "old_pond",
+    "name": "老塘",
+    "description": "多年未清的老塘，传闻深处藏着大货。",
+    "big_fish_modifier": 1.2,
+    "fish_king_modifier": 1.1,
+    "difficulty_modifier": 1.1,
+    "risk_description": "鱼情不透明，可能有暗坑。"
+  },
+  {
+    "id": "reservoir_pond",
+    "name": "水库塘",
+    "description": "水面宽、鱼种杂，上限高但更难判断。",
+    "big_fish_modifier": 1.4,
+    "fish_king_modifier": 1.5,
+    "difficulty_modifier": 1.3,
+    "risk_description": "波动大，成本和空军风险更高。"
+  }
+]
