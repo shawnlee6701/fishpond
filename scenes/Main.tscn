@@ -1,0 +1,82 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
+
+[node name="Main" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_main")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.071, 0.135, 0.129, 1)
+
+[node name="MainMenu" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Content" type="VBoxContainer" parent="MainMenu"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -360.0
+offset_top = -360.0
+offset_right = 360.0
+offset_bottom = 360.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 48
+alignment = 1
+
+[node name="Title" type="Label" parent="MainMenu/Content"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 86
+text = "这塘我包了"
+horizontal_alignment = 1
+
+[node name="Stats" type="VBoxContainer" parent="MainMenu/Content"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="CashLabel" type="Label" parent="MainMenu/Content/Stats"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 42
+text = "当前现金：10000 元"
+horizontal_alignment = 1
+
+[node name="DayLabel" type="Label" parent="MainMenu/Content/Stats"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 42
+text = "当前天数：第 1 天"
+horizontal_alignment = 1
+
+[node name="GoPondButton" type="Button" parent="MainMenu/Content"]
+custom_minimum_size = Vector2(0, 120)
+layout_mode = 2
+theme_override_font_sizes/font_size = 44
+text = "去看塘"
+
+[node name="ScreenContainer" type="Control" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
