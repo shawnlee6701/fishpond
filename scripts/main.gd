@@ -1,7 +1,5 @@
 extends Control
 
-const POND_LIST_SCENE := preload("res://scenes/PondList.tscn")
-
 @onready var main_menu: Control = $MainMenu
 @onready var screen_container: Control = $ScreenContainer
 @onready var cash_label: Label = $MainMenu/Content/Stats/CashLabel
@@ -21,4 +19,4 @@ func _update_stats() -> void:
 func _on_go_pond_pressed() -> void:
 	main_menu.visible = false
 	screen_container.visible = true
-	UIController.replace_screen(screen_container, POND_LIST_SCENE.instantiate())
+	UIController.show_pond_list(screen_container, game_state)
