@@ -1,6 +1,7 @@
 extends Control
 
 const DataLoaderScript := preload("res://scripts/data_loader.gd")
+const InspectionSystemScript := preload("res://scripts/inspection_system.gd")
 
 @onready var title_label: Label = $Panel/Margin/Content/TitleLabel
 @onready var cash_label: Label = $Panel/Margin/Content/CashLabel
@@ -13,6 +14,7 @@ const DataLoaderScript := preload("res://scripts/data_loader.gd")
 var game_state: GameState
 var screen_container: Control
 var tools: Array = []
+var inspection_system := InspectionSystemScript.new()
 
 func setup(next_game_state: GameState, next_screen_container: Control) -> void:
 	game_state = next_game_state
@@ -31,7 +33,8 @@ func _ready() -> void:
 func _render_detail() -> void:
 	var pond := game_state.current_pond
 	title_label.text = str(pond.get("name", "未选择鱼塘"))
-	cash_label.text = "当前现金：%d 元" % game_state.cash
+	_update_cash_label()
+	_render_inspection_results()
 	info_label.text = "\n".join([
 		"塘主报价：%d 元" % int(pond.get("quote_price", 0)),
 		"鱼塘类型：%s" % pond.get("pond_type_name", "-"),
@@ -56,16 +59,31 @@ func _render_inspection_buttons() -> void:
 
 func _on_inspection_pressed(tool: Dictionary) -> void:
 	var pond := game_state.current_pond
-	result_label.text = "%s：%s\n准确度：%d%%\n初步判断：%s，%s。" % [
-		tool["name"],
-		tool["description"],
-		int(float(tool["accuracy"]) * 100.0),
-		pond.get("water_state", "水色不明"),
-		pond.get("risk_tag", "风险未知")
-	]
+	var cost := int(tool.get("cost", 0))
+	if not game_state.pay_inspection_cost(cost):
+		_append_system_message("现金不足，不能使用%s（需要 %d 元）。" % [tool.get("name", "该验塘方式"), cost])
+		return
+
+	var result_text := inspection_system.generate_result(tool, pond)
+	game_state.add_inspection_result(result_text)
+	_update_cash_label()
+	_render_inspection_results()
 
 func _on_contract_pressed() -> void:
 	result_label.text = "承包功能将在下一步实现。"
 
 func _on_back_pressed() -> void:
 	UIController.show_pond_list(screen_container, game_state)
+
+func _update_cash_label() -> void:
+	cash_label.text = "当前现金：%d 元    验塘成本：%d 元" % [game_state.cash, game_state.inspection_cost_total]
+
+func _render_inspection_results() -> void:
+	if game_state.inspection_results.is_empty():
+		result_label.text = "请选择一种验塘方式。"
+	else:
+		result_label.text = "\n\n".join(game_state.inspection_results)
+
+func _append_system_message(message: String) -> void:
+	game_state.add_inspection_result(message)
+	_render_inspection_results()

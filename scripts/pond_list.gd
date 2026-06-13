@@ -19,8 +19,12 @@ func _ready() -> void:
 	_render_ponds()
 
 func _render_ponds() -> void:
-	var generator := PondGeneratorScript.new()
-	var ponds := generator.generate_daily_ponds(game_state.day)
+	if game_state.daily_ponds_day != game_state.day or game_state.daily_ponds.is_empty():
+		var generator := PondGeneratorScript.new()
+		game_state.daily_ponds = generator.generate_daily_ponds(game_state.day)
+		game_state.daily_ponds_day = game_state.day
+
+	var ponds := game_state.daily_ponds
 	day_label.text = "第 %d 天：今日可看 3 口塘" % game_state.day
 
 	for child in card_list.get_children():
@@ -31,7 +35,7 @@ func _render_ponds() -> void:
 
 func _create_pond_card(pond: Dictionary) -> PanelContainer:
 	var card := PanelContainer.new()
-	card.custom_minimum_size = Vector2(0, 330)
+	card.custom_minimum_size = Vector2(0, 290)
 
 	var margin := MarginContainer.new()
 	margin.name = "Margin"
@@ -66,11 +70,6 @@ func _create_pond_card(pond: Dictionary) -> PanelContainer:
 	rumor.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	rumor.add_theme_font_size_override("font_size", 30)
 	content.add_child(rumor)
-
-	var risk := Label.new()
-	risk.text = "风险：%s" % pond["risk_tag"]
-	risk.add_theme_font_size_override("font_size", 30)
-	content.add_child(risk)
 
 	var view_button := Button.new()
 	view_button.name = "ViewButton"

@@ -17,6 +17,7 @@ static func show_pond_list(container: Control, game_state: GameState) -> void:
 	replace_screen(container, screen)
 
 static func show_pond_detail(container: Control, game_state: GameState, pond: Dictionary) -> void:
+	game_state.reset_round()
 	game_state.current_pond = pond
 	var screen := POND_DETAIL_SCENE.instantiate()
 	screen.setup(game_state, container)
