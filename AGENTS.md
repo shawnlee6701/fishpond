@@ -75,6 +75,15 @@ This file is the live handoff guide for agents working on **这塘我包了**. K
 - Keep random mechanics readable and bounded with `clampf`, `clampi`, or explicit min/max logic.
 - If adding save/load, isolate persistence from `GameState` calculation methods so the existing screen flow remains testable.
 
+## Git And Repository
+
+- Canonical GitHub repository: `https://github.com/shawnlee6701/fishpond`.
+- Local `origin` should point to `https://github.com/shawnlee6701/fishpond.git`.
+- Commit all project code changes to this repository unless the user explicitly gives a different target.
+- Default branch is currently `main`.
+- Before committing, check `git status --short` and stage only files relevant to the task.
+- After committing, push the branch to `origin` so GitHub stays current.
+
 ## Verification
 
 Run these from the project root after meaningful changes:
