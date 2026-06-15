@@ -15,7 +15,6 @@ const FISH_KING_NAME := "青背老塘王"
 
 var game_state: GameState
 var screen_container: Control
-var rng := RandomNumberGenerator.new()
 
 func setup(next_game_state: GameState, next_screen_container: Control) -> void:
 	game_state = next_game_state
@@ -41,11 +40,7 @@ func _render() -> void:
 	if not game_state.catch_details.is_empty():
 		lines.append("鱼获明细：")
 		for item in game_state.catch_details:
-			lines.append("%s：%d 斤，%d 元" % [
-				str(item.get("name", "")),
-				int(item.get("weight_jin", 0)),
-				int(item.get("income", 0))
-			])
+			lines.append(_format_catch_detail_line(item))
 	lines.append("")
 	lines.append("承包费：%d 元（已在承包时扣除）" % int(game_state.current_pond.get("quote_price", 0)))
 	lines.append("验塘费：-%d 元" % game_state.inspection_cost_total)
@@ -68,10 +63,10 @@ func _render_fish_king_panel(is_fish_king: bool) -> void:
 	if not is_fish_king:
 		return
 
-	rng.randomize()
-	var weight_jin := rng.randi_range(50, 150)
-	var integrity := rng.randi_range(80, 100)
-	var estimated_value := _round_to_hundred(int(float(weight_jin) * lerpf(180.0, 280.0, float(integrity - 80) / 20.0)))
+	var fish_king_detail := _get_fish_king_catch_detail()
+	var weight_jin := int(fish_king_detail.get("weight_jin", 0))
+	var integrity := int(fish_king_detail.get("integrity", 0))
+	var estimated_value := int(fish_king_detail.get("income", 0))
 
 	fish_king_scene_label.text = "水面炸开，一条巨大的青鱼被拖出水面！"
 	fish_king_name_label.text = "%s出现！" % FISH_KING_NAME
@@ -84,8 +79,23 @@ func _render_fish_king_panel(is_fish_king: bool) -> void:
 	_apply_fish_king_style()
 	_play_fish_king_animation()
 
-func _round_to_hundred(value: int) -> int:
-	return int(roundf(float(value) / 100.0)) * 100
+func _get_fish_king_catch_detail() -> Dictionary:
+	for item in game_state.catch_details:
+		if str(item.get("id", "")) == FISH_KING_ID:
+			return item
+	return {}
+
+func _format_catch_detail_line(item: Dictionary) -> String:
+	var line := "%s：%d 斤，%d 元" % [
+		str(item.get("name", "")),
+		int(item.get("weight_jin", 0)),
+		int(item.get("income", 0))
+	]
+	if str(item.get("id", "")) == FISH_KING_ID and item.has("integrity"):
+		line = "%s，完整度 %d%%" % [line, int(item.get("integrity", 0))]
+		if not str(item.get("price_note", "")).is_empty():
+			line = "%s（%s）" % [line, str(item.get("price_note", ""))]
+	return line
 
 func _apply_fish_king_style() -> void:
 	title_label.add_theme_color_override("font_color", Color(1.0, 0.82, 0.2))

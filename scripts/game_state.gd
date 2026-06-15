@@ -180,15 +180,28 @@ func _merge_catch_details(next_catch_details: Array) -> void:
 		var fish_id := str(next_item.get("id", ""))
 		var existing := _find_catch_detail(fish_id)
 		if existing.is_empty():
-			catch_details.append({
+			var catch_item := {
 				"id": fish_id,
 				"name": str(next_item.get("name", fish_id)),
 				"weight_jin": int(next_item.get("weight_jin", 0)),
 				"income": int(next_item.get("income", 0))
-			})
+			}
+			if next_item.has("unit_price"):
+				catch_item["unit_price"] = int(next_item.get("unit_price", 0))
+			if next_item.has("integrity"):
+				catch_item["integrity"] = int(next_item.get("integrity", 0))
+			if next_item.has("price_note"):
+				catch_item["price_note"] = str(next_item.get("price_note", ""))
+			catch_details.append(catch_item)
 		else:
 			existing["weight_jin"] = int(existing.get("weight_jin", 0)) + int(next_item.get("weight_jin", 0))
 			existing["income"] = int(existing.get("income", 0)) + int(next_item.get("income", 0))
+			if next_item.has("unit_price"):
+				existing["unit_price"] = int(next_item.get("unit_price", 0))
+			if next_item.has("integrity"):
+				existing["integrity"] = int(next_item.get("integrity", 0))
+			if next_item.has("price_note"):
+				existing["price_note"] = str(next_item.get("price_note", ""))
 
 func _find_catch_detail(fish_id: String) -> Dictionary:
 	for item in catch_details:

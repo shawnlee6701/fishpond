@@ -102,14 +102,27 @@ func _generate_catch_details(pond: Dictionary, plan_id: String, main_fish_type: 
 		var fish_id := str(fish_type.get("id", ""))
 		var weight := _roll_weight_jin(fish_id, main_fish_id, catch_scale)
 		var unit_price := rng.randi_range(int(fish_type.get("min_value", 0)), int(fish_type.get("max_value", 0)))
+		var integrity := 0
+		var price_note := ""
+		if fish_id == "fish_king" and weight > 0:
+			integrity = rng.randi_range(80, 100)
+			if integrity < 90:
+				unit_price = _get_random_unit_price_by_id("big_fish")
+				price_note = "鱼王受伤严重，估计养不活了，只能按大鱼价格算"
+			else:
+				price_note = ""
 		var income := weight * unit_price
-		catch_details.append({
+		var catch_item := {
 			"id": fish_id,
 			"name": str(fish_type.get("name", fish_id)),
 			"weight_jin": weight,
 			"unit_price": unit_price,
 			"income": income
-		})
+		}
+		if integrity > 0:
+			catch_item["integrity"] = integrity
+			catch_item["price_note"] = price_note
+		catch_details.append(catch_item)
 
 	return catch_details
 
@@ -130,7 +143,7 @@ func _roll_weight_jin(fish_id: String, main_fish_id: String, catch_scale: float)
 				weight = rng.randf_range(10.0, 16.0) * catch_scale
 		"fish_king":
 			if main_fish_id == "fish_king":
-				weight = rng.randf_range(50.0, 95.0) * catch_scale
+				weight = rng.randi_range(50, 150)
 		_:
 			weight = 0.0
 
@@ -145,9 +158,15 @@ func _get_weight_unit(fish_id: String) -> int:
 		"big_fish":
 			return 10
 		"fish_king":
-			return 50
+			return 1
 		_:
 			return 1
+
+func _get_random_unit_price_by_id(fish_id: String) -> int:
+	for fish_type in fish_types:
+		if str(fish_type.get("id", "")) == fish_id:
+			return rng.randi_range(int(fish_type.get("min_value", 0)), int(fish_type.get("max_value", 0)))
+	return 0
 
 func _snap_weight_to_unit(weight: float, unit: int) -> int:
 	if weight <= 0.0:
@@ -164,12 +183,17 @@ func _sum_catch_income(catch_details: Array[Dictionary]) -> int:
 func _format_catch_details(catch_details: Array[Dictionary]) -> String:
 	var lines: Array[String] = []
 	for item in catch_details:
-		lines.append("%s：%d 斤，%d 元/斤，合计 %d 元" % [
+		var line := "%s：%d 斤，%d 元/斤，合计 %d 元" % [
 			str(item.get("name", "")),
 			int(item.get("weight_jin", 0)),
 			int(item.get("unit_price", 0)),
 			int(item.get("income", 0))
-		])
+		]
+		if str(item.get("id", "")) == "fish_king" and item.has("integrity"):
+			line = "%s，完整度 %d%%" % [line, int(item.get("integrity", 0))]
+			if not str(item.get("price_note", "")).is_empty():
+				line = "%s（%s）" % [line, str(item.get("price_note", ""))]
+		lines.append(line)
 	return "\n".join(lines)
 
 func _get_plan_power(plan_id: String) -> float:
