@@ -57,20 +57,20 @@ theme_override_constants/separation = 20
 [node name="CashLabel" type="Label" parent="MainMenu/Content/Stats"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 42
-text = "当前现金：10000 元"
+text = "本钱：10000 元"
 horizontal_alignment = 1
 
 [node name="DayLabel" type="Label" parent="MainMenu/Content/Stats"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 42
-text = "当前天数：第 1 天"
+text = "第 1 天，今天去看塘、验塘、谈价。"
 horizontal_alignment = 1
 
 [node name="GoPondButton" type="Button" parent="MainMenu/Content"]
 custom_minimum_size = Vector2(0, 120)
 layout_mode = 2
 theme_override_font_sizes/font_size = 44
-text = "去看塘"
+text = "去塘口看看"
 
 [node name="ScreenContainer" type="Control" parent="."]
 visible = false

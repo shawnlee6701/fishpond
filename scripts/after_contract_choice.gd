@@ -43,25 +43,25 @@ func _ready() -> void:
 
 func _render() -> void:
 	var pond := game_state.current_pond
-	pond_name_label.text = "当前鱼塘：%s" % str(pond.get("name", "未承包鱼塘"))
-	cash_label.text = "当前现金：%d 元" % game_state.cash
+	pond_name_label.text = "已包下：%s" % str(pond.get("name", "未承包鱼塘"))
+	cash_label.text = "剩余本钱：%d 元" % game_state.cash
 
-	transfer_button.text = "转包"
-	sell_one_net_button.text = "卖给别人一网"
-	harvest_self_button.text = "自己捞"
-	abandon_button.text = "放弃"
+	transfer_button.text = "转包脱手"
+	sell_one_net_button.text = "卖一网给别人"
+	harvest_self_button.text = "自己下网"
+	abandon_button.text = "认亏收手"
 	transfer_button.disabled = current_transfer_offer.is_empty()
 	sell_one_net_button.disabled = current_one_net_offer.is_empty() or game_state.sold_one_net
 	if current_transfer_offer.is_empty():
-		transfer_button.text = "转包（暂无报价）"
+		transfer_button.text = "转包脱手（暂无报价）"
 	if game_state.sold_one_net:
 		sell_one_net_button.text = "卖一网（已卖出）"
 	elif current_one_net_offer.is_empty():
-		sell_one_net_button.text = "卖给别人一网（暂无买家）"
+		sell_one_net_button.text = "卖一网（暂无买家）"
 	if not game_state.can_pay(game_state.get_work_cost("low")):
-		message_label.text = "当前现金不足以支付最低作业成本，可以选择放弃，直接进入本局结算。"
+		message_label.text = "剩下的钱连低成本下一网都不够了，只能认亏收手，看看这一局账面。"
 	elif game_state.self_net_count <= 0:
-		message_label.text = "先自己捞一网，市场才会根据鱼情给出转包或买一网的机会。"
+		message_label.text = "先自己下一网，把鱼情打出来。没见到鱼，外面的人不会给你真价。"
 
 	_update_work_buttons()
 
@@ -71,7 +71,7 @@ func _hide_detail_panels() -> void:
 
 func _on_transfer_pressed() -> void:
 	if current_transfer_offer.is_empty():
-		message_label.text = "还没人愿意接手。先自己捞一网，让外面的人看到鱼情。"
+		message_label.text = "现在没人肯接手。先自己下一网，让外面的人看到这塘到底有没有货。"
 		return
 
 	_hide_detail_panels()
@@ -86,22 +86,22 @@ func _on_accept_transfer_pressed() -> void:
 func _on_reject_transfer_pressed() -> void:
 	current_transfer_offer = {}
 	transfer_confirm_panel.visible = false
-	message_label.text = "你拒绝了转包报价，继续自己拿主意。"
+	message_label.text = "你没接这个转包价。后面是赚是亏，继续自己扛。"
 	_render()
 
 func _on_sell_one_net_pressed() -> void:
 	_hide_detail_panels()
 	if game_state.sold_one_net:
-		message_label.text = "这一局已经卖过一网了，不能重复卖。"
+		message_label.text = "这一局已经卖过一网了，不能再把机会拆着卖。"
 		_render()
 		return
 	if current_one_net_offer.is_empty():
-		message_label.text = "暂时没人愿意买一网。先自己捞一网，把鱼情打出来。"
+		message_label.text = "暂时没人愿意买一网。先自己下一网，把鱼情打出来。"
 		_render()
 		return
 
 	if game_state.apply_one_net(int(current_one_net_offer.get("income", 0)), str(current_one_net_offer.get("text", ""))):
-		message_label.text = "%s\n买家支付 %d 元，你获得一网收入。" % [str(current_one_net_offer.get("text", "")), int(current_one_net_offer.get("income", 0))]
+		message_label.text = "%s\n买家当场付 %d 元。这钱稳了，但这一网里有什么鱼就归他了。" % [str(current_one_net_offer.get("text", "")), int(current_one_net_offer.get("income", 0))]
 		current_one_net_offer = {}
 	_render()
 
@@ -113,13 +113,13 @@ func _on_abandon_pressed() -> void:
 func _on_harvest_self_pressed() -> void:
 	_hide_detail_panels()
 	work_plan_panel.visible = true
-	message_label.text = "捞一网可以多次做；全部抽干只能做一次，做完直接结算。现金不足的方案不能选择。"
+	message_label.text = "三种干法：省钱试一网、正常下一网、直接抽干收尾。抽干做完就结算，钱不够的方案不能选。"
 	_update_work_buttons()
 
 func _on_work_plan_pressed(plan_id: String) -> void:
 	var cost := game_state.get_work_cost(plan_id)
 	if not game_state.can_pay(cost):
-		message_label.text = "现金不足，无法选择这个作业方案。"
+		message_label.text = "本钱不够，干不了这个作业方案。"
 		_update_work_buttons()
 		return
 
@@ -137,7 +137,7 @@ func _on_work_plan_pressed(plan_id: String) -> void:
 		work_plan_panel.visible = false
 		_render()
 	else:
-		message_label.text = "现金不足，无法选择这个作业方案。"
+		message_label.text = "本钱不够，干不了这个作业方案。"
 		_update_work_buttons()
 
 func _update_work_buttons() -> void:
@@ -145,9 +145,9 @@ func _update_work_buttons() -> void:
 	var standard_cost := game_state.get_work_cost("standard")
 	var full_cost := game_state.get_work_cost("full")
 
-	low_work_button.text = "低成本捞一网（%d 元）" % low_cost
-	standard_work_button.text = "标准捞一网（%d 元）" % standard_cost
-	full_work_button.text = "全部抽干（%d 元）" % full_cost
+	low_work_button.text = "省着下网：小捞一网（%d 元）" % low_cost
+	standard_work_button.text = "正常作业：稳捞一网（%d 元）" % standard_cost
+	full_work_button.text = "抽干收尾：一次结算（%d 元）" % full_cost
 	low_work_button.disabled = not game_state.can_pay(low_cost)
 	standard_work_button.disabled = not game_state.can_pay(standard_cost)
 	full_work_button.disabled = game_state.drained or not game_state.can_pay(full_cost)

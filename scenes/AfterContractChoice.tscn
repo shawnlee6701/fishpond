@@ -37,19 +37,19 @@ theme_override_constants/separation = 30
 [node name="TitleLabel" type="Label" parent="Panel/Margin/Content"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 58
-text = "承包成功"
+text = "塘已经包下"
 horizontal_alignment = 1
 
 [node name="PondNameLabel" type="Label" parent="Panel/Margin/Content"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 38
-text = "当前鱼塘：-"
+text = "已包下：-"
 horizontal_alignment = 1
 
 [node name="CashLabel" type="Label" parent="Panel/Margin/Content"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 34
-text = "当前现金：0 元"
+text = "剩余本钱：0 元"
 horizontal_alignment = 1
 
 [node name="ChoiceButtons" type="VBoxContainer" parent="Panel/Margin/Content"]
@@ -60,25 +60,25 @@ theme_override_constants/separation = 20
 custom_minimum_size = Vector2(0, 90)
 layout_mode = 2
 theme_override_font_sizes/font_size = 36
-text = "转包"
+text = "转包脱手"
 
 [node name="SellOneNetButton" type="Button" parent="Panel/Margin/Content/ChoiceButtons"]
 custom_minimum_size = Vector2(0, 90)
 layout_mode = 2
 theme_override_font_sizes/font_size = 36
-text = "卖给别人一网"
+text = "卖一网给别人"
 
 [node name="HarvestSelfButton" type="Button" parent="Panel/Margin/Content/ChoiceButtons"]
 custom_minimum_size = Vector2(0, 90)
 layout_mode = 2
 theme_override_font_sizes/font_size = 36
-text = "自己捞"
+text = "自己下网"
 
 [node name="AbandonButton" type="Button" parent="Panel/Margin/Content/ChoiceButtons"]
 custom_minimum_size = Vector2(0, 90)
 layout_mode = 2
 theme_override_font_sizes/font_size = 36
-text = "放弃"
+text = "认亏收手"
 
 [node name="MessageLabel" type="Label" parent="Panel/Margin/Content"]
 layout_mode = 2
@@ -95,7 +95,7 @@ theme_override_constants/separation = 16
 [node name="TransferOfferLabel" type="Label" parent="Panel/Margin/Content/TransferConfirmPanel"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 30
-text = "有人愿意出 0 元接手这口塘，是否转包？"
+text = "有人开价接手这口塘，要不要脱手？"
 horizontal_alignment = 1
 autowrap_mode = 3
 
@@ -108,14 +108,14 @@ custom_minimum_size = Vector2(0, 70)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 30
-text = "接受"
+text = "接受转包"
 
 [node name="RejectTransferButton" type="Button" parent="Panel/Margin/Content/TransferConfirmPanel/Buttons"]
 custom_minimum_size = Vector2(0, 70)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 30
-text = "拒绝"
+text = "继续自己扛"
 
 [node name="WorkPlanPanel" type="VBoxContainer" parent="Panel/Margin/Content"]
 visible = false
@@ -126,16 +126,16 @@ theme_override_constants/separation = 14
 custom_minimum_size = Vector2(0, 72)
 layout_mode = 2
 theme_override_font_sizes/font_size = 30
-text = "低成本捞一网（500 元）"
+text = "省着下网：小捞一网（500 元）"
 
 [node name="StandardWorkButton" type="Button" parent="Panel/Margin/Content/WorkPlanPanel"]
 custom_minimum_size = Vector2(0, 72)
 layout_mode = 2
 theme_override_font_sizes/font_size = 30
-text = "标准捞一网（1200 元）"
+text = "正常作业：稳捞一网（1200 元）"
 
 [node name="FullWorkButton" type="Button" parent="Panel/Margin/Content/WorkPlanPanel"]
 custom_minimum_size = Vector2(0, 72)
 layout_mode = 2
 theme_override_font_sizes/font_size = 30
-text = "全部抽干（2500 元）"
+text = "抽干收尾：一次结算（2500 元）"

@@ -34,24 +34,25 @@ func _render() -> void:
 	_render_fish_king_panel(is_fish_king)
 
 	var lines: Array[String] = []
-	lines.append("鱼塘名称：%s" % str(game_state.current_pond.get("name", "未知鱼塘")))
-	lines.append("鱼获结果：%s" % _get_fish_result_text())
-	lines.append("鱼获描述：%s" % _get_fish_description_text())
+	lines.append("这口塘：%s" % str(game_state.current_pond.get("name", "未知鱼塘")))
+	lines.append("本局结果：%s" % _get_fish_result_text())
+	lines.append("原因说明：%s" % _get_fish_description_text())
 	if not game_state.catch_details.is_empty():
 		lines.append("鱼获明细：")
 		for item in game_state.catch_details:
 			lines.append(_format_catch_detail_line(item))
 	lines.append("")
-	lines.append("承包费：%d 元（已在承包时扣除）" % int(game_state.current_pond.get("quote_price", 0)))
+	lines.append("账本：")
+	lines.append("承包费：%d 元（包塘时已经扣掉，不再重复算进净利润）" % int(game_state.current_pond.get("quote_price", 0)))
 	lines.append("验塘费：-%d 元" % game_state.inspection_cost_total)
 	lines.append("作业成本：-%d 元" % game_state.work_cost)
-	lines.append("卖一网收入：+%d 元" % game_state.one_net_income)
-	lines.append("转包收入：+%d 元" % game_state.transfer_income)
-	lines.append("卖鱼收入：+%d 元" % game_state.fish_income)
-	lines.append("本局净利润：%+d 元" % game_state.get_net_profit())
+	lines.append("卖一网回款：+%d 元" % game_state.one_net_income)
+	lines.append("转包回款：+%d 元" % game_state.transfer_income)
+	lines.append("卖鱼回款：+%d 元" % game_state.fish_income)
+	lines.append("本局账面：%s" % _format_profit_line(game_state.get_net_profit()))
 
 	detail_label.text = "\n".join(lines)
-	cash_label.text = "当前现金：%d 元" % game_state.cash
+	cash_label.text = "手上本钱：%d 元" % game_state.cash
 
 func _is_fish_king_result() -> bool:
 	if game_state.fish_result_id == FISH_KING_ID:
@@ -68,14 +69,14 @@ func _render_fish_king_panel(is_fish_king: bool) -> void:
 	var integrity := int(fish_king_detail.get("integrity", 0))
 	var estimated_value := int(fish_king_detail.get("income", 0))
 
-	fish_king_scene_label.text = "水面炸开，一条巨大的青鱼被拖出水面！"
+	fish_king_scene_label.text = "水面猛地一翻，一条大青鱼被拖出水面。"
 	fish_king_name_label.text = "%s出现！" % FISH_KING_NAME
 	fish_king_stats_label.text = "重量：%d 斤\n完整度：%d%%\n估值：%d 元" % [
 		weight_jin,
 		integrity,
 		estimated_value
 	]
-	fish_king_tagline_label.text = "这一网，翻身了。"
+	fish_king_tagline_label.text = "这口塘，算是捞出名堂了。"
 	_apply_fish_king_style()
 	_play_fish_king_animation()
 
@@ -126,7 +127,7 @@ func _get_fish_result_text() -> String:
 	if not game_state.fish_result_name.is_empty():
 		return game_state.fish_result_name
 	if str(game_state.last_result.get("type", "")) == "abandon":
-		return "放弃作业"
+		return "认亏收手"
 	if game_state.transfer_income > 0:
 		return "未继续捕捞"
 	return "暂无鱼获"
@@ -135,10 +136,17 @@ func _get_fish_description_text() -> String:
 	if not game_state.fish_description.is_empty():
 		return game_state.fish_description
 	if str(game_state.last_result.get("type", "")) == "abandon":
-		return "本局放弃继续捕捞，没有产生作业成本和卖鱼收入。"
+		return "你没有继续下网，止住了后续作业成本，也放弃了可能的鱼获。"
 	if game_state.transfer_income > 0:
-		return "本局已转包结算。"
-	return "本局没有产生卖鱼收入。"
+		return "你选择转包，拿固定回款离场，后面涨跌都不再参与。"
+	return "本局没有卖鱼回款，亏损主要来自验塘费和作业成本。"
+
+func _format_profit_line(net_profit: int) -> String:
+	if net_profit > 0:
+		return "+%d 元，赚在回款盖过验塘费和作业成本。" % net_profit
+	if net_profit < 0:
+		return "%d 元，亏在回款没盖住验塘费和作业成本。" % net_profit
+	return "0 元，刚好打平。"
 
 func _on_next_day_pressed() -> void:
 	game_state.advance_to_next_day()

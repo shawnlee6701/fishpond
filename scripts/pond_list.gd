@@ -26,8 +26,8 @@ func _render_ponds() -> void:
 		game_state.daily_ponds_day = game_state.day
 
 	var ponds := game_state.daily_ponds
-	day_label.text = "第 %d 天：今日可看 3 口塘" % game_state.day
-	cash_label.text = "当前现金：%d 元" % game_state.cash
+	day_label.text = "第 %d 天：今天有 3 口塘可谈，先看牌面再决定。" % game_state.day
+	cash_label.text = "手上本钱：%d 元" % game_state.cash
 
 	for child in card_list.get_children():
 		child.queue_free()
@@ -53,12 +53,12 @@ func _create_pond_card(pond: Dictionary) -> PanelContainer:
 	margin.add_child(content)
 
 	var title := Label.new()
-	title.text = "%s  ｜  报价：%d 元" % [pond["name"], pond["quote_price"]]
+	title.text = "%s  ｜  塘主要价：%d 元" % [pond["name"], pond["quote_price"]]
 	title.add_theme_font_size_override("font_size", 38)
 	content.add_child(title)
 
 	var info := Label.new()
-	info.text = "类型：%s    面积：%s    深度：%s（%.1f 米）" % [pond["pond_type_name"], pond["area_label"], pond["depth_label"], float(pond["depth_meters"])]
+	info.text = "塘型：%s    水面：%s    水深：%s（%.1f 米）" % [pond["pond_type_name"], pond["area_label"], pond["depth_label"], float(pond["depth_meters"])]
 	info.add_theme_font_size_override("font_size", 30)
 	content.add_child(info)
 
@@ -68,19 +68,19 @@ func _create_pond_card(pond: Dictionary) -> PanelContainer:
 	content.add_child(age)
 
 	var water := Label.new()
-	water.text = "水色：%s" % pond["water_state"]
+	water.text = "水色看着：%s" % pond["water_state"]
 	water.add_theme_font_size_override("font_size", 30)
 	content.add_child(water)
 
 	var rumor := Label.new()
-	rumor.text = "传闻：%s" % pond["rumor"]
+	rumor.text = "塘边说法：%s" % pond["rumor"]
 	rumor.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	rumor.add_theme_font_size_override("font_size", 30)
 	content.add_child(rumor)
 
 	var view_button := Button.new()
 	view_button.name = "ViewButton"
-	view_button.text = "查看"
+	view_button.text = "进塘看看"
 	view_button.custom_minimum_size = Vector2(0, 72)
 	view_button.add_theme_font_size_override("font_size", 32)
 	view_button.pressed.connect(_on_view_pressed.bind(pond))

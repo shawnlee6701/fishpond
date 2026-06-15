@@ -42,14 +42,14 @@ func _render_detail() -> void:
 	_update_cash_label()
 	_render_inspection_results()
 	info_label.text = "\n".join([
-		"塘主报价：%d 元" % int(pond.get("quote_price", 0)),
-		"鱼塘类型：%s" % pond.get("pond_type_name", "-"),
+		"塘主要价：%d 元" % int(pond.get("quote_price", 0)),
+		"塘型：%s" % pond.get("pond_type_name", "-"),
 		"塘龄：%s（%d 年）" % [pond.get("age_label", "-"), int(pond.get("age_years", 0))],
-		"面积：%s" % pond.get("area_label", "-"),
-		"深度：%s（%.1f 米）" % [pond.get("depth_label", "-"), float(pond.get("depth_meters", 0.0))],
-		"水色：%s" % pond.get("water_state", "-"),
-		"传闻：%s" % pond.get("rumor", "-"),
-		"风险标签：%s" % pond.get("risk_tag", "-")
+		"水面：%s" % pond.get("area_label", "-"),
+		"水深：%s（%.1f 米）" % [pond.get("depth_label", "-"), float(pond.get("depth_meters", 0.0))],
+		"水色看着：%s" % pond.get("water_state", "-"),
+		"塘边说法：%s" % pond.get("rumor", "-"),
+		"心里先记一笔：%s" % pond.get("risk_tag", "-")
 	])
 
 func _render_inspection_buttons() -> void:
@@ -88,7 +88,7 @@ func _on_inspection_pressed(tool: Dictionary) -> void:
 
 	var cost := int(tool.get("cost", 0))
 	if not game_state.pay_inspection_cost(cost):
-		game_state.set_inspection_feedback(tool_id, "现金不足，不能使用%s（需要 %d 元）。" % [tool.get("name", "该验塘方式"), cost])
+		game_state.set_inspection_feedback(tool_id, "本钱不够，先别请%s了（需要 %d 元）。" % [tool.get("name", "这个验塘方式"), cost])
 		_update_inspection_feedback(tool_id)
 		return
 
@@ -105,11 +105,11 @@ func _on_back_pressed() -> void:
 	UIController.show_pond_list(screen_container, game_state)
 
 func _update_cash_label() -> void:
-	cash_label.text = "当前现金：%d 元    验塘成本：%d 元" % [game_state.cash, game_state.inspection_cost_total]
+	cash_label.text = "手上本钱：%d 元    已花验塘费：%d 元" % [game_state.cash, game_state.inspection_cost_total]
 
 func _render_inspection_results() -> void:
 	if game_state.inspection_results.is_empty():
-		result_label.text = "每种验塘方式本局仅可使用一次，结果会显示在对应按钮下方。"
+		result_label.text = "验塘只能帮你缩小判断，不会直接告诉你赚还是亏。每种方式本局用一次。"
 	else:
 		result_label.text = "\n\n".join(game_state.inspection_results)
 
@@ -130,9 +130,9 @@ func _update_inspection_feedback(tool_id: String) -> void:
 
 func _create_contract_dialog() -> void:
 	contract_dialog = ConfirmationDialog.new()
-	contract_dialog.title = "确认承包"
-	contract_dialog.ok_button_text = "确认承包"
-	contract_dialog.cancel_button_text = "取消"
+	contract_dialog.title = "盘一盘再承包"
+	contract_dialog.ok_button_text = "就包这塘"
+	contract_dialog.cancel_button_text = "再想想"
 	contract_dialog.dialog_text = ""
 	contract_dialog.confirmed.connect(_on_contract_confirmed)
 	add_child(contract_dialog)
@@ -141,15 +141,15 @@ func _show_contract_dialog() -> void:
 	var preview := game_state.get_contract_preview(pond)
 	var can_contract := bool(preview.get("can_contract", false))
 	var lines := [
-		"当前现金：%d 元" % int(preview.get("current_cash", 0)),
-		"塘主报价：%d 元" % int(preview.get("quote_price", 0)),
-		"承包后剩余资金：%d 元" % int(preview.get("remaining_cash", 0)),
-		"最低开工资金：%d 元" % int(preview.get("min_working_capital", 0)),
-		"是否可以承包：%s" % ("可以" if can_contract else "不可以")
+		"手上本钱：%d 元" % int(preview.get("current_cash", 0)),
+		"塘主要价：%d 元（确认后立刻扣）" % int(preview.get("quote_price", 0)),
+		"包下后剩余：%d 元" % int(preview.get("remaining_cash", 0)),
+		"最低开工资金：%d 元（留给下网、请工、周转）" % int(preview.get("min_working_capital", 0)),
+		"能不能包：%s" % ("能包，后面还够开工。" if can_contract else "不能包，包完就没钱开工。")
 	]
 	if not can_contract:
 		lines.append("")
-		lines.append("承包后剩余资金不足，无法支付基础作业成本，不能承包。")
+		lines.append("做水产生意不能把本钱一次压光，先换一口塘看看。")
 
 	contract_dialog.dialog_text = "\n".join(lines)
 	contract_dialog.get_ok_button().disabled = not can_contract
@@ -157,7 +157,7 @@ func _show_contract_dialog() -> void:
 
 func _on_contract_confirmed() -> void:
 	if not game_state.contract_pond(pond):
-		_append_system_message("承包后剩余资金不足，无法支付基础作业成本，不能承包。")
+		_append_system_message("包下后不够最低开工资金，这塘先不能接。")
 		return
 
 	UIController.show_after_contract_choice(screen_container, game_state)

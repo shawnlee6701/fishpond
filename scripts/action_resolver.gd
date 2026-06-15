@@ -25,7 +25,7 @@ func generate_transfer_offer(pond: Dictionary, harvest_result: Dictionary = {}) 
 
 	return {
 		"income": maxi(300, offer),
-		"text": "有人愿意出 %d 元接手这口塘，是否转包？" % maxi(300, offer)
+		"text": "有人开价 %d 元接手这口塘。\n现在转包，后面的鱼和风险都归他；留下来，可能翻本，也可能越捞越重。要不要脱手？" % maxi(300, offer)
 	}
 
 func generate_one_net_offer(pond: Dictionary, harvest_result: Dictionary = {}) -> Dictionary:
@@ -40,17 +40,17 @@ func generate_one_net_offer(pond: Dictionary, harvest_result: Dictionary = {}) -
 	var result_text := ""
 
 	if result_roll <= fish_king_chance * 0.18:
-		result_text = "极低概率对方捞到鱼王，你亏麻了"
+		result_text = "小概率让人家碰到鱼王，这笔会很扎心。"
 	elif result_roll <= fish_king_chance * 0.18 + big_fish_chance * 0.45:
-		result_text = "对方捞到大鱼，你有点后悔"
+		result_text = "要是人家这一网起大鱼，你多半会后悔。"
 	elif result_roll <= 0.62:
-		result_text = "对方捞到普通鱼"
+		result_text = "大概率就是普通鱼，赚亏看这一口价。"
 	else:
-		result_text = "对方只捞到小鱼，你赚了"
+		result_text = "也可能只起小鱼，那这钱就收得舒服。"
 
 	return {
 		"income": maxi(500, income),
-		"text": "有人想花 %d 元买下一网。\n%s" % [maxi(500, income), result_text],
+		"text": "有人出 %d 元买下一网，只买这一网，不接整口塘。\n%s" % [maxi(500, income), result_text],
 		"result_text": result_text
 	}
 
@@ -79,12 +79,12 @@ func generate_disposal_opportunities(pond: Dictionary, harvest_result: Dictionar
 	var messages: Array[String] = []
 	if not Dictionary(opportunities["transfer_offer"]).is_empty():
 		if quality < -0.25:
-			messages.append("鱼获不太好，有人压价想接手。")
+			messages.append("这一网不亮眼，有人趁机压价想接手。")
 		else:
-			messages.append("这网动静不小，有人开始问转包价。")
+			messages.append("这一网有动静，塘边有人开始问整塘转包价。")
 	if not Dictionary(opportunities["one_net_offer"]).is_empty():
-		messages.append("旁边有人想买一网试试水。")
+		messages.append("旁边有人想买一网试试水，给你先回点现金。")
 	if messages.is_empty():
-		messages.append("这一网还没激起买家的兴趣，你可以继续捞或选择全部抽干。")
+		messages.append("这一网还没让买家动心。你可以继续下网，也可以抽干收尾。")
 	opportunities["message"] = "\n".join(messages)
 	return opportunities

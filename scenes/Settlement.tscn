@@ -44,7 +44,7 @@ horizontal_alignment = 1
 [node name="CashLabel" type="Label" parent="Panel/Margin/Content"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 36
-text = "当前现金：0 元"
+text = "手上本钱：0 元"
 horizontal_alignment = 1
 
 [node name="FishKingPanel" type="PanelContainer" parent="Panel/Margin/Content"]
@@ -67,7 +67,7 @@ alignment = 1
 [node name="SceneLabel" type="Label" parent="Panel/Margin/Content/FishKingPanel/Margin/Content"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 30
-text = "水面炸开，一条巨大的青鱼被拖出水面！"
+text = "水面猛地一翻，一条大青鱼被拖出水面。"
 horizontal_alignment = 1
 autowrap_mode = 3
 
@@ -88,7 +88,7 @@ autowrap_mode = 3
 [node name="TaglineLabel" type="Label" parent="Panel/Margin/Content/FishKingPanel/Margin/Content"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 30
-text = "这一网，翻身了。"
+text = "这口塘，算是捞出名堂了。"
 horizontal_alignment = 1
 autowrap_mode = 3
 

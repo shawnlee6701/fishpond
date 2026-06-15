@@ -119,7 +119,7 @@ func apply_transfer(income: int) -> void:
 	last_result = {
 		"type": "transfer",
 		"title": "转包结算",
-		"message": "你以 %d 元转包了这口塘。" % income
+		"message": "你以 %d 元把这口塘转了出去，后面的鱼情和风险都不归你了。" % income
 	}
 
 func apply_one_net(income: int, result_text: String) -> bool:
@@ -132,7 +132,7 @@ func apply_one_net(income: int, result_text: String) -> bool:
 	last_result = {
 		"type": "one_net",
 		"title": "卖一网",
-		"message": "%s\n获得一网收入 %d 元。" % [result_text, income]
+		"message": "%s\n你先收下一网钱 %d 元，但这网里真有好鱼也归买家。" % [result_text, income]
 	}
 	return true
 
@@ -140,7 +140,7 @@ func apply_abandon() -> void:
 	last_result = {
 		"type": "abandon",
 		"title": "放弃结算",
-		"message": "你放弃继续作业，本局不再产生作业成本和卖鱼收入。"
+		"message": "你决定认亏收手，本局不再花作业钱，也不会再有卖鱼收入。"
 	}
 
 func apply_harvest(result: Dictionary) -> bool:
@@ -162,7 +162,7 @@ func apply_harvest(result: Dictionary) -> bool:
 		self_net_count += 1
 	last_result = {
 		"type": "harvest",
-		"title": "全部抽干结算" if bool(result.get("is_final", false)) else "捞一网结果",
+		"title": "抽干结算" if bool(result.get("is_final", false)) else "一网结果",
 		"message": str(result.get("text", "")),
 		"plan_name": str(result.get("plan_name", "")),
 		"work_cost": work_cost,

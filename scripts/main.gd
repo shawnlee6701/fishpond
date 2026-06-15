@@ -13,8 +13,8 @@ func _ready() -> void:
 	go_pond_button.pressed.connect(_on_go_pond_pressed)
 
 func _update_stats() -> void:
-	cash_label.text = "当前现金：%d 元" % game_state.cash
-	day_label.text = "当前天数：第 %d 天" % game_state.day
+	cash_label.text = "本钱：%d 元" % game_state.cash
+	day_label.text = "第 %d 天，今天去看塘、验塘、谈价。" % game_state.day
 
 func _on_go_pond_pressed() -> void:
 	main_menu.visible = false

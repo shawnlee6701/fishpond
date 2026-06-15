@@ -35,7 +35,7 @@ func generate_harvest_result(pond: Dictionary, plan_id: String, work_cost: int) 
 		"fish_result_id": str(main_fish_type.get("id", "normal_fish")),
 		"fish_result_name": fish_name,
 		"fish_description": description,
-		"text": "%s：%s\n%s\n本次卖鱼收入 %d 元。" % [plan_name, description, _format_catch_details(catch_details), fish_income]
+		"text": "%s：%s\n%s\n本次卖鱼回款 %d 元。" % [plan_name, description, _format_catch_details(catch_details), fish_income]
 	}
 
 func _roll_fish_type(pond: Dictionary, plan_id: String) -> Dictionary:
@@ -221,25 +221,25 @@ func _get_plan_catch_scale(plan_id: String) -> float:
 func _get_plan_name(plan_id: String) -> String:
 	match plan_id:
 		"low":
-			return "低成本捞一网"
+			return "省着下网"
 		"standard":
-			return "标准捞一网"
+			return "正常作业"
 		"full", "drain":
-			return "全部抽干"
+			return "抽干收尾"
 		_:
-			return "标准捞一网"
+			return "正常作业"
 
 func _build_fish_description(fish_income: int, work_cost: int, fish_name: String) -> String:
 	var harvest_profit := fish_income - work_cost
 	if fish_income <= 0:
-		return "这一网几乎空了，作业费全压在身上。"
+		return "这一网几乎空了，作业费基本压在身上。"
 	if harvest_profit < -int(float(work_cost) * 0.55):
-		return "鱼获明显不够，卖鱼收入离作业成本差得远。"
+		return "鱼获明显不够，卖鱼钱离作业成本差得远。"
 	if harvest_profit < 0:
-		return "%s上岸，但卖鱼收入还没覆盖本次作业成本。" % fish_name
+		return "%s上岸，但卖鱼钱还没盖住这次作业成本。" % fish_name
 	if harvest_profit < int(float(work_cost) * 0.35):
-		return "%s上岸，刚刚覆盖作业成本，利润不厚。" % fish_name
-	return "%s上岸，这一网卖鱼收入明显跑赢作业成本。" % fish_name
+		return "%s上岸，刚刚盖住作业成本，利润不厚。" % fish_name
+	return "%s上岸，这一网卖鱼钱明显跑赢作业成本。" % fish_name
 
 func _get_quality_score(fish_result_id: String, income: int, work_cost: int) -> float:
 	var profit_ratio := float(income - work_cost) / maxf(float(work_cost), 1.0)

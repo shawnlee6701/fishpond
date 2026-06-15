@@ -7,6 +7,7 @@ This file is the live handoff guide for agents working on **这塘我包了**. K
 - Engine: Godot 4.6.3, main scene `res://scenes/Main.tscn`.
 - Game type: mobile-first fish pond contracting / risk decision game.
 - Current stage: playable MVP loop in Godot UI with procedural daily ponds, pond inspection, contract confirmation, post-contract choices, harvest simulation, settlement, fish-king special result, and next-day progression.
+- UI copy pass completed for the first MVP loop: main menu, pond cards, inspection, contract confirmation, post-contract choices, transfer, one-net sale, work plans, and settlement now use clearer grounded Chinese business wording.
 - Current README is minimal; treat this file as the primary working guide until README is expanded.
 - Assets folders exist as placeholders only: `assets/ui`, `assets/ponds`, `assets/effects`, `assets/fish`.
 
@@ -113,7 +114,7 @@ For gameplay/UI changes, also run the project in the Godot editor or player and 
 - README still needs a real product/game overview.
 - No automated tests or deterministic simulation harness exists yet.
 - No save/load, meta progression, tutorial, or end condition exists yet.
-- Visual assets are placeholders; current UI is mostly native Godot controls.
+- Visual assets are placeholders; current UI is mostly native Godot controls with first-pass grounded Chinese MVP copy.
 - Balance has not been stress-tested across many simulated days.
 - `game_balance.ponds_per_day` exists, but daily generation currently hardcodes 3 ponds in `PondGenerator`.
 - Fish-king panel currently generates presentation weight/value at settlement time rather than reusing exact catch detail data.
