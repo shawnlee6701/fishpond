@@ -116,7 +116,6 @@ For gameplay/UI changes, also run the project in the Godot editor or player and 
 - No save/load, meta progression, tutorial, or end condition exists yet.
 - Visual assets are placeholders; current UI is mostly native Godot controls with first-pass grounded Chinese MVP copy.
 - Balance has not been stress-tested across many simulated days.
-- `game_balance.ponds_per_day` exists, but daily generation currently hardcodes 3 ponds in `PondGenerator`.
 - Fish-king panel currently generates presentation weight/value at settlement time rather than reusing exact catch detail data.
 - Main menu stats are not refreshed after returning from later screens because the current loop stays inside `ScreenContainer`.
 

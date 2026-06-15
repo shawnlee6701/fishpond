@@ -26,7 +26,7 @@ func _render_ponds() -> void:
 		game_state.daily_ponds_day = game_state.day
 
 	var ponds := game_state.daily_ponds
-	day_label.text = "第 %d 天：今天有 3 口塘可谈，先看牌面再决定。" % game_state.day
+	day_label.text = "第 %d 天：今天有 %d 口塘可谈，先看牌面再决定。" % [game_state.day, ponds.size()]
 	cash_label.text = "手上本钱：%d 元" % game_state.cash
 
 	for child in card_list.get_children():

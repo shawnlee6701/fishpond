@@ -75,6 +75,7 @@ func has_inspection_result(tool_id: String) -> bool:
 func set_inspection_result(tool_id: String, result_text: String) -> void:
 	inspection_results_by_tool[tool_id] = result_text
 	inspection_feedback_by_tool[tool_id] = result_text
+	inspection_results.append(result_text)
 
 func set_inspection_feedback(tool_id: String, feedback_text: String) -> void:
 	inspection_feedback_by_tool[tool_id] = feedback_text

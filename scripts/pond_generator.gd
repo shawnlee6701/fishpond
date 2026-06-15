@@ -38,6 +38,8 @@ func _init(seed_value: int = 0) -> void:
 	pond_types = DataLoaderScript.load_json(DataLoaderScript.POND_TYPES_PATH, [])
 
 func generate_daily_ponds(day: int, current_cash: int = 10000) -> Array[Dictionary]:
+	var game_balance: Dictionary = DataLoaderScript.load_json(DataLoaderScript.GAME_BALANCE_PATH, {})
+	var ponds_per_day := maxi(1, int(game_balance.get("ponds_per_day", 3)))
 	var ponds: Array[Dictionary] = []
 	var profiles := VALUE_PROFILES.duplicate()
 	profiles.shuffle()
@@ -46,8 +48,12 @@ func generate_daily_ponds(day: int, current_cash: int = 10000) -> Array[Dictiona
 	var name_pool := POND_NAMES.duplicate()
 	name_pool.shuffle()
 
-	for index in range(3):
-		ponds.append(_generate_pond(day, index, str(profiles[index]), str(QUOTE_TIERS[index]), str(rumor_pool[index]), str(name_pool[index]), current_cash))
+	for index in range(ponds_per_day):
+		var profile := str(profiles[index % profiles.size()])
+		var quote_tier := str(QUOTE_TIERS[mini(index, QUOTE_TIERS.size() - 1)])
+		var rumor := str(rumor_pool[index % rumor_pool.size()])
+		var pond_name := str(name_pool[index % name_pool.size()])
+		ponds.append(_generate_pond(day, index, profile, quote_tier, rumor, pond_name, current_cash))
 
 	return ponds
 
