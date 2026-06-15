@@ -17,6 +17,7 @@ var pond: Dictionary = {}
 var tools: Array = []
 var inspection_system := InspectionSystemScript.new()
 var contract_dialog: ConfirmationDialog
+var inspection_feedback_labels: Dictionary = {}
 
 func setup(next_game_state: GameState, next_screen_container: Control, next_pond: Dictionary = {}) -> void:
 	game_state = next_game_state
@@ -45,6 +46,7 @@ func _render_detail() -> void:
 		"鱼塘类型：%s" % pond.get("pond_type_name", "-"),
 		"塘龄：%s（%d 年）" % [pond.get("age_label", "-"), int(pond.get("age_years", 0))],
 		"面积：%s" % pond.get("area_label", "-"),
+		"深度：%s（%.1f 米）" % [pond.get("depth_label", "-"), float(pond.get("depth_meters", 0.0))],
 		"水色：%s" % pond.get("water_state", "-"),
 		"传闻：%s" % pond.get("rumor", "-"),
 		"风险标签：%s" % pond.get("risk_tag", "-")
@@ -53,24 +55,47 @@ func _render_detail() -> void:
 func _render_inspection_buttons() -> void:
 	for child in inspection_buttons.get_children():
 		child.queue_free()
+	inspection_feedback_labels = {}
 
 	for tool in tools:
+		var tool_id := str(tool.get("id", ""))
+		var section := VBoxContainer.new()
+		section.add_theme_constant_override("separation", 8)
+		inspection_buttons.add_child(section)
+
 		var button := Button.new()
 		button.text = "%s（%d 元）" % [tool["name"], int(tool["cost"])]
 		button.custom_minimum_size = Vector2(0, 76)
 		button.add_theme_font_size_override("font_size", 30)
+		button.disabled = game_state.has_inspection_result(tool_id)
+		if button.disabled:
+			button.text = "%s（已验）" % tool["name"]
 		button.pressed.connect(_on_inspection_pressed.bind(tool))
-		inspection_buttons.add_child(button)
+		section.add_child(button)
+
+		var feedback := Label.new()
+		feedback.text = game_state.get_inspection_feedback(tool_id)
+		feedback.visible = not feedback.text.is_empty()
+		feedback.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		feedback.add_theme_font_size_override("font_size", 26)
+		section.add_child(feedback)
+		inspection_feedback_labels[tool_id] = feedback
 
 func _on_inspection_pressed(tool: Dictionary) -> void:
+	var tool_id := str(tool.get("id", ""))
+	if game_state.has_inspection_result(tool_id):
+		return
+
 	var cost := int(tool.get("cost", 0))
 	if not game_state.pay_inspection_cost(cost):
-		_append_system_message("现金不足，不能使用%s（需要 %d 元）。" % [tool.get("name", "该验塘方式"), cost])
+		game_state.set_inspection_feedback(tool_id, "现金不足，不能使用%s（需要 %d 元）。" % [tool.get("name", "该验塘方式"), cost])
+		_update_inspection_feedback(tool_id)
 		return
 
 	var result_text := inspection_system.generate_result(tool, pond)
-	game_state.add_inspection_result(result_text)
+	game_state.set_inspection_result(tool_id, result_text)
 	_update_cash_label()
+	_render_inspection_buttons()
 	_render_inspection_results()
 
 func _on_contract_pressed() -> void:
@@ -84,13 +109,24 @@ func _update_cash_label() -> void:
 
 func _render_inspection_results() -> void:
 	if game_state.inspection_results.is_empty():
-		result_label.text = "请选择一种验塘方式。"
+		result_label.text = "每种验塘方式本局仅可使用一次，结果会显示在对应按钮下方。"
 	else:
 		result_label.text = "\n\n".join(game_state.inspection_results)
 
 func _append_system_message(message: String) -> void:
 	game_state.add_inspection_result(message)
 	_render_inspection_results()
+
+func _update_inspection_feedback(tool_id: String) -> void:
+	if not inspection_feedback_labels.has(tool_id):
+		return
+
+	var feedback := inspection_feedback_labels[tool_id] as Label
+	if feedback == null:
+		return
+
+	feedback.text = game_state.get_inspection_feedback(tool_id)
+	feedback.visible = not feedback.text.is_empty()
 
 func _create_contract_dialog() -> void:
 	contract_dialog = ConfirmationDialog.new()

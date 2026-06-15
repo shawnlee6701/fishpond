@@ -54,7 +54,6 @@ horizontal_alignment = 1
 
 [node name="ChoiceButtons" type="VBoxContainer" parent="Panel/Margin/Content"]
 layout_mode = 2
-size_flags_vertical = 3
 theme_override_constants/separation = 20
 
 [node name="TransferButton" type="Button" parent="Panel/Margin/Content/ChoiceButtons"]
@@ -67,10 +66,76 @@ text = "转包"
 custom_minimum_size = Vector2(0, 90)
 layout_mode = 2
 theme_override_font_sizes/font_size = 36
-text = "卖一网"
+text = "卖给别人一网"
 
 [node name="HarvestSelfButton" type="Button" parent="Panel/Margin/Content/ChoiceButtons"]
 custom_minimum_size = Vector2(0, 90)
 layout_mode = 2
 theme_override_font_sizes/font_size = 36
 text = "自己捞"
+
+[node name="AbandonButton" type="Button" parent="Panel/Margin/Content/ChoiceButtons"]
+custom_minimum_size = Vector2(0, 90)
+layout_mode = 2
+theme_override_font_sizes/font_size = 36
+text = "放弃"
+
+[node name="MessageLabel" type="Label" parent="Panel/Margin/Content"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = ""
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="TransferConfirmPanel" type="VBoxContainer" parent="Panel/Margin/Content"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="TransferOfferLabel" type="Label" parent="Panel/Margin/Content/TransferConfirmPanel"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+text = "有人愿意出 0 元接手这口塘，是否转包？"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Buttons" type="HBoxContainer" parent="Panel/Margin/Content/TransferConfirmPanel"]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="AcceptTransferButton" type="Button" parent="Panel/Margin/Content/TransferConfirmPanel/Buttons"]
+custom_minimum_size = Vector2(0, 70)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 30
+text = "接受"
+
+[node name="RejectTransferButton" type="Button" parent="Panel/Margin/Content/TransferConfirmPanel/Buttons"]
+custom_minimum_size = Vector2(0, 70)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 30
+text = "拒绝"
+
+[node name="WorkPlanPanel" type="VBoxContainer" parent="Panel/Margin/Content"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="LowWorkButton" type="Button" parent="Panel/Margin/Content/WorkPlanPanel"]
+custom_minimum_size = Vector2(0, 72)
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+text = "低成本捞一网（500 元）"
+
+[node name="StandardWorkButton" type="Button" parent="Panel/Margin/Content/WorkPlanPanel"]
+custom_minimum_size = Vector2(0, 72)
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+text = "标准捞一网（1200 元）"
+
+[node name="FullWorkButton" type="Button" parent="Panel/Margin/Content/WorkPlanPanel"]
+custom_minimum_size = Vector2(0, 72)
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+text = "全部抽干（2500 元）"

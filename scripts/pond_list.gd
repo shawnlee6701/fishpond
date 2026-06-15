@@ -3,6 +3,7 @@ extends Control
 const PondGeneratorScript := preload("res://scripts/pond_generator.gd")
 
 @onready var day_label: Label = $Panel/Margin/Content/Header/DayLabel
+@onready var cash_label: Label = $Panel/Margin/Content/Header/CashLabel
 @onready var card_list: VBoxContainer = $Panel/Margin/Content/Scroll/CardList
 
 var game_state: GameState
@@ -21,11 +22,12 @@ func _ready() -> void:
 func _render_ponds() -> void:
 	if game_state.daily_ponds_day != game_state.day or game_state.daily_ponds.is_empty():
 		var generator := PondGeneratorScript.new()
-		game_state.daily_ponds = generator.generate_daily_ponds(game_state.day)
+		game_state.daily_ponds = generator.generate_daily_ponds(game_state.day, game_state.cash)
 		game_state.daily_ponds_day = game_state.day
 
 	var ponds := game_state.daily_ponds
 	day_label.text = "第 %d 天：今日可看 3 口塘" % game_state.day
+	cash_label.text = "当前现金：%d 元" % game_state.cash
 
 	for child in card_list.get_children():
 		child.queue_free()
@@ -35,7 +37,7 @@ func _render_ponds() -> void:
 
 func _create_pond_card(pond: Dictionary) -> PanelContainer:
 	var card := PanelContainer.new()
-	card.custom_minimum_size = Vector2(0, 290)
+	card.custom_minimum_size = Vector2(0, 350)
 
 	var margin := MarginContainer.new()
 	margin.name = "Margin"
@@ -56,9 +58,14 @@ func _create_pond_card(pond: Dictionary) -> PanelContainer:
 	content.add_child(title)
 
 	var info := Label.new()
-	info.text = "类型：%s    塘龄：%s（%d 年）" % [pond["pond_type_name"], pond["age_label"], pond["age_years"]]
+	info.text = "类型：%s    面积：%s    深度：%s（%.1f 米）" % [pond["pond_type_name"], pond["area_label"], pond["depth_label"], float(pond["depth_meters"])]
 	info.add_theme_font_size_override("font_size", 30)
 	content.add_child(info)
+
+	var age := Label.new()
+	age.text = "塘龄：%s（%d 年）" % [pond["age_label"], pond["age_years"]]
+	age.add_theme_font_size_override("font_size", 30)
+	content.add_child(age)
 
 	var water := Label.new()
 	water.text = "水色：%s" % pond["water_state"]
