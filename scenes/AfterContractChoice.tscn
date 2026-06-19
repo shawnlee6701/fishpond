@@ -138,4 +138,4 @@ text = "正常作业：稳捞一网（1200 元）"
 custom_minimum_size = Vector2(0, 72)
 layout_mode = 2
 theme_override_font_sizes/font_size = 30
-text = "抽干收尾：一次结算（2500 元）"
+text = "抽干收尾：一次结算"

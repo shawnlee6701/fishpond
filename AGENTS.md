@@ -44,6 +44,7 @@ This file is the live handoff guide for agents working on **这塘我包了**. K
 - Contracting deducts the pond quote immediately.
 - The player cannot contract if the remaining cash would be below `min_working_capital`.
 - Work plans must require available cash before applying harvest results.
+- Full/drain work cost is dynamic: `max(2000, current pond quote_price * 20%)`.
 - `full` / `drain` is final and should go to settlement.
 - `low` and `standard` can be repeated while cash allows.
 - Selling one net can happen at most once per round.
@@ -55,7 +56,8 @@ This file is the live handoff guide for agents working on **这塘我包了**. K
   - `initial_cash`: 10000
   - `min_working_capital`: 1000
   - `ponds_per_day`: 3
-  - work costs: low 500, standard 1200, full 2500
+  - work costs: low 500, standard 1200
+  - full/drain work cost: max 2000 or 20% of current pond quote
 - `data/tools.json`
   - `observe`: free, low accuracy
   - `fish_finder`: 300

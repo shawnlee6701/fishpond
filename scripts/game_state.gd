@@ -109,10 +109,16 @@ func get_work_cost(plan_id: String) -> int:
 	match plan_id:
 		"low":
 			return int(game_balance.get("low_work_cost", 500))
-		"full":
-			return int(game_balance.get("full_work_cost", 2500))
+		"full", "drain":
+			return get_full_work_cost()
 		_:
 			return int(game_balance.get("standard_work_cost", 1200))
+
+func get_full_work_cost() -> int:
+	var min_cost := int(game_balance.get("full_work_min_cost", 2000))
+	var quote_ratio := float(game_balance.get("full_work_quote_ratio", 0.2))
+	var quote_price := int(current_pond.get("quote_price", 0))
+	return maxi(min_cost, int(round(float(quote_price) * quote_ratio)))
 
 func apply_transfer(income: int) -> void:
 	transfer_income = income
