@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>这塘我包了 · 数值调参台</title>
+  <link rel="icon" href="../../icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <img src="../../icon.svg" alt="" class="brand-mark">
+      <div>
+        <h1>数值调参台</h1>
+        <p>调规则、跑模拟、看长期风险</p>
+      </div>
+    </div>
+    <div class="run-strip">
+      <label>
+        轮数
+        <input id="runsInput" type="number" min="50" max="20000" step="50" value="1000">
+      </label>
+      <label>
+        天数
+        <input id="daysInput" type="number" min="1" max="60" step="1" value="12">
+      </label>
+      <label>
+        Seed
+        <input id="seedInput" type="number" step="1" value="20260619">
+      </label>
+      <button id="runButton" class="primary">跑模拟</button>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <aside class="control-panel">
+      <div class="panel-head">
+        <span>Balance Rules</span>
+        <button id="resetButton" class="ghost">重置</button>
+      </div>
+      <div id="controls" class="controls"></div>
+      <div class="export-row">
+        <button id="exportButton" class="secondary">导出 JSON</button>
+        <button id="copyButton" class="secondary">复制参数</button>
+      </div>
+    </aside>
+
+    <section class="results">
+      <div class="summary-grid">
+        <article class="metric-card">
+          <span>随机不验塘 ROI</span>
+          <strong id="randomRoi">--</strong>
+        </article>
+        <article class="metric-card">
+          <span>基础止损 ROI</span>
+          <strong id="basicRoi">--</strong>
+        </article>
+        <article class="metric-card">
+          <span>老师傅代理 ROI</span>
+          <strong id="masterRoi">--</strong>
+        </article>
+        <article class="metric-card">
+          <span>当前状态</span>
+          <strong id="statusText">待运行</strong>
+        </article>
+      </div>
+
+      <div class="chart-row">
+        <section class="chart-panel">
+          <div class="section-title">最终现金分布</div>
+          <canvas id="cashChart" width="900" height="320"></canvas>
+        </section>
+        <section class="notes-panel">
+          <div class="section-title">调参提示</div>
+          <ul id="insights"></ul>
+        </section>
+      </div>
+
+      <section class="table-panel">
+        <div class="section-title">策略结果</div>
+        <table>
+          <thead>
+            <tr>
+              <th>策略</th>
+              <th>平均 ROI</th>
+              <th>中位 ROI</th>
+              <th>P25 现金</th>
+              <th>P50 现金</th>
+              <th>P75 现金</th>
+              <th>破产率</th>
+              <th>平均天数</th>
+              <th>鱼王率</th>
+            </tr>
+          </thead>
+          <tbody id="resultRows"></tbody>
+        </table>
+      </section>
+
+      <section class="json-panel">
+        <div class="section-title">导出预览</div>
+        <textarea id="jsonOutput" spellcheck="false"></textarea>
+      </section>
+    </section>
+  </main>
+
+  <script src="./app.js"></script>
+</body>
+</html>

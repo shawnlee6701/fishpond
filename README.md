@@ -38,11 +38,28 @@ godot --version
 godot --headless --path . --quit
 ```
 
+## 数值调参台
+
+项目内置一个本地网页调参器：
+
+```bash
+python3 -m http.server 8766
+```
+
+然后打开：
+
+```text
+http://127.0.0.1:8766/tools/balance-lab/
+```
+
+调参台会读取 `data/balance_rules.json`，支持调整关键参数、批量跑策略模拟、查看 ROI/破产率/现金分位数，并导出修改后的 JSON。
+
 ## 主要目录说明
 
 - `scenes/`：Godot 场景文件，包含主菜单、鱼塘列表、鱼塘详情、承包后选择和结算界面。
 - `scripts/`：GDScript 逻辑代码，包含状态管理、界面路由、鱼塘生成、验塘、捕鱼模拟和结算。
 - `data/`：玩法数值和配置表，例如初始现金、作业成本、工具、鱼类和鱼塘类型。
+- `tools/balance-lab/`：本地网页数值调参台。
 - `assets/`：美术资源占位目录，当前主要用于后续 UI、鱼塘、特效和鱼类素材。
 
 ## 后续计划
