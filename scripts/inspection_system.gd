@@ -1,10 +1,16 @@
 extends RefCounted
 class_name InspectionSystem
 
+const BalanceRulesScript := preload("res://scripts/balance_rules.gd")
+
 var rng := RandomNumberGenerator.new()
+var rules: Dictionary = {}
+var inspection_rules: Dictionary = {}
 
 func _init() -> void:
 	rng.randomize()
+	rules = BalanceRulesScript.load_rules()
+	inspection_rules = BalanceRulesScript.section(rules, "inspection")
 
 func generate_result(tool: Dictionary, pond: Dictionary) -> String:
 	var tool_id := str(tool.get("id", "observe"))
@@ -39,30 +45,34 @@ func _build_signal_profile(pond: Dictionary) -> Dictionary:
 	}
 
 func _big_level(value: float) -> String:
-	if value >= 0.42:
+	var thresholds := BalanceRulesScript.dict_value(inspection_rules, "big_thresholds")
+	if value >= BalanceRulesScript.number(thresholds, "high", 0.42):
 		return "high"
-	if value >= 0.24:
+	if value >= BalanceRulesScript.number(thresholds, "medium", 0.24):
 		return "medium"
 	return "low"
 
 func _king_level(value: float) -> String:
-	if value >= 0.14:
+	var thresholds := BalanceRulesScript.dict_value(inspection_rules, "king_thresholds")
+	if value >= BalanceRulesScript.number(thresholds, "strong", 0.14):
 		return "strong"
-	if value >= 0.07:
+	if value >= BalanceRulesScript.number(thresholds, "possible", 0.07):
 		return "possible"
 	return "quiet"
 
 func _difficulty_level(value: float) -> String:
-	if value >= 1.18:
+	var thresholds := BalanceRulesScript.dict_value(inspection_rules, "difficulty_thresholds")
+	if value >= BalanceRulesScript.number(thresholds, "hard", 1.18):
 		return "hard"
-	if value >= 0.95:
+	if value >= BalanceRulesScript.number(thresholds, "normal", 0.95):
 		return "normal"
 	return "easy"
 
 func _price_level(quote_ratio: float) -> String:
-	if quote_ratio <= 0.9:
+	var thresholds := BalanceRulesScript.dict_value(inspection_rules, "price_thresholds")
+	if quote_ratio <= BalanceRulesScript.number(thresholds, "cheap", 0.9):
 		return "cheap"
-	if quote_ratio >= 1.12:
+	if quote_ratio >= BalanceRulesScript.number(thresholds, "expensive", 1.12):
 		return "expensive"
 	return "fair"
 
@@ -210,9 +220,11 @@ func _build_master_lines(pond: Dictionary, profile: Dictionary) -> Array[String]
 	return lines
 
 func _estimate_value_range(hidden_value: float) -> Vector2i:
-	var center := hidden_value * rng.randf_range(0.88, 1.12)
-	var lower := _round_to_nearest(maxf(1000.0, center * rng.randf_range(0.86, 0.94)), 500)
-	var upper := _round_to_nearest(maxf(float(lower + 500), center * rng.randf_range(1.06, 1.16)), 500)
+	var estimate_rules := BalanceRulesScript.dict_value(inspection_rules, "master_value_estimate")
+	var rounding := BalanceRulesScript.integer(estimate_rules, "rounding", 500)
+	var center := hidden_value * BalanceRulesScript.random_float_range(rng, estimate_rules, "center_min", "center_max", 0.88, 1.12)
+	var lower := _round_to_nearest(maxf(BalanceRulesScript.number(estimate_rules, "min_lower", 1000.0), center * BalanceRulesScript.random_float_range(rng, estimate_rules, "lower_min", "lower_max", 0.86, 0.94)), rounding)
+	var upper := _round_to_nearest(maxf(float(lower + BalanceRulesScript.integer(estimate_rules, "min_width", 500)), center * BalanceRulesScript.random_float_range(rng, estimate_rules, "upper_min", "upper_max", 1.06, 1.16)), rounding)
 	return Vector2i(lower, upper)
 
 func _uncertainty_note(tool_id: String) -> String:

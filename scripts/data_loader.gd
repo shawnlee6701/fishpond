@@ -5,13 +5,15 @@ const POND_TYPES_PATH := "res://data/pond_types.json"
 const FISH_TYPES_PATH := "res://data/fish_types.json"
 const TOOLS_PATH := "res://data/tools.json"
 const GAME_BALANCE_PATH := "res://data/game_balance.json"
+const BALANCE_RULES_PATH := "res://data/balance_rules.json"
 
 static func load_all() -> Dictionary:
 	return {
 		"pond_types": load_json(POND_TYPES_PATH, []),
 		"fish_types": load_json(FISH_TYPES_PATH, []),
 		"tools": load_json(TOOLS_PATH, []),
-		"game_balance": load_json(GAME_BALANCE_PATH, {})
+		"game_balance": load_json(GAME_BALANCE_PATH, {}),
+		"balance_rules": load_json(BALANCE_RULES_PATH, {})
 	}
 
 static func load_json(path: String, fallback: Variant) -> Variant:

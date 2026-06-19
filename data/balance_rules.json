@@ -1,0 +1,326 @@
+{
+  "pond_generation": {
+    "age_factor_divisor": 10.0,
+    "factor_min": 0.0,
+    "factor_max": 1.5,
+    "difficulty": {
+      "age_weight": 0.25,
+      "depth_weight": 0.12,
+      "random_min": -0.08,
+      "random_max": 0.08
+    },
+    "big_fish_chance": {
+      "base": 0.12,
+      "age_weight": 0.16,
+      "physical_weight": 0.05,
+      "type_weight": 0.08,
+      "min": 0.05,
+      "max": 0.65
+    },
+    "fish_king_chance": {
+      "base": 0.01,
+      "age_weight": 0.025,
+      "depth_weight": 0.012,
+      "type_weight": 0.018,
+      "min": 0.01,
+      "max": 0.22
+    },
+    "depth_factor": {
+      "offset": 1.0,
+      "divisor": 2.2,
+      "min": 0.0,
+      "max": 1.5
+    },
+    "physical_value_factor": {
+      "base": 0.72,
+      "area_weight": 0.28,
+      "depth_weight": 0.18,
+      "age_weight": 0.12,
+      "min": 0.65,
+      "max": 1.55
+    },
+    "area_factors": {
+      "小塘": 0.25,
+      "中塘": 0.65,
+      "大塘": 1.0,
+      "宽水面": 1.28
+    },
+    "age_ranges_by_type": {
+      "artificial_pond": [0, 5],
+      "old_pond": [3, 12],
+      "reservoir_pond": [2, 15],
+      "default": [0, 8]
+    },
+    "quote_tiers": {
+      "quarter": {
+        "ratio_min": 0.23,
+        "ratio_max": 0.27,
+        "adjusted_min": 0.22,
+        "adjusted_max": 0.30,
+        "area_labels": ["小塘", "中塘"],
+        "depth_min": 0.8,
+        "depth_max": 1.5,
+        "age_min": 0,
+        "age_max": 4
+      },
+      "half": {
+        "ratio_min": 0.48,
+        "ratio_max": 0.52,
+        "adjusted_min": 0.44,
+        "adjusted_max": 0.58,
+        "area_labels": ["中塘", "大塘"],
+        "depth_min": 1.5,
+        "depth_max": 2.4,
+        "age_min": 2,
+        "age_max": 8
+      },
+      "high": {
+        "ratio_min": 0.80,
+        "ratio_max": 0.90,
+        "adjusted_min": 0.78,
+        "adjusted_max": 0.92,
+        "area_labels": ["大塘", "宽水面"],
+        "depth_min": 2.4,
+        "depth_max": 4.0,
+        "age_min": 5,
+        "age_max": 15
+      },
+      "default": {
+        "ratio_min": 0.25,
+        "ratio_max": 0.25,
+        "adjusted_min": 0.22,
+        "adjusted_max": 0.92,
+        "area_labels": ["小塘", "中塘", "大塘", "宽水面"],
+        "depth_min": 1.0,
+        "depth_max": 3.0,
+        "age_min": 0,
+        "age_max": 8
+      }
+    },
+    "quote_physical_factor_min": 0.86,
+    "quote_physical_factor_max": 1.12,
+    "quote_rounding": 100,
+    "min_quote": 100,
+    "hidden_value": {
+      "base_min": 4500,
+      "base_max": 9000,
+      "min": 1800,
+      "big_fish_weight": 3500.0,
+      "fish_king_weight": 9000.0,
+      "age_bonus_min": 80,
+      "age_bonus_max": 180,
+      "type_bonus": {
+        "artificial_pond": [-600, 700],
+        "old_pond": [200, 1700],
+        "reservoir_pond": [700, 2600],
+        "default": [0, 0]
+      }
+    },
+    "value_profiles": {
+      "surplus": {
+        "hidden_value_factor": [1.18, 1.42],
+        "difficulty_factor": [0.78, 0.95],
+        "big_fish_factor": [1.25, 1.55],
+        "fish_king_factor": [1.15, 1.45]
+      },
+      "break_even": {
+        "hidden_value_factor": [0.92, 1.08],
+        "difficulty_factor": [0.96, 1.08],
+        "big_fish_factor": [0.90, 1.10],
+        "fish_king_factor": [0.85, 1.10]
+      },
+      "loss": {
+        "hidden_value_factor": [0.68, 0.88],
+        "difficulty_factor": [1.12, 1.35],
+        "big_fish_factor": [0.55, 0.82],
+        "fish_king_factor": [0.45, 0.75]
+      }
+    },
+    "risk_thresholds": {
+      "hard": 1.2,
+      "unclear": 1.0
+    }
+  },
+  "inspection": {
+    "big_thresholds": {
+      "high": 0.42,
+      "medium": 0.24
+    },
+    "king_thresholds": {
+      "strong": 0.14,
+      "possible": 0.07
+    },
+    "difficulty_thresholds": {
+      "hard": 1.18,
+      "normal": 0.95
+    },
+    "price_thresholds": {
+      "cheap": 0.90,
+      "expensive": 1.12
+    },
+    "master_value_estimate": {
+      "center_min": 0.88,
+      "center_max": 1.12,
+      "lower_min": 0.86,
+      "lower_max": 0.94,
+      "upper_min": 1.06,
+      "upper_max": 1.16,
+      "min_lower": 1000,
+      "min_width": 500,
+      "rounding": 500
+    }
+  },
+  "fishing": {
+    "fallback_fish_min_value": 100,
+    "fallback_fish_max_value": 300,
+    "min_difficulty": 0.2,
+    "plan_power": {
+      "low": -0.22,
+      "standard": 0.08,
+      "full": 0.62,
+      "drain": 0.62,
+      "default": 0.08
+    },
+    "plan_catch_scale": {
+      "low": 0.72,
+      "standard": 1.0,
+      "full": 1.75,
+      "drain": 1.75,
+      "default": 1.0
+    },
+    "result_power": {
+      "big_chance_baseline": 0.12,
+      "big_bonus_min": -0.08,
+      "big_bonus_max": 0.28,
+      "king_chance_baseline": 0.02,
+      "king_bonus_min": -0.01,
+      "king_bonus_max": 0.08,
+      "difficulty_baseline": 1.0,
+      "difficulty_weight": 0.42,
+      "difficulty_penalty_min": -0.12,
+      "difficulty_penalty_max": 0.35
+    },
+    "base_weights": {
+      "small_fish": 42.0,
+      "normal_fish": 43.0,
+      "big_fish": 13.0,
+      "fish_king": 2.0
+    },
+    "positive_weight_adjustments": {
+      "small_fish": {"min": 16.0, "delta": -30.0},
+      "normal_fish": {"min": 32.0, "delta": -8.0},
+      "big_fish": {"max": 31.0, "delta": 28.0},
+      "fish_king": {"max": 7.5, "delta": 3.6}
+    },
+    "negative_weight_adjustments": {
+      "small_fish": {"max": 68.0, "delta": 34.0},
+      "normal_fish": {"min": 25.0, "delta": -8.0},
+      "big_fish": {"min": 4.0, "delta": -20.0},
+      "fish_king": {"min": 0.5, "delta": -2.2}
+    },
+    "difficulty_scale": {
+      "base": 1.12,
+      "difficulty_baseline": 1.0,
+      "difficulty_weight": 0.2,
+      "min": 0.62,
+      "max": 1.22
+    },
+    "weights": {
+      "small_fish": {"min": 6.0, "max": 22.0, "unit": 1, "main_multiplier_min": 0.8, "main_multiplier_max": 1.25},
+      "normal_fish": {"min": 5.0, "max": 18.0, "unit": 5, "extra_chance": 0.45},
+      "big_fish": {"min": 10.0, "max": 32.0, "unit": 10, "extra_chance": 0.08, "extra_min": 10.0, "extra_max": 16.0},
+      "fish_king": {"min": 50, "max": 150, "unit": 1}
+    },
+    "fish_king_integrity": {
+      "min": 80,
+      "max": 100,
+      "premium_threshold": 90
+    },
+    "description_thresholds": {
+      "severe_loss_ratio": -0.55,
+      "thin_profit_ratio": 0.35
+    },
+    "quality_scores": {
+      "small_fish": {"base": -0.55, "profit_weight": 0.18, "min": -0.9, "max": -0.2},
+      "normal_fish": {"base": -0.1, "profit_weight": 0.22, "min": -0.45, "max": 0.35},
+      "big_fish": {"base": 0.55, "profit_weight": 0.2, "min": 0.45, "max": 1.15},
+      "fish_king": {"base": 1.2, "profit_weight": 0.12, "min": 1.0, "max": 1.8},
+      "default": {"base": 0.0, "profit_weight": 0.0, "min": 0.0, "max": 0.0}
+    }
+  },
+  "market": {
+    "transfer": {
+      "value_factor_min": 0.55,
+      "value_factor_max": 1.65,
+      "value_lerp_min": 0.82,
+      "value_lerp_max": 1.16,
+      "quality_weight": 0.42,
+      "result_factor_min": 0.58,
+      "result_factor_max": 1.35,
+      "random_min": 0.78,
+      "random_max": 1.22,
+      "min_income": 300,
+      "rounding": 100,
+      "default_quality_offset": -1.0
+    },
+    "one_net": {
+      "quote_ratio_min": 0.16,
+      "quote_ratio_max": 0.28,
+      "hidden_ratio_min": 0.04,
+      "hidden_ratio_max": 0.09,
+      "quality_weight": 0.3,
+      "heat_factor_min": 0.75,
+      "heat_factor_max": 1.35,
+      "min_income": 500,
+      "rounding": 100,
+      "fish_king_text_weight": 0.18,
+      "big_fish_text_weight": 0.45,
+      "normal_text_threshold": 0.62
+    },
+    "opportunities": {
+      "transfer_base": 0.28,
+      "transfer_quality_weight": 0.2,
+      "transfer_min": 0.12,
+      "transfer_max": 0.68,
+      "one_net_base": 0.2,
+      "one_net_quality_weight": 0.35,
+      "one_net_min": 0.02,
+      "one_net_max": 0.72,
+      "bad_quality_threshold": -0.25,
+      "bad_transfer_bonus": 0.24,
+      "bad_transfer_min": 0.22,
+      "bad_transfer_max": 0.78,
+      "bad_one_net_multiplier": 0.35
+    }
+  },
+  "simulation": {
+    "default_runs": 1000,
+    "max_days": 12,
+    "seed": 20260619,
+    "strategies": {
+      "random_no_inspection": {
+        "inspection_cost": 0,
+        "selection": "random",
+        "plans": ["standard", "full"],
+        "accept_transfer_quality_below": -999.0,
+        "accept_one_net": false
+      },
+      "basic_stop_loss": {
+        "inspection_cost": 0,
+        "selection": "lowest_quote",
+        "plans": ["low", "full"],
+        "accept_transfer_quality_below": -0.25,
+        "accept_one_net": true
+      },
+      "master_estimate_stop_loss": {
+        "inspection_cost": 800,
+        "selection": "best_hidden_value_ratio_with_noise",
+        "selection_noise_min": 0.82,
+        "selection_noise_max": 1.18,
+        "plans": ["standard", "full"],
+        "accept_transfer_quality_below": -0.25,
+        "accept_one_net": true
+      }
+    }
+  }
+}

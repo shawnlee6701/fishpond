@@ -25,13 +25,16 @@ This file is the live handoff guide for agents working on **这塘我包了**. K
 ## Core Architecture
 
 - `data/*.json` are the balance/source tables. Prefer adding tunable values here before hardcoding more constants in scripts.
+- `data/balance_rules.json` owns detailed formula knobs for pond generation, inspection thresholds, fishing odds, market offers, and simulation presets.
 - `scripts/data_loader.gd` is the shared JSON loader and path registry.
+- `scripts/balance_rules.gd` is the shared helper for reading balance rule dictionaries.
 - `scripts/game_state.gd` owns mutable run state, cash changes, round reset, contracting, settlement totals, and day advancement.
 - `scripts/ui_controller.gd` is the only screen router. Add new scene transitions here rather than scattering scene replacement logic.
 - `scripts/pond_generator.gd` creates daily pond offers and hidden pond qualities.
 - `scripts/inspection_system.gd` turns hidden pond values into fuzzy player-facing signals.
 - `scripts/fishing_simulator.gd` resolves fishing results and fish income.
 - `scripts/action_resolver.gd` resolves market opportunities after fishing.
+- `scripts/balance_simulator.gd` runs headless multi-run strategy simulations for ROI, bankrupt rate, cash percentiles, and fish-king exposure.
 - `scenes/*.tscn` hold the screen layouts. Keep node paths aligned with each script's `@onready` references.
 
 ## Important Gameplay Invariants
@@ -66,6 +69,8 @@ This file is the live handoff guide for agents working on **这塘我包了**. K
   - `small_fish`, `normal_fish`, `big_fish`, `fish_king`
 - `data/pond_types.json`
   - `artificial_pond`, `old_pond`, `reservoir_pond`
+- `data/balance_rules.json`
+  - pond generation formula knobs, inspection thresholds, fishing weights, market offer odds, and simulation strategy presets
 
 ## Development Rules
 
@@ -96,6 +101,12 @@ godot --version
 godot --headless --path . --quit
 ```
 
+For balance tuning, run the simulator:
+
+```bash
+godot --headless --log-file /private/tmp/fish_pool_balance_sim.log --path . --script res://scripts/balance_simulator.gd -- --runs=1000 --days=12
+```
+
 If the headless check crashes while opening `user://logs` inside a restricted sandbox, rerun the same command with permission to write Godot's user log directory. A clean project load should print the Godot version and exit with code 0.
 
 For gameplay/UI changes, also run the project in the Godot editor or player and manually verify:
@@ -114,10 +125,10 @@ For gameplay/UI changes, also run the project in the Godot editor or player and 
 ## Known Gaps / Next Likely Work
 
 - README still needs a real product/game overview.
-- No automated tests or deterministic simulation harness exists yet.
+- A deterministic balance simulator exists, but its strategies are first-pass proxies and need more design review before tuning against them.
 - No save/load, meta progression, tutorial, or end condition exists yet.
 - Visual assets are placeholders; current UI is mostly native Godot controls with first-pass grounded Chinese MVP copy.
-- Balance has not been stress-tested across many simulated days.
+- Balance has not yet been tuned against the simulator output across many design passes.
 - Fish-king panel currently generates presentation weight/value at settlement time rather than reusing exact catch detail data.
 - Main menu stats are not refreshed after returning from later screens because the current loop stays inside `ScreenContainer`.
 
