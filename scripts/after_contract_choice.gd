@@ -87,9 +87,9 @@ func _apply_ui_frame() -> void:
 	UIKit.style_button(low_work_button, "secondary")
 	UIKit.style_button(standard_work_button, "secondary")
 	UIKit.style_button(full_work_button, "gold")
-	transfer_button.custom_minimum_size = Vector2(0, 82)
-	sell_one_net_button.custom_minimum_size = Vector2(0, 82)
-	harvest_self_button.custom_minimum_size = Vector2(0, 88)
+	transfer_button.custom_minimum_size = Vector2(0, 96)
+	sell_one_net_button.custom_minimum_size = Vector2(0, 96)
+	harvest_self_button.custom_minimum_size = Vector2(0, 96)
 	work_plan_back_button.custom_minimum_size = Vector2(0, 64)
 	low_work_button.custom_minimum_size = Vector2(0, 220)
 	standard_work_button.custom_minimum_size = Vector2(0, 220)
@@ -271,6 +271,7 @@ func _show_choice_page() -> void:
 	title_label.text = "塘已经包下"
 	estimate_label.visible = true
 	profit_label.visible = true
+	message_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	choice_buttons.visible = true
 	work_plan_back_button.visible = false
 	work_plan_panel.visible = false
@@ -279,6 +280,7 @@ func _show_work_plan_page() -> void:
 	title_label.text = "自己下网"
 	estimate_label.visible = false
 	profit_label.visible = false
+	message_label.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	choice_buttons.visible = false
 	work_plan_back_button.visible = true
 	work_plan_panel.visible = true

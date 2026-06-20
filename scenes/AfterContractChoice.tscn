@@ -39,7 +39,7 @@ offset_top = 32.0
 offset_right = -42.0
 offset_bottom = 96.0
 grow_horizontal = 2
-text = "第 1 天  |  本金 30000 元"
+text = "第 1 天  |  本钱 30000 元"
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -65,9 +65,9 @@ stretch_mode = 0
 [node name="Margin" type="MarginContainer" parent="Panel"]
 layout_mode = 2
 theme_override_constants/margin_left = 108
-theme_override_constants/margin_top = 52
+theme_override_constants/margin_top = 96
 theme_override_constants/margin_right = 108
-theme_override_constants/margin_bottom = 52
+theme_override_constants/margin_bottom = 84
 
 [node name="Content" type="VBoxContainer" parent="Panel/Margin"]
 layout_mode = 2
@@ -94,37 +94,38 @@ horizontal_alignment = 1
 [node name="ProfitLabel" type="Label" parent="Panel/Margin/Content"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 27
-text = "当前账面净赚：+0 元"
+text = "塘口账面：+0 元"
 horizontal_alignment = 1
+
+[node name="MessageLabel" type="Label" parent="Panel/Margin/Content"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_font_sizes/font_size = 25
+text = ""
+horizontal_alignment = 1
+autowrap_mode = 3
 
 [node name="ChoiceButtons" type="VBoxContainer" parent="Panel/Margin/Content"]
 layout_mode = 2
-theme_override_constants/separation = 12
+theme_override_constants/separation = 14
 
 [node name="TransferButton" type="Button" parent="Panel/Margin/Content/ChoiceButtons"]
-custom_minimum_size = Vector2(0, 82)
+custom_minimum_size = Vector2(0, 96)
 layout_mode = 2
 theme_override_font_sizes/font_size = 30
 text = "转包脱手"
 
 [node name="SellOneNetButton" type="Button" parent="Panel/Margin/Content/ChoiceButtons"]
-custom_minimum_size = Vector2(0, 82)
+custom_minimum_size = Vector2(0, 96)
 layout_mode = 2
 theme_override_font_sizes/font_size = 30
 text = "卖一网给别人"
 
 [node name="HarvestSelfButton" type="Button" parent="Panel/Margin/Content/ChoiceButtons"]
-custom_minimum_size = Vector2(0, 88)
+custom_minimum_size = Vector2(0, 96)
 layout_mode = 2
 theme_override_font_sizes/font_size = 30
 text = "自己下网"
-
-[node name="MessageLabel" type="Label" parent="Panel/Margin/Content"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 25
-text = ""
-horizontal_alignment = 1
-autowrap_mode = 3
 
 [node name="WorkPlanBackButton" type="Button" parent="Panel/Margin/Content"]
 visible = false

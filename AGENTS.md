@@ -62,6 +62,7 @@ This file is the live handoff guide for agents working on **这塘我包了**. K
 - `low` and `standard` can be repeated while cash allows.
 - Selling one net can happen at most once per round.
 - The post-contract player-facing choices should not include an abandon / "认亏走人" option; use transfer as the exit path.
+- On the post-contract choice page, keep the title and pond figures inside the paper's upper safe area, let feedback use the flexible middle space, and anchor the three disposal buttons together at the bottom.
 - Choosing "自己下网" opens a dedicated work-plan page: the original transfer/sell/self-fishing buttons are hidden, and the three work plans share the available page height equally.
 - Settlement net profit currently excludes the already-deducted contract fee and reports it separately as "承包费：已在承包时扣除".
 - Continue restores the latest pond-list checkpoint; incomplete inspection, contract, and harvest actions are intentionally not persisted.
@@ -164,6 +165,7 @@ For gameplay/UI changes, also run the project in the Godot editor or player and 
 - Contract and transfer popups both visibly retain title, scroll-safe content, and accept/cancel actions at 1080 × 1920.
 - The post-contract choice page uses `Design/Pond Check/screen_clean.png` as its paper dossier background.
 - “自己下网” switches to a dedicated page state with a return control and three equal-height work-plan buttons; the original bottom choice buttons must not remain visible.
+- The default post-contract choice page keeps “转包脱手” / “卖一网” / “自己下网” grouped at the bottom of the paper instead of directly under the title block.
 - “转包脱手” opens a centered responsive popup using `Design/Popup/popup_clean.png`; a full-screen dim mask blocks the underlying page while open, and the offer appears above the cleaned buyer illustration and the speech bubble “兄弟一场，把这塘包给我”, with accept/reject actions at the bottom.
 - After contracting, low/standard/full work buttons reflect available cash.
 - Non-final harvest can create market opportunities and continue the round.
