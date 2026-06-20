@@ -11,6 +11,7 @@ This file is the live handoff guide for agents working on **这塘我包了**. K
 - Gameplay UI now follows one 1080 × 1920 hierarchy: global day/cash status at the top, page title below it, bounded or scrollable content in the middle, and visible actions that stay inside the authored canvas.
 - Current README is minimal; treat this file as the primary working guide until README is expanded.
 - `assets/ui/homepage.png` is the homepage artwork; `assets/ui/button_board.png` is the transparent wood-board texture used by both homepage buttons; `assets/ui/parchment_background.png` is the unified background for the pond list and other routed gameplay screens; `Design/Pond card/screen_transparent.png` is the cleaned blank-card derivative of `Design/Pond card/screen.png` used as the stretchable nine-patch texture; `Design/Pond Check/screen_clean.png` is the cleaned transparent paper dossier shared by pond detail and the post-contract choice page; `Design/Popup/popup_clean.png` is the cleaned transparent paper texture used by the responsive contract and transfer popups; `Design/Other Person/screen_clean.png` is the cleaned transparent transfer-buyer illustration.
+- Result illustrations use cleaned transparent derivatives: `Design/Catch Fish King/screen_clean.png`, `Design/Earn More/screen_clean.png`, `Design/Earn Less/screen_clean.png`, `Design/Win More/screen_clean.png`, `Design/Win Less/screen_clean.png`, and `Design/Bankrupt/screen_clean.png`. Regenerate them from the matching `screen.png` sources with `python3 tools/clean_checkerboard_assets.py`.
 - Other asset folders remain placeholders: `assets/ponds`, `assets/effects`, `assets/fish`.
 
 ## Current Implemented Flow
@@ -55,6 +56,8 @@ This file is the live handoff guide for agents working on **这塘我包了**. K
 - The player cannot contract if the remaining cash would be below `min_working_capital`.
 - Work plans must require available cash before applying harvest results.
 - Full/drain work cost is dynamic: `max(2000, current pond quote_price * 20%)`.
+- Non-final self-fishing results use a blocking illustration popup: fish king overrides the result art; otherwise positive per-net profit uses Earn More and zero/negative per-net profit uses Earn Less.
+- Final settlement art uses Bankrupt when cash is below 3000; otherwise fish king overrides the normal result art, then positive net profit uses Win More and zero/negative net profit uses Win Less.
 - `full` / `drain` is final and should go to settlement.
 - `low` and `standard` can be repeated while cash allows.
 - Selling one net can happen at most once per round.
@@ -167,6 +170,8 @@ For gameplay/UI changes, also run the project in the Godot editor or player and 
 - Full harvest or transfer reaches settlement.
 - "下一地方" advances the internal day counter, resets round-only state, and generates new ponds.
 - Fish-king result displays the special panel without breaking settlement totals.
+- Non-final self-fishing results show the cleaned Fish King / Earn More / Earn Less illustration popup and keep underlying actions blocked until dismissed.
+- Settlement shows the cleaned Bankrupt / Fish King / Win More / Win Less illustration selected from the final cash and net-profit rules above.
 
 ## Known Gaps / Next Likely Work
 

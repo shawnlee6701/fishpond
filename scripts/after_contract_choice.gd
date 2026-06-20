@@ -3,6 +3,9 @@ extends Control
 const UIKit := preload("res://scripts/ui_kit.gd")
 const TRANSFER_POPUP_TEXTURE := preload("res://Design/Popup/popup_clean.png")
 const TRANSFER_PERSON_TEXTURE := preload("res://Design/Other Person/screen_clean.png")
+const FISH_KING_TEXTURE := preload("res://Design/Catch Fish King/screen_clean.png")
+const EARN_MORE_TEXTURE := preload("res://Design/Earn More/screen_clean.png")
+const EARN_LESS_TEXTURE := preload("res://Design/Earn Less/screen_clean.png")
 
 @onready var panel: PanelContainer = $Panel
 @onready var title_label: Label = $Panel/Margin/Content/TitleLabel
@@ -31,6 +34,11 @@ var transfer_dialog: PanelContainer
 var transfer_offer_label: Label
 var accept_transfer_button: Button
 var reject_transfer_button: Button
+var harvest_result_overlay: Control
+var harvest_result_dialog: PanelContainer
+var harvest_result_title: Label
+var harvest_result_illustration: TextureRect
+var harvest_result_label: Label
 
 func setup(next_game_state: GameState, next_screen_container: Control) -> void:
 	game_state = next_game_state
@@ -41,6 +49,7 @@ func _ready() -> void:
 		game_state = GameState.new()
 
 	_create_transfer_dialog()
+	_create_harvest_result_dialog()
 	transfer_button.pressed.connect(_on_transfer_pressed)
 	sell_one_net_button.pressed.connect(_on_sell_one_net_pressed)
 	harvest_self_button.pressed.connect(_on_harvest_self_pressed)
@@ -185,12 +194,56 @@ func _create_transfer_dialog() -> void:
 	reject_transfer_button.pressed.connect(_on_reject_transfer_pressed)
 	buttons.add_child(reject_transfer_button)
 
+func _create_harvest_result_dialog() -> void:
+	var modal := UIKit.create_modal_layer(self, "HarvestResultModal", TRANSFER_POPUP_TEXTURE)
+	harvest_result_overlay = modal["overlay"] as Control
+	harvest_result_dialog = modal["card"] as PanelContainer
+
+	var content := VBoxContainer.new()
+	content.add_theme_constant_override("separation", 14)
+	harvest_result_dialog.add_child(content)
+
+	harvest_result_title = Label.new()
+	UIKit.style_modal_title(harvest_result_title)
+	content.add_child(harvest_result_title)
+
+	var body_scroll := ScrollContainer.new()
+	body_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	body_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	content.add_child(body_scroll)
+
+	var body := VBoxContainer.new()
+	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	body.add_theme_constant_override("separation", 14)
+	body_scroll.add_child(body)
+
+	harvest_result_illustration = TextureRect.new()
+	harvest_result_illustration.custom_minimum_size = Vector2(0, 520)
+	harvest_result_illustration.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	harvest_result_illustration.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	harvest_result_illustration.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	harvest_result_illustration.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	body.add_child(harvest_result_illustration)
+
+	harvest_result_label = Label.new()
+	harvest_result_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	harvest_result_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	UIKit.style_label(harvest_result_label, "body_dark")
+	body.add_child(harvest_result_label)
+
+	var continue_button := Button.new()
+	continue_button.text = "收下结果"
+	continue_button.custom_minimum_size = Vector2(0, 78)
+	UIKit.style_button(continue_button, "primary")
+	continue_button.pressed.connect(_on_harvest_result_continue_pressed)
+	content.add_child(continue_button)
+
 func _render() -> void:
 	var pond := game_state.current_pond
 	pond_name_label.text = "已包下：%s" % str(pond.get("name", "未承包鱼塘"))
 	cash_label.text = UIKit.format_run_status(game_state.day, game_state.cash)
 	estimate_label.text = "塘口估值：%d 元" % game_state.get_current_pond_estimated_value()
-	profit_label.text = "账面净赚：%+d 元" % game_state.get_mark_to_market_profit()
+	profit_label.text = "塘口账面：%+d 元" % game_state.get_mark_to_market_profit()
 
 	transfer_button.text = "转包脱手"
 	sell_one_net_button.text = "卖一网给别人"
@@ -258,9 +311,10 @@ func _on_reject_transfer_pressed() -> void:
 	_render()
 
 func _on_viewport_size_changed() -> void:
-	if transfer_overlay == null or not transfer_overlay.visible:
-		return
-	UIKit.layout_modal(self, transfer_dialog, 0.86, 980, Vector2i(340, 560), Vector2i(860, 1040))
+	if transfer_overlay != null and transfer_overlay.visible:
+		UIKit.layout_modal(self, transfer_dialog, 0.86, 980, Vector2i(340, 560), Vector2i(860, 1040))
+	if harvest_result_overlay != null and harvest_result_overlay.visible:
+		UIKit.layout_modal(self, harvest_result_dialog, 0.86, 1060, Vector2i(340, 700), Vector2i(860, 1160))
 
 func _on_sell_one_net_pressed() -> void:
 	_hide_detail_panels()
@@ -312,9 +366,37 @@ func _on_work_plan_pressed(plan_id: String) -> void:
 		message_label.text = "%s\n%s" % [str(result.get("text", "")), str(opportunities.get("message", ""))]
 		_show_choice_page()
 		_render()
+		_show_harvest_result(result)
 	else:
 		message_label.text = "本钱不够，干不了这个作业方案。"
 		_update_work_buttons()
+
+func _show_harvest_result(result: Dictionary) -> void:
+	var caught_fish_king := false
+	for item in Array(result.get("catch_details", [])):
+		if str(Dictionary(item).get("id", "")) == "fish_king":
+			caught_fish_king = true
+			break
+
+	var round_profit := int(result.get("fish_income", 0)) - int(result.get("work_cost", 0))
+	if caught_fish_king:
+		harvest_result_title.text = "鱼王出现！"
+		harvest_result_illustration.texture = FISH_KING_TEXTURE
+	elif round_profit > 0:
+		harvest_result_title.text = "这一网赚到了"
+		harvest_result_illustration.texture = EARN_MORE_TEXTURE
+	else:
+		harvest_result_title.text = "这一网没回本"
+		harvest_result_illustration.texture = EARN_LESS_TEXTURE
+
+	harvest_result_label.text = "%s\n本次赚亏 %+d 元" % [
+		str(result.get("fish_result_name", "下网结果")),
+		round_profit
+	]
+	UIKit.show_modal(self, harvest_result_overlay, harvest_result_dialog, 0.86, 1060, Vector2i(340, 700), Vector2i(860, 1160))
+
+func _on_harvest_result_continue_pressed() -> void:
+	UIKit.hide_modal(harvest_result_overlay)
 
 func _update_work_buttons() -> void:
 	var low_cost := game_state.get_work_cost("low")
