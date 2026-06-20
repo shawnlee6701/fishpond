@@ -1,12 +1,7 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/after_contract_choice.gd" id="1_after_contract_choice"]
-[ext_resource type="Texture2D" path="res://Design/Pond Check/screen_clean.png" id="2_pond_check"]
 [ext_resource type="Texture2D" path="res://assets/ui/parchment_background.png" id="3_background"]
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_pond_check"]
-atlas = ExtResource("2_pond_check")
-region = Rect2(225, 55, 790, 1135)
 
 [node name="AfterContractChoice" type="Control"]
 custom_minimum_size = Vector2(1080, 1920)
@@ -68,19 +63,12 @@ offset_bottom = -110.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Paper" type="TextureRect" parent="Panel"]
-layout_mode = 2
-mouse_filter = 2
-texture = SubResource("AtlasTexture_pond_check")
-expand_mode = 1
-stretch_mode = 0
-
 [node name="Margin" type="MarginContainer" parent="Panel"]
 layout_mode = 2
-theme_override_constants/margin_left = 108
-theme_override_constants/margin_top = 96
-theme_override_constants/margin_right = 108
-theme_override_constants/margin_bottom = 84
+theme_override_constants/margin_left = 54
+theme_override_constants/margin_top = 52
+theme_override_constants/margin_right = 54
+theme_override_constants/margin_bottom = 52
 
 [node name="Content" type="VBoxContainer" parent="Panel/Margin"]
 layout_mode = 2

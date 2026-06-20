@@ -65,12 +65,12 @@ func _ready() -> void:
 
 func _apply_ui_frame() -> void:
 	UIKit.apply_root(self)
-	panel.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+	UIKit.style_page_frame(panel)
 	var margin := panel.get_node_or_null("Margin") as MarginContainer
 	if margin != null:
-		margin.add_theme_constant_override("margin_left", 108)
+		margin.add_theme_constant_override("margin_left", 54)
 		margin.add_theme_constant_override("margin_top", 52)
-		margin.add_theme_constant_override("margin_right", 108)
+		margin.add_theme_constant_override("margin_right", 54)
 		margin.add_theme_constant_override("margin_bottom", 52)
 	UIKit.style_page_title(title_label)
 	UIKit.style_label(pond_name_label, "content_title")

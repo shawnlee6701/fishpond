@@ -40,7 +40,7 @@ func _ready() -> void:
 
 func _apply_ui_frame() -> void:
 	UIKit.apply_root(self)
-	panel.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+	UIKit.style_page_frame(panel)
 	UIKit.style_page_title(title_label)
 	UIKit.style_top_status(cash_label)
 	UIKit.style_label(detail_label, "body_dark")

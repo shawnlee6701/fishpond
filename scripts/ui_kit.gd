@@ -105,6 +105,14 @@ static func style_main_panel(panel: PanelContainer) -> void:
 static func style_card(card: PanelContainer, accent := GREEN) -> void:
 	card.add_theme_stylebox_override("panel", make_style(CARD, accent, 14, 3, true))
 
+static func style_page_frame(panel: PanelContainer, accent := GREEN) -> void:
+	var style := make_style(Color(0.97, 0.90, 0.72, 0.98), accent, 8, 5, true)
+	style.border_width_top = 10
+	style.shadow_color = Color(0.10, 0.08, 0.04, 0.30)
+	style.shadow_size = 14
+	style.shadow_offset = Vector2(0, 8)
+	panel.add_theme_stylebox_override("panel", style)
+
 static func style_message_panel(panel: PanelContainer) -> void:
 	panel.add_theme_stylebox_override("panel", make_style(Color(0.18, 0.30, 0.22, 1.0), Color(0.43, 0.62, 0.39, 1.0), 12, 2, false))
 

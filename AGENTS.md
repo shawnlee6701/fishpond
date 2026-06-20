@@ -10,7 +10,7 @@ This file is the live handoff guide for agents working on **这塘我包了**. K
 - UI copy pass completed for the first MVP loop: main menu, pond cards, inspection, contract confirmation, post-contract choices, transfer, one-net sale, work plans, and settlement now use clearer grounded Chinese business wording.
 - Gameplay UI now follows one 1080 × 1920 hierarchy: global day/cash status at the top, page title below it, bounded or scrollable content in the middle, and visible actions that stay inside the authored canvas.
 - Current README is minimal; treat this file as the primary working guide until README is expanded.
-- `assets/ui/homepage.png` is the homepage artwork; `assets/ui/button_board.png` is the transparent wood-board texture used by both homepage buttons; `assets/ui/parchment_background.png` is the unified background for the pond list and other routed gameplay screens; `Design/Pond card/screen_transparent.png` is the cleaned blank-card derivative of `Design/Pond card/screen.png` used as the stretchable nine-patch texture; `Design/Pond Check/screen_clean.png` is the cleaned transparent paper dossier shared by pond detail and the post-contract choice page; `Design/Popup/popup_clean.png` is the cleaned transparent paper texture used by the responsive contract and transfer popups; `Design/Other Person/screen_clean.png` is the cleaned transparent transfer-buyer illustration.
+- `assets/ui/homepage.png` is the homepage artwork; `assets/ui/button_board.png` is the transparent wood-board texture used by both homepage buttons; `assets/ui/parchment_background.png` is the unified background for the pond list and other routed gameplay screens; pond-list, pond-detail, post-contract, and settlement cards use native Godot panels rather than paper/card textures; `Design/Popup/popup_clean.png` is the cleaned transparent paper texture used by the responsive contract and transfer popups; `Design/Other Person/screen_clean.png` is the cleaned transparent transfer-buyer illustration.
 - Result illustrations use cleaned transparent derivatives: `Design/Catch Fish King/screen_clean.png`, `Design/Earn More/screen_clean.png`, `Design/Earn Less/screen_clean.png`, `Design/Win More/screen_clean.png`, `Design/Win Less/screen_clean.png`, and `Design/Bankrupt/screen_clean.png`. Regenerate them from the matching `screen.png` sources with `python3 tools/clean_checkerboard_assets.py`.
 - Other asset folders remain placeholders: `assets/ponds`, `assets/effects`, `assets/fish`.
 
@@ -63,7 +63,7 @@ This file is the live handoff guide for agents working on **这塘我包了**. K
 - `low` and `standard` can be repeated while cash allows.
 - Selling one net can happen at most once per round.
 - The post-contract player-facing choices should not include an abandon / "认亏走人" option; use transfer as the exit path.
-- On the post-contract choice page, keep the operation title outside the paper below the global status, keep pond figures inside the paper's upper safe area, let feedback use the flexible middle space, and anchor the three disposal buttons together at the bottom.
+- On the post-contract choice page, keep the operation title outside the framed card below the global status, keep pond figures inside the card's upper safe area, let feedback use the flexible middle space, and anchor the three disposal buttons together at the bottom.
 - Choosing "自己下网" opens a dedicated work-plan page: the original transfer/sell/self-fishing buttons are hidden, and the three work plans share the available page height equally.
 - Settlement net profit currently excludes the already-deducted contract fee and reports it separately as "承包费：已在承包时扣除".
 - Continue restores the latest pond-list checkpoint; incomplete inspection, contract, and harvest actions are intentionally not persisted.
@@ -105,7 +105,7 @@ This file is the live handoff guide for agents working on **这塘我包了**. K
 - Prefer reusing `FishPoolUIKit` / `scripts/ui_kit.gd` for panel, card, button, chip, and label styling before adding one-off scene styles.
 - Keep screen layouts mobile-first: narrow safe margins, scroll long content, short card copy, and large bottom-priority touch targets.
 - Treat 1080 × 1920 as the authored UI canvas; align dynamic card text to painted artwork at that logical resolution and let Godot scale the canvas for devices.
-- Keep every routed gameplay page in this order: global run status, page title outside the paper, page-specific paper content, then operable actions. Keep every custom popup in this order: title, highlighted decision/result summary when applicable, bounded/scrollable body, then operable actions.
+- Keep every routed gameplay page in this order: global run status, page title outside the framed card, page-specific card content, then operable actions. Keep every custom popup in this order: title, highlighted decision/result summary when applicable, bounded/scrollable body, then operable actions.
 - Use shared label roles instead of one-off typography. Important prices, estimates, and profit/loss values use `style_highlight_label`; supporting copy uses the secondary text role. Do not render player-facing text below `FishPoolUIKit.FONT_MIN`.
 - Use `primary` for the decisive action, `secondary` for normal in-flow choices, and `ghost` for back/cancel/decline actions so secondary operations remain visibly distinct without leaving the paper-and-ink visual language.
 - Put global run values such as day and player cash at the top of each screen before the page title or local pond/result details.
@@ -153,23 +153,23 @@ For gameplay/UI changes, also run the project in the Godot editor or player and 
 - “重新开始” clears the old checkpoint and starts from configured initial cash/day.
 - Pond list shows 3 ponds.
 - Pond list uses `assets/ui/parchment_background.png`, with one shared day/cash status bar followed by “今日鱼塘” at the top.
-- Pond cards use `Design/Pond card/screen_transparent.png`, which removes the baked checkerboard fringe from the original `screen.png` while preserving its artwork.
+- Pond cards use a clean native Godot panel with a pond-type accent border; no card-image texture is applied.
 - Pond-card content is centered for legibility: centered pond name, three horizontal tags, age/depth on one row, and centered water and rumor text.
 - The quote is a highlighted horizontal badge at the upper right; “进塘验货” is a standard high-contrast red button with white text.
 - At the 1080 × 1920 design resolution, each pond card is 540 logical pixels tall so the three daily cards fill the available vertical space on one screen.
-- Pond detail uses the cropped transparent `Design/Pond Check/screen_clean.png` dossier as its information-card background; inspection actions use standard `FishPoolUIKit` buttons and no hand-drawn button textures.
+- Pond detail uses the shared native framed page card; inspection actions use standard `FishPoolUIKit` buttons and no hand-drawn textures.
 - At 1080 × 1920, pond detail uses 70 px horizontal card margins, separate top status/card/bottom-action zones, and a bottom safe area; the card-internal inspection region scrolls independently when needed.
-- Pond detail, post-contract choice/work-plan, and settlement titles sit outside their paper dossiers between the global status and paper content; pond names and result details remain inside the paper.
-- Each inspection result appears only beneath its matching button; the inspection list scrolls inside the paper card so multiple expanded results cannot overflow the card or cover the bottom actions.
+- Pond detail, post-contract choice/work-plan, and settlement titles sit outside their framed cards between the global status and page content; pond names and result details remain inside the card.
+- Each inspection result appears only beneath its matching button; the inspection list scrolls inside the framed card so multiple expanded results cannot overflow the card or cover the bottom actions.
 - Backtracking from pond detail preserves the same day's ponds.
 - Each inspection tool deducts the expected cash and cannot be reused.
 - Contract confirmation blocks insufficient remaining working capital.
 - Contract confirmation uses `Design/Popup/popup_clean.png`, stays centered, and resizes with the game window without stretching its paper border.
 - All confirmation popups use an opaque-input modal overlay with a dark mask; popup cards remain inside a 24 px viewport safe area and oversized body content scrolls instead of expanding the card.
 - Contract and transfer popups both visibly retain title, highlighted decision value, scroll-safe content, and accept/cancel actions at 1080 × 1920; the harvest-result popup highlights per-net profit/loss above its dismiss action.
-- The post-contract choice page uses `Design/Pond Check/screen_clean.png` as its paper dossier background.
+- Pond detail, post-contract choice/work-plan, and settlement use the same native framed page card with no large paper-sticker texture.
 - “自己下网” switches to a dedicated page state with a return control and three equal-height work-plan buttons; the original bottom choice buttons must not remain visible.
-- The default post-contract choice page keeps “转包脱手” / “卖一网” / “自己下网” grouped at the bottom of the paper instead of directly under the title block.
+- The default post-contract choice page keeps “转包脱手” / “卖一网” / “自己下网” grouped at the bottom of the framed card instead of directly under the title block.
 - “转包脱手” opens a centered responsive popup using `Design/Popup/popup_clean.png`; a full-screen dim mask blocks the underlying page while open, and the offer appears above the cleaned buyer illustration and the speech bubble “兄弟一场，把这塘包给我”, with accept/reject actions at the bottom.
 - After contracting, low/standard/full work buttons reflect available cash.
 - Non-final harvest can create market opportunities and continue the round.
