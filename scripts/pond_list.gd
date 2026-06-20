@@ -2,7 +2,6 @@ extends Control
 
 const PondGeneratorScript := preload("res://scripts/pond_generator.gd")
 const UIKit := preload("res://scripts/ui_kit.gd")
-const POND_CARD_TEXTURE := preload("res://Design/Pond card/screen_transparent.png")
 
 @onready var title_label: Label = $Panel/Margin/Content/Title
 @onready var status_label: Label = $Panel/Margin/Content/StatusLabel
@@ -52,7 +51,7 @@ func _create_pond_card(pond: Dictionary) -> Control:
 
 	var background := PanelContainer.new()
 	background.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	background.add_theme_stylebox_override("panel", _make_pond_card_style())
+	background.add_theme_stylebox_override("panel", _make_pond_card_style(pond))
 	card.add_child(background)
 	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
@@ -163,26 +162,14 @@ func _make_quote_badge(quote_price: int) -> PanelContainer:
 	badge.add_child(label)
 	return badge
 
-func _make_pond_card_style() -> StyleBoxTexture:
-	return _make_texture_style(
-		POND_CARD_TEXTURE,
-		Rect2(75, 315, 1110, 580),
-		Vector4(100, 80, 100, 85)
+func _make_pond_card_style(pond: Dictionary) -> StyleBoxFlat:
+	return UIKit.make_style(
+		Color(0.98, 0.92, 0.76, 0.96),
+		_get_pond_accent(pond),
+		22,
+		3,
+		true
 	)
-
-func _make_texture_style(texture: Texture2D, region: Rect2, margins: Vector4, modulate_color := Color.WHITE) -> StyleBoxTexture:
-	var cropped := AtlasTexture.new()
-	cropped.atlas = texture
-	cropped.region = region
-
-	var style := StyleBoxTexture.new()
-	style.texture = cropped
-	style.texture_margin_left = margins.x
-	style.texture_margin_top = margins.y
-	style.texture_margin_right = margins.z
-	style.texture_margin_bottom = margins.w
-	style.modulate_color = modulate_color
-	return style
 
 func _get_pond_accent(pond: Dictionary) -> Color:
 	match str(pond.get("pond_type", pond.get("pond_type_id", ""))):
