@@ -5,8 +5,7 @@ const UIKit := preload("res://scripts/ui_kit.gd")
 const POND_CARD_TEXTURE := preload("res://Design/Pond card/screen_transparent.png")
 
 @onready var title_label: Label = $Panel/Margin/Content/Title
-@onready var day_label: Label = $Panel/Margin/Content/StatusRow/DayLabel
-@onready var cash_label: Label = $Panel/Margin/Content/StatusRow/CashLabel
+@onready var status_label: Label = $Panel/Margin/Content/StatusLabel
 @onready var panel: PanelContainer = $Panel
 @onready var card_list: VBoxContainer = $Panel/Margin/Content/Scroll/CardList
 
@@ -28,8 +27,7 @@ func _apply_ui_frame() -> void:
 	UIKit.apply_root(self)
 	panel.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	UIKit.style_page_title(title_label)
-	UIKit.style_top_status(day_label)
-	UIKit.style_top_status(cash_label)
+	UIKit.style_top_status(status_label)
 	card_list.add_theme_constant_override("separation", 18)
 
 func _render_ponds() -> void:
@@ -39,8 +37,7 @@ func _render_ponds() -> void:
 		game_state.daily_ponds_day = game_state.day
 
 	var ponds := game_state.daily_ponds
-	day_label.text = "第 %d 天" % game_state.day
-	cash_label.text = "本金 %d 元" % game_state.cash
+	status_label.text = UIKit.format_run_status(game_state.day, game_state.cash)
 
 	for child in card_list.get_children():
 		child.queue_free()
@@ -94,7 +91,7 @@ func _create_pond_card(pond: Dictionary) -> Control:
 	info.text = "塘龄：%s（%d 年）" % [pond["age_label"], pond["age_years"]]
 	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	info.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	info.add_theme_font_size_override("font_size", 25)
+	info.add_theme_font_size_override("font_size", UIKit.FONT_BODY)
 	info.add_theme_color_override("font_color", UIKit.INK)
 	info_row.add_child(info)
 
@@ -102,14 +99,14 @@ func _create_pond_card(pond: Dictionary) -> Control:
 	depth.text = "水深：%.1f 米" % float(pond["depth_meters"])
 	depth.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	depth.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	depth.add_theme_font_size_override("font_size", 25)
+	depth.add_theme_font_size_override("font_size", UIKit.FONT_BODY)
 	depth.add_theme_color_override("font_color", UIKit.INK)
 	info_row.add_child(depth)
 
 	var water := Label.new()
 	water.text = "水色：%s" % pond["water_state"]
 	water.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	water.add_theme_font_size_override("font_size", 25)
+	water.add_theme_font_size_override("font_size", UIKit.FONT_BODY)
 	water.add_theme_color_override("font_color", UIKit.INK)
 	content.add_child(water)
 
@@ -117,7 +114,7 @@ func _create_pond_card(pond: Dictionary) -> Control:
 	rumor.text = "“%s”" % pond["rumor"]
 	rumor.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	rumor.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	rumor.add_theme_font_size_override("font_size", 24)
+	rumor.add_theme_font_size_override("font_size", UIKit.FONT_SECONDARY)
 	rumor.add_theme_color_override("font_color", UIKit.MUTED)
 	content.add_child(rumor)
 

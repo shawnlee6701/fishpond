@@ -2,8 +2,9 @@ extends Control
 
 const UIKit := preload("res://scripts/ui_kit.gd")
 
-@onready var title_label: Label = $Panel/Margin/Content/TitleLabel
+@onready var title_label: Label = $TitleLabel
 @onready var detail_label: Label = $Panel/Margin/Content/Scroll/DetailLabel
+@onready var summary_label: Label = $Panel/Margin/Content/SummaryLabel
 @onready var cash_label: Label = $CashLabel
 @onready var panel: PanelContainer = $Panel
 @onready var result_illustration: TextureRect = $Panel/Margin/Content/ResultIllustration
@@ -43,10 +44,11 @@ func _apply_ui_frame() -> void:
 	UIKit.style_page_title(title_label)
 	UIKit.style_top_status(cash_label)
 	UIKit.style_label(detail_label, "body_dark")
+	UIKit.style_highlight_label(summary_label, "gold")
 	UIKit.style_button(next_day_button, "gold")
 	UIKit.style_card(fish_king_panel, UIKit.GOLD)
-	next_day_button.custom_minimum_size = Vector2(0, 88)
-	detail_label.add_theme_font_size_override("font_size", 25)
+	next_day_button.custom_minimum_size = Vector2(0, UIKit.PAGE_ACTION_HEIGHT)
+	detail_label.add_theme_font_size_override("font_size", UIKit.FONT_BODY)
 
 func _render() -> void:
 	var result := game_state.last_result
@@ -77,7 +79,9 @@ func _render() -> void:
 	lines.append("卖一网回款：+%d 元" % game_state.one_net_income)
 	lines.append("转包回款：+%d 元" % game_state.transfer_income)
 	lines.append("卖鱼回款：+%d 元" % game_state.fish_income)
-	lines.append("承包后经营账：%s" % _format_profit_line(game_state.get_net_profit()))
+	var net_profit := game_state.get_net_profit()
+	summary_label.text = "承包后经营账：%s" % _format_profit_line(net_profit)
+	UIKit.style_highlight_label(summary_label, "positive" if net_profit >= 0 else "negative")
 
 	detail_label.text = "\n".join(lines)
 	cash_label.text = UIKit.format_run_status(game_state.day, game_state.cash)

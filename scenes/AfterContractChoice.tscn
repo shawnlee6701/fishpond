@@ -43,13 +43,26 @@ text = "第 1 天  |  本钱 30000 元"
 horizontal_alignment = 1
 vertical_alignment = 1
 
+[node name="TitleLabel" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 72.0
+offset_top = 112.0
+offset_right = -72.0
+offset_bottom = 194.0
+grow_horizontal = 2
+text = "塘已经包下"
+horizontal_alignment = 1
+vertical_alignment = 1
+
 [node name="Panel" type="PanelContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 72.0
-offset_top = 110.0
+offset_top = 210.0
 offset_right = -72.0
 offset_bottom = -110.0
 grow_horizontal = 2
@@ -72,12 +85,6 @@ theme_override_constants/margin_bottom = 84
 [node name="Content" type="VBoxContainer" parent="Panel/Margin"]
 layout_mode = 2
 theme_override_constants/separation = 16
-
-[node name="TitleLabel" type="Label" parent="Panel/Margin/Content"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 44
-text = "塘已经包下"
-horizontal_alignment = 1
 
 [node name="PondNameLabel" type="Label" parent="Panel/Margin/Content"]
 layout_mode = 2

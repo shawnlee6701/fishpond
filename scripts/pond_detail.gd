@@ -6,6 +6,7 @@ const UIKit := preload("res://scripts/ui_kit.gd")
 const CONTRACT_POPUP_TEXTURE := preload("res://Design/Popup/popup_clean.png")
 
 @onready var title_label: Label = $Panel/Content/TitleLabel
+@onready var page_title_label: Label = $PageTitleLabel
 @onready var cash_label: Label = $CashLabel
 @onready var info_label: Label = $Panel/Content/InfoLabel
 @onready var quote_label: Label = $Panel/Content/QuoteLabel
@@ -22,6 +23,7 @@ var tools: Array = []
 var inspection_system := InspectionSystemScript.new()
 var contract_overlay: Control
 var contract_dialog: PanelContainer
+var contract_dialog_summary: Label
 var contract_dialog_message: Label
 var contract_dialog_ok_button: Button
 var contract_dialog_preferred_height := 500
@@ -50,14 +52,14 @@ func _ready() -> void:
 func _apply_ui_frame() -> void:
 	UIKit.apply_root(self)
 	panel.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
-	UIKit.style_page_title(title_label)
+	UIKit.style_page_title(page_title_label)
+	UIKit.style_label(title_label, "content_title")
 	UIKit.style_top_status(cash_label)
 	UIKit.style_label(info_label, "body_dark")
-	UIKit.style_label(quote_label, "body_dark")
+	UIKit.style_highlight_label(quote_label, "price")
 	UIKit.style_button(back_button, "ghost")
 	UIKit.style_button(contract_button, "primary")
-	title_label.add_theme_font_size_override("font_size", 48)
-	quote_label.add_theme_font_size_override("font_size", 24)
+	title_label.add_theme_font_size_override("font_size", 42)
 
 func _render_detail() -> void:
 	title_label.text = str(pond.get("name", "未选择鱼塘"))
@@ -85,7 +87,7 @@ func _render_inspection_buttons() -> void:
 
 		var button := Button.new()
 		button.text = "%s  |  %d 元" % [tool["name"], int(tool["cost"])]
-		button.custom_minimum_size = Vector2(0, 78)
+		button.custom_minimum_size = Vector2(0, UIKit.MODAL_ACTION_HEIGHT)
 		UIKit.style_button(button, "secondary")
 		button.disabled = game_state.has_inspection_result(tool_id)
 		if button.disabled:
@@ -97,7 +99,7 @@ func _render_inspection_buttons() -> void:
 		feedback.text = game_state.get_inspection_feedback(tool_id)
 		feedback.visible = not feedback.text.is_empty()
 		feedback.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		feedback.add_theme_font_size_override("font_size", 19)
+		feedback.add_theme_font_size_override("font_size", UIKit.FONT_SECONDARY)
 		feedback.add_theme_color_override("font_color", UIKit.MUTED)
 		section.add_child(feedback)
 		inspection_feedback_labels[tool_id] = feedback
@@ -164,11 +166,17 @@ func _create_contract_dialog() -> void:
 	UIKit.style_modal_title(dialog_title)
 	content.add_child(dialog_title)
 
+	contract_dialog_summary = Label.new()
+	contract_dialog_summary.custom_minimum_size = Vector2(0, 64)
+	contract_dialog_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	UIKit.style_highlight_label(contract_dialog_summary, "gold")
+	content.add_child(contract_dialog_summary)
+
 	contract_dialog_message = Label.new()
 	contract_dialog_message.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	contract_dialog_message.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	contract_dialog_message.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	contract_dialog_message.add_theme_font_size_override("font_size", 22)
+	contract_dialog_message.add_theme_font_size_override("font_size", UIKit.FONT_BODY)
 	contract_dialog_message.add_theme_color_override("font_color", Color("392d24"))
 	var message_scroll := ScrollContainer.new()
 	message_scroll.name = "MessageScroll"
@@ -183,7 +191,7 @@ func _create_contract_dialog() -> void:
 
 	var cancel_button := Button.new()
 	cancel_button.text = "再想想"
-	cancel_button.custom_minimum_size = Vector2(0, 76)
+	cancel_button.custom_minimum_size = Vector2(0, UIKit.MODAL_ACTION_HEIGHT)
 	cancel_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	UIKit.style_button(cancel_button, "ghost")
 	cancel_button.pressed.connect(_close_contract_dialog)
@@ -191,7 +199,7 @@ func _create_contract_dialog() -> void:
 
 	contract_dialog_ok_button = Button.new()
 	contract_dialog_ok_button.text = "就包这塘"
-	contract_dialog_ok_button.custom_minimum_size = Vector2(0, 76)
+	contract_dialog_ok_button.custom_minimum_size = Vector2(0, UIKit.MODAL_ACTION_HEIGHT)
 	contract_dialog_ok_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	UIKit.style_button(contract_dialog_ok_button, "primary")
 	contract_dialog_ok_button.pressed.connect(_on_contract_dialog_confirmed)
@@ -212,6 +220,8 @@ func _show_contract_dialog() -> void:
 		lines.append("做水产生意不能把本钱一次压光，先换一口塘看看。")
 
 	contract_dialog_message.text = "\n".join(lines)
+	contract_dialog_summary.text = "包下后剩余：%d 元" % int(preview.get("remaining_cash", 0))
+	UIKit.style_highlight_label(contract_dialog_summary, "positive" if can_contract else "negative")
 	contract_dialog_ok_button.disabled = not can_contract
 	_show_contract_popup(500)
 

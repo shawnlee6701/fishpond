@@ -40,18 +40,31 @@ offset_right = -42.0
 offset_bottom = 96.0
 grow_horizontal = 2
 theme_override_font_sizes/font_size = 27
-text = "第 1 天  |  本金 30000 元"
+text = "第 1 天  |  本钱 30000 元"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="PageTitleLabel" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 72.0
+offset_top = 112.0
+offset_right = -72.0
+offset_bottom = 194.0
+grow_horizontal = 2
+text = "进塘验货"
 horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="Panel" type="PanelContainer" parent="."]
-custom_minimum_size = Vector2(940, 1470)
+custom_minimum_size = Vector2(940, 1430)
 layout_mode = 1
 anchors_preset = 10
 anchor_left = 0.5
 anchor_right = 0.5
 offset_left = -470.0
-offset_top = 110.0
+offset_top = 210.0
 offset_right = 470.0
 offset_bottom = 1640.0
 grow_horizontal = 2
@@ -70,9 +83,9 @@ mouse_filter = 1
 [node name="TitleLabel" type="Label" parent="Panel/Content"]
 layout_mode = 0
 offset_left = 145.0
-offset_top = 64.0
+offset_top = 46.0
 offset_right = 690.0
-offset_bottom = 140.0
+offset_bottom = 116.0
 theme_override_font_sizes/font_size = 48
 text = "鱼塘详情"
 horizontal_alignment = 1
@@ -81,9 +94,9 @@ vertical_alignment = 1
 [node name="QuoteLabel" type="Label" parent="Panel/Content"]
 layout_mode = 0
 offset_left = 145.0
-offset_top = 133.0
+offset_top = 124.0
 offset_right = 690.0
-offset_bottom = 183.0
+offset_bottom = 188.0
 theme_override_font_sizes/font_size = 24
 text = "¥ 00000"
 horizontal_alignment = 1
@@ -92,9 +105,9 @@ vertical_alignment = 1
 [node name="InfoLabel" type="Label" parent="Panel/Content"]
 layout_mode = 0
 offset_left = 133.0
-offset_top = 195.0
+offset_top = 202.0
 offset_right = 807.0
-offset_bottom = 575.0
+offset_bottom = 515.0
 theme_override_font_sizes/font_size = 27
 text = "塘口信息"
 vertical_alignment = 1
@@ -103,9 +116,9 @@ autowrap_mode = 2
 [node name="InspectionScroll" type="ScrollContainer" parent="Panel/Content"]
 layout_mode = 0
 offset_left = 150.0
-offset_top = 585.0
+offset_top = 530.0
 offset_right = 790.0
-offset_bottom = 1430.0
+offset_bottom = 1325.0
 horizontal_scroll_mode = 0
 follow_focus = true
 

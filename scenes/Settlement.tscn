@@ -47,13 +47,26 @@ text = "第 1 天  |  本钱 30000 元"
 horizontal_alignment = 1
 vertical_alignment = 1
 
+[node name="TitleLabel" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 72.0
+offset_top = 112.0
+offset_right = -72.0
+offset_bottom = 194.0
+grow_horizontal = 2
+text = "本局结算"
+horizontal_alignment = 1
+vertical_alignment = 1
+
 [node name="Panel" type="PanelContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 72.0
-offset_top = 110.0
+offset_top = 210.0
 offset_right = -72.0
 offset_bottom = -110.0
 grow_horizontal = 2
@@ -77,12 +90,6 @@ theme_override_constants/margin_bottom = 52
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="TitleLabel" type="Label" parent="Panel/Margin/Content"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 44
-text = "本局结算"
-horizontal_alignment = 1
-
 [node name="ResultIllustration" type="TextureRect" parent="Panel/Margin/Content"]
 custom_minimum_size = Vector2(0, 440)
 layout_mode = 2
@@ -90,6 +97,13 @@ mouse_filter = 2
 texture = ExtResource("5_win_more")
 expand_mode = 1
 stretch_mode = 5
+
+[node name="SummaryLabel" type="Label" parent="Panel/Margin/Content"]
+custom_minimum_size = Vector2(0, 62)
+layout_mode = 2
+text = "承包后经营账：+0 元"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="FishKingPanel" type="PanelContainer" parent="Panel/Margin/Content"]
 visible = false
@@ -149,7 +163,7 @@ horizontal_alignment = 1
 autowrap_mode = 3
 
 [node name="NextDayButton" type="Button" parent="Panel/Margin/Content"]
-custom_minimum_size = Vector2(0, 88)
+custom_minimum_size = Vector2(0, 96)
 layout_mode = 2
 theme_override_font_sizes/font_size = 30
 text = "下一地方"

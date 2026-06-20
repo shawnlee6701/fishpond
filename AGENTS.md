@@ -41,6 +41,7 @@ This file is the live handoff guide for agents working on **这塘我包了**. K
 - `scripts/balance_simulator.gd` runs headless multi-run strategy simulations for ROI, bankrupt rate, cash percentiles, and fish-king exposure.
 - `scripts/ui_kit.gd` owns the shared mobile-first UI frame: phone-safe panel margins, compact card/button/message styles, chips, and screen label roles.
 - `scripts/ui_kit.gd` also owns the authored 1080 × 1920 design constants plus shared top-status, page-title, and modal-title styling.
+- `scripts/ui_kit.gd` defines the shared information hierarchy: 24 px minimum readable text, 27 px body text, 31 px section text, 32 px highlighted values, and 44 px page titles on the 1080 × 1920 canvas.
 - `scripts/ui_kit.gd` also owns the shared in-page modal layer: bounded paper cards, full-screen input-blocking masks, resize-safe centering, and scroll protection for oversized popup content.
 - `tools/balance-lab/` is a static local web tuning console for adjusting `data/balance_rules.json` knobs and running browser-side simulations.
 - `scenes/*.tscn` hold the screen layouts. Keep node paths aligned with each script's `@onready` references.
@@ -62,7 +63,7 @@ This file is the live handoff guide for agents working on **这塘我包了**. K
 - `low` and `standard` can be repeated while cash allows.
 - Selling one net can happen at most once per round.
 - The post-contract player-facing choices should not include an abandon / "认亏走人" option; use transfer as the exit path.
-- On the post-contract choice page, keep the title and pond figures inside the paper's upper safe area, let feedback use the flexible middle space, and anchor the three disposal buttons together at the bottom.
+- On the post-contract choice page, keep the operation title outside the paper below the global status, keep pond figures inside the paper's upper safe area, let feedback use the flexible middle space, and anchor the three disposal buttons together at the bottom.
 - Choosing "自己下网" opens a dedicated work-plan page: the original transfer/sell/self-fishing buttons are hidden, and the three work plans share the available page height equally.
 - Settlement net profit currently excludes the already-deducted contract fee and reports it separately as "承包费：已在承包时扣除".
 - Continue restores the latest pond-list checkpoint; incomplete inspection, contract, and harvest actions are intentionally not persisted.
@@ -104,7 +105,9 @@ This file is the live handoff guide for agents working on **这塘我包了**. K
 - Prefer reusing `FishPoolUIKit` / `scripts/ui_kit.gd` for panel, card, button, chip, and label styling before adding one-off scene styles.
 - Keep screen layouts mobile-first: narrow safe margins, scroll long content, short card copy, and large bottom-priority touch targets.
 - Treat 1080 × 1920 as the authored UI canvas; align dynamic card text to painted artwork at that logical resolution and let Godot scale the canvas for devices.
-- Keep every routed gameplay page in this order: global run status, page title, content, then operable actions. Keep every custom popup in this order: title, bounded/scrollable body, then operable actions.
+- Keep every routed gameplay page in this order: global run status, page title outside the paper, page-specific paper content, then operable actions. Keep every custom popup in this order: title, highlighted decision/result summary when applicable, bounded/scrollable body, then operable actions.
+- Use shared label roles instead of one-off typography. Important prices, estimates, and profit/loss values use `style_highlight_label`; supporting copy uses the secondary text role. Do not render player-facing text below `FishPoolUIKit.FONT_MIN`.
+- Use `primary` for the decisive action, `secondary` for normal in-flow choices, and `ghost` for back/cancel/decline actions so secondary operations remain visibly distinct without leaving the paper-and-ink visual language.
 - Put global run values such as day and player cash at the top of each screen before the page title or local pond/result details.
 - Keep economic changes data-driven where practical.
 - Keep random mechanics readable and bounded with `clampf`, `clampi`, or explicit min/max logic.
@@ -149,20 +152,21 @@ For gameplay/UI changes, also run the project in the Godot editor or player and 
 - “开始包塘” / “继续包塘” restores saved day/cash/pond offers when a checkpoint exists and otherwise starts fresh.
 - “重新开始” clears the old checkpoint and starts from configured initial cash/day.
 - Pond list shows 3 ponds.
-- Pond list uses `assets/ui/parchment_background.png`, with “今日鱼塘” plus plain day and cash text at the top.
+- Pond list uses `assets/ui/parchment_background.png`, with one shared day/cash status bar followed by “今日鱼塘” at the top.
 - Pond cards use `Design/Pond card/screen_transparent.png`, which removes the baked checkerboard fringe from the original `screen.png` while preserving its artwork.
 - Pond-card content is centered for legibility: centered pond name, three horizontal tags, age/depth on one row, and centered water and rumor text.
 - The quote is a highlighted horizontal badge at the upper right; “进塘验货” is a standard high-contrast red button with white text.
 - At the 1080 × 1920 design resolution, each pond card is 540 logical pixels tall so the three daily cards fill the available vertical space on one screen.
 - Pond detail uses the cropped transparent `Design/Pond Check/screen_clean.png` dossier as its information-card background; inspection actions use standard `FishPoolUIKit` buttons and no hand-drawn button textures.
 - At 1080 × 1920, pond detail uses 70 px horizontal card margins, separate top status/card/bottom-action zones, and a bottom safe area; the card-internal inspection region scrolls independently when needed.
+- Pond detail, post-contract choice/work-plan, and settlement titles sit outside their paper dossiers between the global status and paper content; pond names and result details remain inside the paper.
 - Each inspection result appears only beneath its matching button; the inspection list scrolls inside the paper card so multiple expanded results cannot overflow the card or cover the bottom actions.
 - Backtracking from pond detail preserves the same day's ponds.
 - Each inspection tool deducts the expected cash and cannot be reused.
 - Contract confirmation blocks insufficient remaining working capital.
 - Contract confirmation uses `Design/Popup/popup_clean.png`, stays centered, and resizes with the game window without stretching its paper border.
 - All confirmation popups use an opaque-input modal overlay with a dark mask; popup cards remain inside a 24 px viewport safe area and oversized body content scrolls instead of expanding the card.
-- Contract and transfer popups both visibly retain title, scroll-safe content, and accept/cancel actions at 1080 × 1920.
+- Contract and transfer popups both visibly retain title, highlighted decision value, scroll-safe content, and accept/cancel actions at 1080 × 1920; the harvest-result popup highlights per-net profit/loss above its dismiss action.
 - The post-contract choice page uses `Design/Pond Check/screen_clean.png` as its paper dossier background.
 - “自己下网” switches to a dedicated page state with a return control and three equal-height work-plan buttons; the original bottom choice buttons must not remain visible.
 - The default post-contract choice page keeps “转包脱手” / “卖一网” / “自己下网” grouped at the bottom of the paper instead of directly under the title block.

@@ -20,13 +20,15 @@ func _ready() -> void:
 
 func _apply_ui_frame() -> void:
 	UIKit.apply_root(self)
-	_style_wood_button(start_button)
-	_style_wood_button(restart_button)
+	_style_wood_button(start_button, false)
+	_style_wood_button(restart_button, true)
 
-func _style_wood_button(button: Button) -> void:
-	button.add_theme_stylebox_override("normal", _make_wood_style(Color.WHITE))
-	button.add_theme_stylebox_override("hover", _make_wood_style(Color(1.0, 0.94, 0.80, 1.0)))
-	button.add_theme_stylebox_override("pressed", _make_wood_style(Color(0.76, 0.69, 0.56, 1.0)))
+func _style_wood_button(button: Button, secondary: bool) -> void:
+	var normal_tint := Color(0.78, 0.73, 0.62, 1.0) if secondary else Color.WHITE
+	var hover_tint := Color(0.88, 0.82, 0.68, 1.0) if secondary else Color(1.0, 0.94, 0.80, 1.0)
+	button.add_theme_stylebox_override("normal", _make_wood_style(normal_tint))
+	button.add_theme_stylebox_override("hover", _make_wood_style(hover_tint))
+	button.add_theme_stylebox_override("pressed", _make_wood_style(Color(0.68, 0.63, 0.53, 1.0)))
 	button.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
 	button.add_theme_color_override("font_color", UIKit.INK)
 	button.add_theme_color_override("font_hover_color", UIKit.INK)

@@ -14,6 +14,14 @@ const GREEN_LIGHT := Color(0.22, 0.53, 0.34, 1.0)
 const GOLD := Color(0.92, 0.62, 0.20, 1.0)
 const RED := Color(0.66, 0.16, 0.11, 1.0)
 const DISABLED := Color(0.42, 0.43, 0.38, 1.0)
+const FONT_MIN := 24
+const FONT_BODY := 27
+const FONT_SECONDARY := 24
+const FONT_SECTION := 31
+const FONT_IMPORTANT := 32
+const FONT_PAGE_TITLE := 44
+const PAGE_ACTION_HEIGHT := 96
+const MODAL_ACTION_HEIGHT := 84
 const DESIGN_SIZE := Vector2(1080, 1920)
 const PAGE_SAFE_X := 52.0
 const PAGE_TOP := 32.0
@@ -50,14 +58,40 @@ static func style_top_status(label: Label) -> void:
 	label.add_theme_stylebox_override("normal", style)
 
 static func style_page_title(label: Label) -> void:
-	style_label(label, "panel_title")
+	label.add_theme_color_override("font_color", RED)
+	label.add_theme_color_override("font_outline_color", Color(1.0, 0.90, 0.68, 0.92))
+	label.add_theme_constant_override("outline_size", 6)
+	label.add_theme_font_size_override("font_size", FONT_PAGE_TITLE)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 
 static func style_modal_title(label: Label) -> void:
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.add_theme_font_size_override("font_size", 34)
+	label.add_theme_font_size_override("font_size", 38)
 	label.add_theme_color_override("font_color", Color("6d241f"))
+
+static func style_highlight_label(label: Label, tone := "gold") -> void:
+	var border := GOLD
+	var font := INK
+	if tone == "positive":
+		border = GREEN_LIGHT
+		font = GREEN
+	elif tone == "negative":
+		border = RED
+		font = RED
+	elif tone == "price":
+		border = GOLD
+		font = RED
+	var style := make_style(Color(1.0, 0.92, 0.70, 0.92), border, 14, 3, true)
+	style.content_margin_left = 18.0
+	style.content_margin_top = 8.0
+	style.content_margin_right = 18.0
+	style.content_margin_bottom = 8.0
+	label.add_theme_stylebox_override("normal", style)
+	label.add_theme_color_override("font_color", font)
+	label.add_theme_font_size_override("font_size", FONT_IMPORTANT)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 
 static func style_main_panel(panel: PanelContainer) -> void:
 	panel.add_theme_stylebox_override("panel", make_style(SURFACE, Color(0.61, 0.45, 0.25), 20, 3, true))
@@ -114,22 +148,25 @@ static func style_label(label: Label, role := "body") -> void:
 		label.add_theme_font_size_override("font_size", 56)
 	elif role == "panel_title":
 		label.add_theme_color_override("font_color", RED)
-		label.add_theme_font_size_override("font_size", 44)
+		label.add_theme_font_size_override("font_size", FONT_PAGE_TITLE)
+	elif role == "content_title":
+		label.add_theme_color_override("font_color", INK)
+		label.add_theme_font_size_override("font_size", 40)
 	elif role == "panel_stat":
 		label.add_theme_color_override("font_color", INK)
-		label.add_theme_font_size_override("font_size", 27)
+		label.add_theme_font_size_override("font_size", FONT_BODY)
 	elif role == "top_status":
 		label.add_theme_color_override("font_color", Color(0.08, 0.18, 0.12, 1.0))
-		label.add_theme_font_size_override("font_size", 27)
+		label.add_theme_font_size_override("font_size", FONT_BODY)
 	elif role == "section":
 		label.add_theme_color_override("font_color", GREEN)
-		label.add_theme_font_size_override("font_size", 31)
+		label.add_theme_font_size_override("font_size", FONT_SECTION)
 	elif role == "body_dark":
 		label.add_theme_color_override("font_color", INK)
-		label.add_theme_font_size_override("font_size", 27)
+		label.add_theme_font_size_override("font_size", FONT_BODY)
 	elif role == "muted":
 		label.add_theme_color_override("font_color", MUTED)
-		label.add_theme_font_size_override("font_size", 25)
+		label.add_theme_font_size_override("font_size", FONT_SECONDARY)
 	elif role == "hud":
 		label.add_theme_color_override("font_color", CREAM)
 		label.add_theme_font_size_override("font_size", 28)
@@ -148,7 +185,7 @@ static func make_label(text: String, font_size := 28, color := INK, align := HOR
 	label.text = text
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.horizontal_alignment = align
-	label.add_theme_font_size_override("font_size", font_size)
+	label.add_theme_font_size_override("font_size", maxi(FONT_MIN, font_size))
 	label.add_theme_color_override("font_color", color)
 	return label
 
@@ -161,7 +198,7 @@ static func make_chip(text: String, accent := GREEN) -> PanelContainer:
 	margin.add_theme_constant_override("margin_right", 14)
 	margin.add_theme_constant_override("margin_bottom", 6)
 	panel.add_child(margin)
-	var label := make_label(text, 23, CREAM, HORIZONTAL_ALIGNMENT_CENTER)
+	var label := make_label(text, FONT_MIN, CREAM, HORIZONTAL_ALIGNMENT_CENTER)
 	margin.add_child(label)
 	return panel
 
@@ -228,7 +265,7 @@ static func hide_modal(overlay: Control) -> void:
 		overlay.visible = false
 
 static func format_run_status(day: int, cash: int, suffix := "") -> String:
-	var text := "第 %d 天  |  本金 %d 元" % [day, cash]
+	var text := "第 %d 天  |  本钱 %d 元" % [day, cash]
 	if not suffix.is_empty():
 		text = "%s  |  %s" % [text, suffix]
 	return text

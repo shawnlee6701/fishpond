@@ -8,7 +8,7 @@ const EARN_MORE_TEXTURE := preload("res://Design/Earn More/screen_clean.png")
 const EARN_LESS_TEXTURE := preload("res://Design/Earn Less/screen_clean.png")
 
 @onready var panel: PanelContainer = $Panel
-@onready var title_label: Label = $Panel/Margin/Content/TitleLabel
+@onready var title_label: Label = $TitleLabel
 @onready var pond_name_label: Label = $Panel/Margin/Content/PondNameLabel
 @onready var cash_label: Label = $CashLabel
 @onready var estimate_label: Label = $Panel/Margin/Content/EstimateLabel
@@ -31,6 +31,7 @@ var current_transfer_offer: Dictionary = {}
 var current_one_net_offer: Dictionary = {}
 var transfer_overlay: Control
 var transfer_dialog: PanelContainer
+var transfer_offer_summary_label: Label
 var transfer_offer_label: Label
 var accept_transfer_button: Button
 var reject_transfer_button: Button
@@ -72,10 +73,10 @@ func _apply_ui_frame() -> void:
 		margin.add_theme_constant_override("margin_right", 108)
 		margin.add_theme_constant_override("margin_bottom", 52)
 	UIKit.style_page_title(title_label)
-	UIKit.style_label(pond_name_label, "panel_stat")
+	UIKit.style_label(pond_name_label, "content_title")
 	UIKit.style_top_status(cash_label)
-	UIKit.style_label(estimate_label, "panel_stat")
-	UIKit.style_label(profit_label, "panel_stat")
+	UIKit.style_highlight_label(estimate_label, "price")
+	UIKit.style_highlight_label(profit_label, "gold")
 	UIKit.style_label(message_label, "body_dark")
 	UIKit.style_label(transfer_offer_label, "body_dark")
 	UIKit.style_button(transfer_button, "ghost")
@@ -98,10 +99,6 @@ func _apply_ui_frame() -> void:
 	standard_work_button.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	full_work_button.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	work_plan_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	var content := title_label.get_parent()
-	if content != null:
-		content.move_child(title_label, 0)
-		content.move_child(pond_name_label, 1)
 	_show_choice_page()
 
 func _create_transfer_dialog() -> void:
@@ -118,6 +115,11 @@ func _create_transfer_dialog() -> void:
 	UIKit.style_modal_title(title)
 	content.add_child(title)
 
+	transfer_offer_summary_label = Label.new()
+	transfer_offer_summary_label.custom_minimum_size = Vector2(0, 64)
+	UIKit.style_highlight_label(transfer_offer_summary_label, "price")
+	content.add_child(transfer_offer_summary_label)
+
 	var body_scroll := ScrollContainer.new()
 	body_scroll.name = "BodyScroll"
 	body_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -132,7 +134,7 @@ func _create_transfer_dialog() -> void:
 	transfer_offer_label = Label.new()
 	transfer_offer_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	transfer_offer_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	transfer_offer_label.add_theme_font_size_override("font_size", 23)
+	transfer_offer_label.add_theme_font_size_override("font_size", UIKit.FONT_BODY)
 	transfer_offer_label.add_theme_color_override("font_color", UIKit.INK)
 	body.add_child(transfer_offer_label)
 
@@ -180,7 +182,7 @@ func _create_transfer_dialog() -> void:
 
 	accept_transfer_button = Button.new()
 	accept_transfer_button.text = "接受转包"
-	accept_transfer_button.custom_minimum_size = Vector2(0, 76)
+	accept_transfer_button.custom_minimum_size = Vector2(0, UIKit.MODAL_ACTION_HEIGHT)
 	accept_transfer_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	UIKit.style_button(accept_transfer_button, "primary")
 	accept_transfer_button.pressed.connect(_on_accept_transfer_pressed)
@@ -188,7 +190,7 @@ func _create_transfer_dialog() -> void:
 
 	reject_transfer_button = Button.new()
 	reject_transfer_button.text = "继续自己扛"
-	reject_transfer_button.custom_minimum_size = Vector2(0, 76)
+	reject_transfer_button.custom_minimum_size = Vector2(0, UIKit.MODAL_ACTION_HEIGHT)
 	reject_transfer_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	UIKit.style_button(reject_transfer_button, "ghost")
 	reject_transfer_button.pressed.connect(_on_reject_transfer_pressed)
@@ -233,7 +235,7 @@ func _create_harvest_result_dialog() -> void:
 
 	var continue_button := Button.new()
 	continue_button.text = "收下结果"
-	continue_button.custom_minimum_size = Vector2(0, 78)
+	continue_button.custom_minimum_size = Vector2(0, UIKit.MODAL_ACTION_HEIGHT)
 	UIKit.style_button(continue_button, "primary")
 	continue_button.pressed.connect(_on_harvest_result_continue_pressed)
 	content.add_child(continue_button)
@@ -243,7 +245,9 @@ func _render() -> void:
 	pond_name_label.text = "已包下：%s" % str(pond.get("name", "未承包鱼塘"))
 	cash_label.text = UIKit.format_run_status(game_state.day, game_state.cash)
 	estimate_label.text = "塘口估值：%d 元" % game_state.get_current_pond_estimated_value()
-	profit_label.text = "塘口账面：%+d 元" % game_state.get_mark_to_market_profit()
+	var mark_to_market := game_state.get_mark_to_market_profit()
+	profit_label.text = "塘口账面：%+d 元" % mark_to_market
+	UIKit.style_highlight_label(profit_label, "positive" if mark_to_market >= 0 else "negative")
 
 	transfer_button.text = "转包脱手"
 	sell_one_net_button.text = "卖一网给别人"
@@ -298,6 +302,7 @@ func _on_transfer_pressed() -> void:
 		return
 
 	_hide_detail_panels()
+	transfer_offer_summary_label.text = "接手价：%d 元" % int(current_transfer_offer.get("income", 0))
 	transfer_offer_label.text = str(current_transfer_offer.get("text", ""))
 	UIKit.show_modal(self, transfer_overlay, transfer_dialog, 0.86, 980, Vector2i(340, 560), Vector2i(860, 1040))
 	message_label.text = ""
@@ -395,6 +400,7 @@ func _show_harvest_result(result: Dictionary) -> void:
 		str(result.get("fish_result_name", "下网结果")),
 		round_profit
 	]
+	UIKit.style_highlight_label(harvest_result_label, "positive" if round_profit > 0 else "negative")
 	UIKit.show_modal(self, harvest_result_overlay, harvest_result_dialog, 0.86, 1060, Vector2i(340, 700), Vector2i(860, 1160))
 
 func _on_harvest_result_continue_pressed() -> void:
