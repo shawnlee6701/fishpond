@@ -1,8 +1,15 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/after_contract_choice.gd" id="1_after_contract_choice"]
+[ext_resource type="Texture2D" path="res://Design/Pond Check/screen_clean.png" id="2_pond_check"]
+[ext_resource type="Texture2D" path="res://assets/ui/parchment_background.png" id="3_background"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_pond_check"]
+atlas = ExtResource("2_pond_check")
+region = Rect2(225, 55, 790, 1135)
 
 [node name="AfterContractChoice" type="Control"]
+custom_minimum_size = Vector2(1080, 1920)
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -11,131 +18,144 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_after_contract_choice")
 
+[node name="Background" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("3_background")
+expand_mode = 1
+stretch_mode = 0
+
+[node name="CashLabel" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 42.0
+offset_top = 32.0
+offset_right = -42.0
+offset_bottom = 96.0
+grow_horizontal = 2
+text = "第 1 天  |  本金 30000 元"
+horizontal_alignment = 1
+vertical_alignment = 1
+
 [node name="Panel" type="PanelContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 72.0
-offset_top = 120.0
+offset_top = 110.0
 offset_right = -72.0
-offset_bottom = -120.0
+offset_bottom = -110.0
 grow_horizontal = 2
 grow_vertical = 2
 
+[node name="Paper" type="TextureRect" parent="Panel"]
+layout_mode = 2
+mouse_filter = 2
+texture = SubResource("AtlasTexture_pond_check")
+expand_mode = 1
+stretch_mode = 0
+
 [node name="Margin" type="MarginContainer" parent="Panel"]
 layout_mode = 2
-theme_override_constants/margin_left = 32
-theme_override_constants/margin_top = 32
-theme_override_constants/margin_right = 32
-theme_override_constants/margin_bottom = 32
+theme_override_constants/margin_left = 108
+theme_override_constants/margin_top = 52
+theme_override_constants/margin_right = 108
+theme_override_constants/margin_bottom = 52
 
 [node name="Content" type="VBoxContainer" parent="Panel/Margin"]
 layout_mode = 2
-theme_override_constants/separation = 30
+theme_override_constants/separation = 16
 
 [node name="TitleLabel" type="Label" parent="Panel/Margin/Content"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 58
+theme_override_font_sizes/font_size = 44
 text = "塘已经包下"
 horizontal_alignment = 1
 
 [node name="PondNameLabel" type="Label" parent="Panel/Margin/Content"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 38
+theme_override_font_sizes/font_size = 28
 text = "已包下：-"
 horizontal_alignment = 1
 
-[node name="CashLabel" type="Label" parent="Panel/Margin/Content"]
+[node name="EstimateLabel" type="Label" parent="Panel/Margin/Content"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 34
-text = "剩余本钱：0 元"
+theme_override_font_sizes/font_size = 27
+text = "当前塘口估值：0 元"
+horizontal_alignment = 1
+
+[node name="ProfitLabel" type="Label" parent="Panel/Margin/Content"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 27
+text = "当前账面净赚：+0 元"
 horizontal_alignment = 1
 
 [node name="ChoiceButtons" type="VBoxContainer" parent="Panel/Margin/Content"]
 layout_mode = 2
-theme_override_constants/separation = 20
+theme_override_constants/separation = 12
 
 [node name="TransferButton" type="Button" parent="Panel/Margin/Content/ChoiceButtons"]
-custom_minimum_size = Vector2(0, 90)
+custom_minimum_size = Vector2(0, 82)
 layout_mode = 2
-theme_override_font_sizes/font_size = 36
+theme_override_font_sizes/font_size = 30
 text = "转包脱手"
 
 [node name="SellOneNetButton" type="Button" parent="Panel/Margin/Content/ChoiceButtons"]
-custom_minimum_size = Vector2(0, 90)
+custom_minimum_size = Vector2(0, 82)
 layout_mode = 2
-theme_override_font_sizes/font_size = 36
+theme_override_font_sizes/font_size = 30
 text = "卖一网给别人"
 
 [node name="HarvestSelfButton" type="Button" parent="Panel/Margin/Content/ChoiceButtons"]
-custom_minimum_size = Vector2(0, 90)
+custom_minimum_size = Vector2(0, 88)
 layout_mode = 2
-theme_override_font_sizes/font_size = 36
+theme_override_font_sizes/font_size = 30
 text = "自己下网"
-
-[node name="AbandonButton" type="Button" parent="Panel/Margin/Content/ChoiceButtons"]
-custom_minimum_size = Vector2(0, 90)
-layout_mode = 2
-theme_override_font_sizes/font_size = 36
-text = "认亏收手"
 
 [node name="MessageLabel" type="Label" parent="Panel/Margin/Content"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 25
 text = ""
 horizontal_alignment = 1
 autowrap_mode = 3
 
-[node name="TransferConfirmPanel" type="VBoxContainer" parent="Panel/Margin/Content"]
+[node name="WorkPlanBackButton" type="Button" parent="Panel/Margin/Content"]
 visible = false
+custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
-theme_override_constants/separation = 16
-
-[node name="TransferOfferLabel" type="Label" parent="Panel/Margin/Content/TransferConfirmPanel"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 30
-text = "有人开价接手这口塘，要不要脱手？"
-horizontal_alignment = 1
-autowrap_mode = 3
-
-[node name="Buttons" type="HBoxContainer" parent="Panel/Margin/Content/TransferConfirmPanel"]
-layout_mode = 2
-theme_override_constants/separation = 18
-
-[node name="AcceptTransferButton" type="Button" parent="Panel/Margin/Content/TransferConfirmPanel/Buttons"]
-custom_minimum_size = Vector2(0, 70)
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 30
-text = "接受转包"
-
-[node name="RejectTransferButton" type="Button" parent="Panel/Margin/Content/TransferConfirmPanel/Buttons"]
-custom_minimum_size = Vector2(0, 70)
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 30
-text = "继续自己扛"
+theme_override_font_sizes/font_size = 26
+text = "‹ 返回处置选择"
 
 [node name="WorkPlanPanel" type="VBoxContainer" parent="Panel/Margin/Content"]
 visible = false
 layout_mode = 2
-theme_override_constants/separation = 14
+size_flags_vertical = 3
+theme_override_constants/separation = 18
 
 [node name="LowWorkButton" type="Button" parent="Panel/Margin/Content/WorkPlanPanel"]
-custom_minimum_size = Vector2(0, 72)
+custom_minimum_size = Vector2(0, 220)
 layout_mode = 2
+size_flags_vertical = 3
 theme_override_font_sizes/font_size = 30
 text = "省着下网：小捞一网（500 元）"
 
 [node name="StandardWorkButton" type="Button" parent="Panel/Margin/Content/WorkPlanPanel"]
-custom_minimum_size = Vector2(0, 72)
+custom_minimum_size = Vector2(0, 220)
 layout_mode = 2
+size_flags_vertical = 3
 theme_override_font_sizes/font_size = 30
 text = "正常作业：稳捞一网（1200 元）"
 
 [node name="FullWorkButton" type="Button" parent="Panel/Margin/Content/WorkPlanPanel"]
-custom_minimum_size = Vector2(0, 72)
+custom_minimum_size = Vector2(0, 220)
 layout_mode = 2
+size_flags_vertical = 3
 theme_override_font_sizes/font_size = 30
 text = "抽干收尾：一次结算"

@@ -22,47 +22,39 @@ func _init(seed_value: int = 0) -> void:
 func generate_transfer_offer(pond: Dictionary, harvest_result: Dictionary = {}) -> Dictionary:
 	var transfer_rules := BalanceRulesScript.dict_value(market_rules, "transfer")
 	var quote_price := int(pond.get("quote_price", 0))
+	var estimated_value := int(pond.get("estimated_transfer_value", quote_price))
 	var hidden_value := int(pond.get("hidden_value", quote_price))
 	var value_factor := clampf(float(hidden_value) / maxf(float(quote_price), 1.0), BalanceRulesScript.number(transfer_rules, "value_factor_min", 0.55), BalanceRulesScript.number(transfer_rules, "value_factor_max", 1.65))
-	var result_quality := float(harvest_result.get("quality", value_factor + BalanceRulesScript.number(transfer_rules, "default_quality_offset", -1.0)))
-	var result_factor := clampf(1.0 + result_quality * BalanceRulesScript.number(transfer_rules, "quality_weight", 0.42), BalanceRulesScript.number(transfer_rules, "result_factor_min", 0.58), BalanceRulesScript.number(transfer_rules, "result_factor_max", 1.35))
-	var random_factor := BalanceRulesScript.random_float_range(rng, transfer_rules, "random_min", "random_max", 0.78, 1.22)
 	var rounding := BalanceRulesScript.integer(transfer_rules, "rounding", 100)
-	var offer := int(round(float(quote_price) * lerpf(BalanceRulesScript.number(transfer_rules, "value_lerp_min", 0.82), BalanceRulesScript.number(transfer_rules, "value_lerp_max", 1.16), value_factor / BalanceRulesScript.number(transfer_rules, "value_factor_max", 1.65)) * result_factor * random_factor / float(rounding))) * rounding
+	var market_noise := BalanceRulesScript.random_float_range(rng, transfer_rules, "estimate_noise_min", "estimate_noise_max", 0.96, 1.04)
+	var offer := int(round(float(estimated_value) * market_noise / float(rounding))) * rounding
 	var min_income := BalanceRulesScript.integer(transfer_rules, "min_income", 300)
+	var work_cost := int(harvest_result.get("work_cost", 0))
+	var recovery_floor := int(round((float(quote_price) * BalanceRulesScript.number(transfer_rules, "min_quote_ratio", 0.0) + float(work_cost) * BalanceRulesScript.number(transfer_rules, "work_cost_recovery", 0.0)) / float(rounding))) * rounding
+	var final_offer := maxi(min_income, maxi(recovery_floor, offer))
 
 	return {
-		"income": maxi(min_income, offer),
-		"text": "有人开价 %d 元接手这口塘。\n现在转包，后面的鱼和风险都归他；留下来，可能翻本，也可能越捞越重。要不要脱手？" % maxi(min_income, offer)
+		"income": final_offer,
+		"text": "现在塘口估值约 %d 元，有人愿意按 %d 元接手。\n这个价只看外面人根据鱼情估出来的行情，不等于塘里的真实剩货。要不要脱手？" % [estimated_value, final_offer],
+		"estimated_value": estimated_value,
+		"value_factor": value_factor
 	}
 
 func generate_one_net_offer(pond: Dictionary, harvest_result: Dictionary = {}) -> Dictionary:
 	var one_net_rules := BalanceRulesScript.dict_value(market_rules, "one_net")
 	var quote_price := int(pond.get("quote_price", 0))
-	var hidden_value := int(pond.get("hidden_value", quote_price))
-	var result_quality := float(harvest_result.get("quality", 0.0))
-	var heat_factor := clampf(1.0 + result_quality * BalanceRulesScript.number(one_net_rules, "quality_weight", 0.3), BalanceRulesScript.number(one_net_rules, "heat_factor_min", 0.75), BalanceRulesScript.number(one_net_rules, "heat_factor_max", 1.35))
+	var estimated_value := int(pond.get("estimated_transfer_value", quote_price))
 	var rounding := BalanceRulesScript.integer(one_net_rules, "rounding", 100)
-	var income := int(round((float(quote_price) * BalanceRulesScript.random_float_range(rng, one_net_rules, "quote_ratio_min", "quote_ratio_max", 0.16, 0.28) + float(hidden_value) * BalanceRulesScript.random_float_range(rng, one_net_rules, "hidden_ratio_min", "hidden_ratio_max", 0.04, 0.09)) * heat_factor / float(rounding))) * rounding
-	var result_roll := rng.randf()
-	var fish_king_chance := float(pond.get("fish_king_chance", 0.01))
-	var big_fish_chance := float(pond.get("big_fish_chance", 0.1))
-	var result_text := ""
-
-	if result_roll <= fish_king_chance * BalanceRulesScript.number(one_net_rules, "fish_king_text_weight", 0.18):
-		result_text = "小概率让人家碰到鱼王，这笔会很扎心。"
-	elif result_roll <= fish_king_chance * BalanceRulesScript.number(one_net_rules, "fish_king_text_weight", 0.18) + big_fish_chance * BalanceRulesScript.number(one_net_rules, "big_fish_text_weight", 0.45):
-		result_text = "要是人家这一网起大鱼，你多半会后悔。"
-	elif result_roll <= BalanceRulesScript.number(one_net_rules, "normal_text_threshold", 0.62):
-		result_text = "大概率就是普通鱼，赚亏看这一口价。"
-	else:
-		result_text = "也可能只起小鱼，那这钱就收得舒服。"
+	var ratio := BalanceRulesScript.number(one_net_rules, "estimated_value_ratio", 0.25)
+	var income := int(round(float(estimated_value) * ratio / float(rounding))) * rounding
+	var result_text := "买家按当前塘口估值的四分之一买一网。等这一网开出来，塘口估值会跟着涨跌。"
 	var min_income := BalanceRulesScript.integer(one_net_rules, "min_income", 500)
 
 	return {
 		"income": maxi(min_income, income),
 		"text": "有人出 %d 元买下一网，只买这一网，不接整口塘。\n%s" % [maxi(min_income, income), result_text],
-		"result_text": result_text
+		"result_text": result_text,
+		"estimated_value": estimated_value
 	}
 
 func generate_harvest_result(pond: Dictionary, plan_id: String, work_cost: int) -> Dictionary:
@@ -84,17 +76,15 @@ func generate_disposal_opportunities(pond: Dictionary, harvest_result: Dictionar
 		transfer_chance = clampf(transfer_chance + BalanceRulesScript.number(opportunity_rules, "bad_transfer_bonus", 0.24), BalanceRulesScript.number(opportunity_rules, "bad_transfer_min", 0.22), BalanceRulesScript.number(opportunity_rules, "bad_transfer_max", 0.78))
 		one_net_chance *= BalanceRulesScript.number(opportunity_rules, "bad_one_net_multiplier", 0.35)
 
-	if rng.randf() <= transfer_chance:
-		opportunities["transfer_offer"] = generate_transfer_offer(pond, harvest_result)
+	opportunities["transfer_offer"] = generate_transfer_offer(pond, harvest_result)
 	if rng.randf() <= one_net_chance:
 		opportunities["one_net_offer"] = generate_one_net_offer(pond, harvest_result)
 
 	var messages: Array[String] = []
-	if not Dictionary(opportunities["transfer_offer"]).is_empty():
-		if quality < bad_quality_threshold:
-			messages.append("这一网不亮眼，有人趁机压价想接手。")
-		else:
-			messages.append("这一网有动静，塘边有人开始问整塘转包价。")
+	if quality < bad_quality_threshold:
+		messages.append("这一网不亮眼，塘口估值被压下来了；你仍然可以按当前价转包。")
+	else:
+		messages.append("这一网打出鱼情，塘口估值已经更新；你可以继续捞，也可以按当前价转包。")
 	if not Dictionary(opportunities["one_net_offer"]).is_empty():
 		messages.append("旁边有人想买一网试试水，给你先回点现金。")
 	if messages.is_empty():

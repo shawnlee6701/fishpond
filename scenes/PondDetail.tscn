@@ -1,8 +1,15 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/pond_detail.gd" id="1_pond_detail"]
+[ext_resource type="Texture2D" path="res://assets/ui/parchment_background.png" id="2_background"]
+[ext_resource type="Texture2D" path="res://Design/Pond Check/screen_clean.png" id="3_pond_check"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_pond_check"]
+atlas = ExtResource("3_pond_check")
+region = Rect2(225, 55, 790, 1135)
 
 [node name="PondDetail" type="Control"]
+custom_minimum_size = Vector2(1080, 1920)
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -11,87 +18,124 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_pond_detail")
 
-[node name="Panel" type="PanelContainer" parent="."]
+[node name="Background" type="TextureRect" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 72.0
-offset_top = 120.0
-offset_right = -72.0
-offset_bottom = -120.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("2_background")
+expand_mode = 1
+stretch_mode = 0
 
-[node name="Margin" type="MarginContainer" parent="Panel"]
-layout_mode = 2
-theme_override_constants/margin_left = 32
-theme_override_constants/margin_top = 32
-theme_override_constants/margin_right = 32
-theme_override_constants/margin_bottom = 32
+[node name="CashLabel" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 42.0
+offset_top = 32.0
+offset_right = -42.0
+offset_bottom = 96.0
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 27
+text = "第 1 天  |  本金 30000 元"
+horizontal_alignment = 1
+vertical_alignment = 1
 
-[node name="Content" type="VBoxContainer" parent="Panel/Margin"]
-layout_mode = 2
-theme_override_constants/separation = 24
+[node name="Panel" type="PanelContainer" parent="."]
+custom_minimum_size = Vector2(940, 1470)
+layout_mode = 1
+anchors_preset = 10
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -470.0
+offset_top = 110.0
+offset_right = 470.0
+offset_bottom = 1640.0
+grow_horizontal = 2
 
-[node name="TitleLabel" type="Label" parent="Panel/Margin/Content"]
+[node name="Paper" type="TextureRect" parent="Panel"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 54
+mouse_filter = 2
+texture = SubResource("AtlasTexture_pond_check")
+expand_mode = 1
+stretch_mode = 0
+
+[node name="Content" type="Control" parent="Panel"]
+layout_mode = 2
+mouse_filter = 1
+
+[node name="TitleLabel" type="Label" parent="Panel/Content"]
+layout_mode = 0
+offset_left = 145.0
+offset_top = 64.0
+offset_right = 690.0
+offset_bottom = 140.0
+theme_override_font_sizes/font_size = 48
 text = "鱼塘详情"
 horizontal_alignment = 1
+vertical_alignment = 1
 
-[node name="CashLabel" type="Label" parent="Panel/Margin/Content"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 34
-text = "手上本钱：10000 元"
+[node name="QuoteLabel" type="Label" parent="Panel/Content"]
+layout_mode = 0
+offset_left = 145.0
+offset_top = 133.0
+offset_right = 690.0
+offset_bottom = 183.0
+theme_override_font_sizes/font_size = 24
+text = "¥ 00000"
 horizontal_alignment = 1
+vertical_alignment = 1
 
-[node name="InfoLabel" type="Label" parent="Panel/Margin/Content"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 31
+[node name="InfoLabel" type="Label" parent="Panel/Content"]
+layout_mode = 0
+offset_left = 133.0
+offset_top = 195.0
+offset_right = 807.0
+offset_bottom = 575.0
+theme_override_font_sizes/font_size = 27
 text = "塘口信息"
+vertical_alignment = 1
 autowrap_mode = 2
 
-[node name="InspectionTitle" type="Label" parent="Panel/Margin/Content"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 36
-text = "验塘方式"
+[node name="InspectionScroll" type="ScrollContainer" parent="Panel/Content"]
+layout_mode = 0
+offset_left = 150.0
+offset_top = 585.0
+offset_right = 790.0
+offset_bottom = 1430.0
+horizontal_scroll_mode = 0
+follow_focus = true
 
-[node name="InspectionButtons" type="VBoxContainer" parent="Panel/Margin/Content"]
+[node name="InspectionButtons" type="VBoxContainer" parent="Panel/Content/InspectionScroll"]
 layout_mode = 2
-theme_override_constants/separation = 14
+size_flags_horizontal = 3
+theme_override_constants/separation = 18
 
-[node name="ResultPanel" type="PanelContainer" parent="Panel/Margin/Content"]
-custom_minimum_size = Vector2(0, 230)
-layout_mode = 2
-
-[node name="Margin" type="MarginContainer" parent="Panel/Margin/Content/ResultPanel"]
-layout_mode = 2
-theme_override_constants/margin_left = 22
-theme_override_constants/margin_top = 22
-theme_override_constants/margin_right = 22
-theme_override_constants/margin_bottom = 22
-
-[node name="ResultLabel" type="Label" parent="Panel/Margin/Content/ResultPanel/Margin"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 30
-text = "验塘只能帮你缩小判断，不会直接告诉你赚还是亏。"
-autowrap_mode = 2
-
-[node name="ActionRow" type="HBoxContainer" parent="Panel/Margin/Content"]
-layout_mode = 2
+[node name="ActionRow" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -450.0
+offset_top = 1670.0
+offset_right = 450.0
+offset_bottom = 1810.0
+grow_horizontal = 2
 theme_override_constants/separation = 20
 
-[node name="BackButton" type="Button" parent="Panel/Margin/Content/ActionRow"]
-custom_minimum_size = Vector2(0, 90)
+[node name="BackButton" type="Button" parent="ActionRow"]
+custom_minimum_size = Vector2(0, 110)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 34
+theme_override_font_sizes/font_size = 30
 text = "返回列表"
 
-[node name="ContractButton" type="Button" parent="Panel/Margin/Content/ActionRow"]
-custom_minimum_size = Vector2(0, 90)
+[node name="ContractButton" type="Button" parent="ActionRow"]
+custom_minimum_size = Vector2(0, 110)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 34
+theme_override_font_sizes/font_size = 30
 text = "谈好承包"

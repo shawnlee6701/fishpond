@@ -100,7 +100,44 @@
     "quote_physical_factor_min": 0.86,
     "quote_physical_factor_max": 1.12,
     "quote_rounding": 100,
-    "min_quote": 100,
+    "min_quote": 4000,
+    "pond_type_roi_targets": {
+      "artificial_pond": {
+        "label": "低风险低波动",
+        "min_roi": -0.10,
+        "max_roi": 0.30,
+        "rounding": 100,
+        "inflation_bias": 0.38
+      },
+      "old_pond": {
+        "label": "中风险中波动",
+        "min_roi": -0.30,
+        "max_roi": 0.50,
+        "rounding": 100,
+        "inflation_bias": 0.43
+      },
+      "reservoir_pond": {
+        "label": "高风险高波动",
+        "min_roi": -0.50,
+        "max_roi": 0.80,
+        "rounding": 100,
+        "inflation_bias": 0.48
+      }
+    },
+    "profile_roi_bands": {
+      "surplus": {
+        "position_min": 0.74,
+        "position_max": 0.94
+      },
+      "break_even": {
+        "position_min": 0.45,
+        "position_max": 0.68
+      },
+      "loss": {
+        "position_min": 0.07,
+        "position_max": 0.30
+      }
+    },
     "hidden_value": {
       "base_min": 4500,
       "base_max": 9000,
@@ -229,7 +266,7 @@
       "small_fish": {"min": 6.0, "max": 22.0, "unit": 1, "main_multiplier_min": 0.8, "main_multiplier_max": 1.25},
       "normal_fish": {"min": 5.0, "max": 18.0, "unit": 5, "extra_chance": 0.45},
       "big_fish": {"min": 10.0, "max": 32.0, "unit": 10, "extra_chance": 0.08, "extra_min": 10.0, "extra_max": 16.0},
-      "fish_king": {"min": 50, "max": 150, "unit": 1}
+      "fish_king": {"min": 50, "max": 150, "unit": 50}
     },
     "fish_king_integrity": {
       "min": 80,
@@ -260,6 +297,8 @@
       "random_min": 0.78,
       "random_max": 1.22,
       "min_income": 300,
+      "min_quote_ratio": 0.93,
+      "work_cost_recovery": 0.25,
       "rounding": 100,
       "default_quality_offset": -1.0
     },
@@ -268,6 +307,7 @@
       "quote_ratio_max": 0.28,
       "hidden_ratio_min": 0.04,
       "hidden_ratio_max": 0.09,
+      "estimated_value_ratio": 0.12,
       "quality_weight": 0.3,
       "heat_factor_min": 0.75,
       "heat_factor_max": 1.35,
@@ -309,16 +349,16 @@
         "inspection_cost": 0,
         "selection": "lowest_quote",
         "plans": ["low", "full"],
-        "accept_transfer_quality_below": -0.25,
+        "accept_transfer_quality_below": 0.25,
         "accept_one_net": true
       },
       "master_estimate_stop_loss": {
-        "inspection_cost": 800,
+        "inspection_cost": 1000,
         "selection": "best_hidden_value_ratio_with_noise",
         "selection_noise_min": 0.82,
         "selection_noise_max": 1.18,
         "plans": ["standard", "full"],
-        "accept_transfer_quality_below": -0.25,
+        "accept_transfer_quality_below": -0.10,
         "accept_one_net": true
       }
     }

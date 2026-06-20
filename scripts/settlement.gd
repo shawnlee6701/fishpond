@@ -1,8 +1,11 @@
 extends Control
 
+const UIKit := preload("res://scripts/ui_kit.gd")
+
 @onready var title_label: Label = $Panel/Margin/Content/TitleLabel
-@onready var detail_label: Label = $Panel/Margin/Content/DetailLabel
-@onready var cash_label: Label = $Panel/Margin/Content/CashLabel
+@onready var detail_label: Label = $Panel/Margin/Content/Scroll/DetailLabel
+@onready var cash_label: Label = $CashLabel
+@onready var panel: PanelContainer = $Panel
 @onready var fish_king_panel: PanelContainer = $Panel/Margin/Content/FishKingPanel
 @onready var fish_king_scene_label: Label = $Panel/Margin/Content/FishKingPanel/Margin/Content/SceneLabel
 @onready var fish_king_name_label: Label = $Panel/Margin/Content/FishKingPanel/Margin/Content/NameLabel
@@ -25,7 +28,19 @@ func _ready() -> void:
 		game_state = GameState.new()
 
 	next_day_button.pressed.connect(_on_next_day_pressed)
+	_apply_ui_frame()
 	_render()
+
+func _apply_ui_frame() -> void:
+	UIKit.apply_root(self)
+	panel.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+	UIKit.style_page_title(title_label)
+	UIKit.style_top_status(cash_label)
+	UIKit.style_label(detail_label, "body_dark")
+	UIKit.style_button(next_day_button, "gold")
+	UIKit.style_card(fish_king_panel, UIKit.GOLD)
+	next_day_button.custom_minimum_size = Vector2(0, 88)
+	detail_label.add_theme_font_size_override("font_size", 25)
 
 func _render() -> void:
 	var result := game_state.last_result
@@ -43,7 +58,7 @@ func _render() -> void:
 			lines.append(_format_catch_detail_line(item))
 	lines.append("")
 	lines.append("账本：")
-	lines.append("承包费：%d 元（包塘时已经扣掉，不再重复算进净利润）" % int(game_state.current_pond.get("quote_price", 0)))
+	lines.append("承包费：%d 元（已扣，不重复算净利）" % int(game_state.current_pond.get("quote_price", 0)))
 	lines.append("验塘费：-%d 元" % game_state.inspection_cost_total)
 	lines.append("作业成本：-%d 元" % game_state.work_cost)
 	lines.append("卖一网回款：+%d 元" % game_state.one_net_income)
@@ -52,7 +67,7 @@ func _render() -> void:
 	lines.append("本局账面：%s" % _format_profit_line(game_state.get_net_profit()))
 
 	detail_label.text = "\n".join(lines)
-	cash_label.text = "手上本钱：%d 元" % game_state.cash
+	cash_label.text = UIKit.format_run_status(game_state.day, game_state.cash)
 
 func _is_fish_king_result() -> bool:
 	if game_state.fish_result_id == FISH_KING_ID:
@@ -150,4 +165,4 @@ func _format_profit_line(net_profit: int) -> String:
 
 func _on_next_day_pressed() -> void:
 	game_state.advance_to_next_day()
-	UIController.show_pond_list(screen_container, game_state)
+	UIController.show_pond_list(screen_container, game_state, true)

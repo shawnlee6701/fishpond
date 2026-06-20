@@ -1,8 +1,13 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
+[ext_resource type="Texture2D" path="res://assets/ui/parchment_background.png" id="2_background"]
+[ext_resource type="Texture2D" path="res://assets/ui/homepage.png" id="3_homepage"]
+[ext_resource type="Texture2D" path="res://assets/ui/icon_droplet.svg" id="4_droplet"]
+[ext_resource type="Texture2D" path="res://assets/ui/icon_restart.svg" id="5_restart"]
 
 [node name="Main" type="Control"]
+custom_minimum_size = Vector2(1080, 1920)
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -11,14 +16,29 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_main")
 
-[node name="Background" type="ColorRect" parent="."]
+[node name="Background" type="TextureRect" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.071, 0.135, 0.129, 1)
+mouse_filter = 2
+texture = ExtResource("2_background")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="HomepageBackground" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("3_homepage")
+expand_mode = 1
+stretch_mode = 6
 
 [node name="MainMenu" type="Control" parent="."]
 layout_mode = 1
@@ -28,49 +48,35 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Content" type="VBoxContainer" parent="MainMenu"]
+[node name="BottomActions" type="VBoxContainer" parent="MainMenu"]
 layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -360.0
-offset_top = -360.0
-offset_right = 360.0
-offset_bottom = 360.0
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 72.0
+offset_top = -380.0
+offset_right = -72.0
+offset_bottom = -24.0
 grow_horizontal = 2
-grow_vertical = 2
-theme_override_constants/separation = 48
-alignment = 1
-
-[node name="Title" type="Label" parent="MainMenu/Content"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 86
-text = "这塘我包了"
-horizontal_alignment = 1
-
-[node name="Stats" type="VBoxContainer" parent="MainMenu/Content"]
-layout_mode = 2
+grow_vertical = 0
 theme_override_constants/separation = 20
 
-[node name="CashLabel" type="Label" parent="MainMenu/Content/Stats"]
+[node name="StartButton" type="Button" parent="MainMenu/BottomActions"]
+custom_minimum_size = Vector2(0, 168)
 layout_mode = 2
-theme_override_font_sizes/font_size = 42
-text = "本钱：10000 元"
-horizontal_alignment = 1
+theme_override_font_sizes/font_size = 36
+icon = ExtResource("4_droplet")
+icon_max_width = 42
+text = "开始包塘"
 
-[node name="DayLabel" type="Label" parent="MainMenu/Content/Stats"]
+[node name="RestartButton" type="Button" parent="MainMenu/BottomActions"]
+custom_minimum_size = Vector2(0, 168)
 layout_mode = 2
-theme_override_font_sizes/font_size = 42
-text = "第 1 天，今天去看塘、验塘、谈价。"
-horizontal_alignment = 1
-
-[node name="GoPondButton" type="Button" parent="MainMenu/Content"]
-custom_minimum_size = Vector2(0, 120)
-layout_mode = 2
-theme_override_font_sizes/font_size = 44
-text = "去塘口看看"
+theme_override_font_sizes/font_size = 36
+icon = ExtResource("5_restart")
+icon_max_width = 42
+text = "重新开始"
 
 [node name="ScreenContainer" type="Control" parent="."]
 visible = false

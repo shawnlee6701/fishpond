@@ -16,7 +16,7 @@
   {
     "id": "master",
     "name": "请老师傅",
-    "cost": 800,
+    "cost": 1000,
     "description": "请懂行老师傅看塘，费用高，但报价和风险会说得更透。",
     "accuracy": 0.85
   }

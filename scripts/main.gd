@@ -1,22 +1,68 @@
 extends Control
 
+const UIKit := preload("res://scripts/ui_kit.gd")
+const SaveSystem := preload("res://scripts/save_system.gd")
+const BUTTON_BOARD := preload("res://assets/ui/button_board.png")
+
 @onready var main_menu: Control = $MainMenu
 @onready var screen_container: Control = $ScreenContainer
-@onready var cash_label: Label = $MainMenu/Content/Stats/CashLabel
-@onready var day_label: Label = $MainMenu/Content/Stats/DayLabel
-@onready var go_pond_button: Button = $MainMenu/Content/GoPondButton
+@onready var homepage_background: TextureRect = $HomepageBackground
+@onready var start_button: Button = $MainMenu/BottomActions/StartButton
+@onready var restart_button: Button = $MainMenu/BottomActions/RestartButton
 
-var game_state := GameState.new()
+var game_state: GameState = GameState.new()
 
 func _ready() -> void:
-	_update_stats()
-	go_pond_button.pressed.connect(_on_go_pond_pressed)
+	start_button.text = "继续包塘" if SaveSystem.has_checkpoint() else "开始包塘"
+	_apply_ui_frame()
+	start_button.pressed.connect(_on_start_pressed)
+	restart_button.pressed.connect(_on_restart_pressed)
 
-func _update_stats() -> void:
-	cash_label.text = "本钱：%d 元" % game_state.cash
-	day_label.text = "第 %d 天，今天去看塘、验塘、谈价。" % game_state.day
+func _apply_ui_frame() -> void:
+	UIKit.apply_root(self)
+	_style_wood_button(start_button)
+	_style_wood_button(restart_button)
 
-func _on_go_pond_pressed() -> void:
+func _style_wood_button(button: Button) -> void:
+	button.add_theme_stylebox_override("normal", _make_wood_style(Color.WHITE))
+	button.add_theme_stylebox_override("hover", _make_wood_style(Color(1.0, 0.94, 0.80, 1.0)))
+	button.add_theme_stylebox_override("pressed", _make_wood_style(Color(0.76, 0.69, 0.56, 1.0)))
+	button.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
+	button.add_theme_color_override("font_color", UIKit.INK)
+	button.add_theme_color_override("font_hover_color", UIKit.INK)
+	button.add_theme_color_override("font_pressed_color", UIKit.INK)
+	button.add_theme_color_override("font_outline_color", Color(0.98, 0.86, 0.61, 0.9))
+	button.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.28))
+	button.add_theme_constant_override("outline_size", 3)
+	button.add_theme_constant_override("shadow_offset_x", 1)
+	button.add_theme_constant_override("shadow_offset_y", 2)
+	button.add_theme_constant_override("h_separation", 18)
+	button.add_theme_font_size_override("font_size", 48)
+
+func _make_wood_style(modulate: Color) -> StyleBoxTexture:
+	var style := StyleBoxTexture.new()
+	style.texture = BUTTON_BOARD
+	style.texture_margin_left = 150.0
+	style.texture_margin_top = 60.0
+	style.texture_margin_right = 150.0
+	style.texture_margin_bottom = 60.0
+	style.modulate_color = modulate
+	return style
+
+func _on_start_pressed() -> void:
+	_open_game(true)
+
+func _on_restart_pressed() -> void:
+	_open_game(false)
+
+func _open_game(continue_existing: bool) -> void:
+	game_state = GameState.new()
+	if continue_existing:
+		SaveSystem.load_checkpoint(game_state)
+	else:
+		SaveSystem.clear_checkpoint()
+
 	main_menu.visible = false
+	homepage_background.visible = false
 	screen_container.visible = true
-	UIController.show_pond_list(screen_container, game_state)
+	UIController.show_pond_list(screen_container, game_state, true)

@@ -1,9 +1,13 @@
 extends Control
 
 const PondGeneratorScript := preload("res://scripts/pond_generator.gd")
+const UIKit := preload("res://scripts/ui_kit.gd")
+const POND_CARD_TEXTURE := preload("res://Design/Pond card/screen_transparent.png")
 
-@onready var day_label: Label = $Panel/Margin/Content/Header/DayLabel
-@onready var cash_label: Label = $Panel/Margin/Content/Header/CashLabel
+@onready var title_label: Label = $Panel/Margin/Content/Title
+@onready var day_label: Label = $Panel/Margin/Content/StatusRow/DayLabel
+@onready var cash_label: Label = $Panel/Margin/Content/StatusRow/CashLabel
+@onready var panel: PanelContainer = $Panel
 @onready var card_list: VBoxContainer = $Panel/Margin/Content/Scroll/CardList
 
 var game_state: GameState
@@ -17,7 +21,16 @@ func _ready() -> void:
 	if game_state == null:
 		game_state = GameState.new()
 
+	_apply_ui_frame()
 	_render_ponds()
+
+func _apply_ui_frame() -> void:
+	UIKit.apply_root(self)
+	panel.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+	UIKit.style_page_title(title_label)
+	UIKit.style_top_status(day_label)
+	UIKit.style_top_status(cash_label)
+	card_list.add_theme_constant_override("separation", 18)
 
 func _render_ponds() -> void:
 	if game_state.daily_ponds_day != game_state.day or game_state.daily_ponds.is_empty():
@@ -26,8 +39,8 @@ func _render_ponds() -> void:
 		game_state.daily_ponds_day = game_state.day
 
 	var ponds := game_state.daily_ponds
-	day_label.text = "第 %d 天：今天有 %d 口塘可谈，先看牌面再决定。" % [game_state.day, ponds.size()]
-	cash_label.text = "手上本钱：%d 元" % game_state.cash
+	day_label.text = "第 %d 天" % game_state.day
+	cash_label.text = "本金 %d 元" % game_state.cash
 
 	for child in card_list.get_children():
 		child.queue_free()
@@ -35,58 +48,155 @@ func _render_ponds() -> void:
 	for pond in ponds:
 		card_list.add_child(_create_pond_card(pond))
 
-func _create_pond_card(pond: Dictionary) -> PanelContainer:
-	var card := PanelContainer.new()
-	card.custom_minimum_size = Vector2(0, 350)
+func _create_pond_card(pond: Dictionary) -> Control:
+	var card := Control.new()
+	card.custom_minimum_size = Vector2(0, 540)
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+	var background := PanelContainer.new()
+	background.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	background.add_theme_stylebox_override("panel", _make_pond_card_style())
+	card.add_child(background)
+	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
 	var margin := MarginContainer.new()
 	margin.name = "Margin"
-	margin.add_theme_constant_override("margin_left", 28)
-	margin.add_theme_constant_override("margin_top", 24)
-	margin.add_theme_constant_override("margin_right", 28)
-	margin.add_theme_constant_override("margin_bottom", 24)
 	card.add_child(margin)
+	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	margin.offset_left = 54
+	margin.offset_top = 44
+	margin.offset_right = -54
+	margin.offset_bottom = -32
 
 	var content := VBoxContainer.new()
 	content.name = "Content"
-	content.add_theme_constant_override("separation", 10)
+	content.add_theme_constant_override("separation", 8)
+	content.alignment = BoxContainer.ALIGNMENT_CENTER
 	margin.add_child(content)
 
-	var title := Label.new()
-	title.text = "%s  ｜  塘主要价：%d 元" % [pond["name"], pond["quote_price"]]
-	title.add_theme_font_size_override("font_size", 38)
+	var title := UIKit.make_label(str(pond["name"]), 38, UIKit.INK, HORIZONTAL_ALIGNMENT_CENTER)
+	title.custom_minimum_size = Vector2(0, 48)
 	content.add_child(title)
 
-	var info := Label.new()
-	info.text = "塘型：%s    水面：%s    水深：%s（%.1f 米）" % [pond["pond_type_name"], pond["area_label"], pond["depth_label"], float(pond["depth_meters"])]
-	info.add_theme_font_size_override("font_size", 30)
-	content.add_child(info)
+	var tag_row := HBoxContainer.new()
+	tag_row.add_theme_constant_override("separation", 12)
+	tag_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	content.add_child(tag_row)
+	tag_row.add_child(_make_card_tag(str(pond["pond_type_name"]), Color(0.58, 0.34, 0.12, 1.0)))
+	tag_row.add_child(_make_card_tag(str(pond["area_label"]), Color(0.66, 0.40, 0.17, 1.0)))
+	tag_row.add_child(_make_card_tag("%s水" % str(pond["depth_label"]), Color(0.76, 0.56, 0.25, 1.0)))
 
-	var age := Label.new()
-	age.text = "塘龄：%s（%d 年）" % [pond["age_label"], pond["age_years"]]
-	age.add_theme_font_size_override("font_size", 30)
-	content.add_child(age)
+	var info_row := HBoxContainer.new()
+	info_row.add_theme_constant_override("separation", 20)
+	content.add_child(info_row)
+
+	var info := Label.new()
+	info.text = "塘龄：%s（%d 年）" % [pond["age_label"], pond["age_years"]]
+	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	info.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	info.add_theme_font_size_override("font_size", 25)
+	info.add_theme_color_override("font_color", UIKit.INK)
+	info_row.add_child(info)
+
+	var depth := Label.new()
+	depth.text = "水深：%.1f 米" % float(pond["depth_meters"])
+	depth.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	depth.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	depth.add_theme_font_size_override("font_size", 25)
+	depth.add_theme_color_override("font_color", UIKit.INK)
+	info_row.add_child(depth)
 
 	var water := Label.new()
-	water.text = "水色看着：%s" % pond["water_state"]
-	water.add_theme_font_size_override("font_size", 30)
+	water.text = "水色：%s" % pond["water_state"]
+	water.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	water.add_theme_font_size_override("font_size", 25)
+	water.add_theme_color_override("font_color", UIKit.INK)
 	content.add_child(water)
 
 	var rumor := Label.new()
-	rumor.text = "塘边说法：%s" % pond["rumor"]
+	rumor.text = "“%s”" % pond["rumor"]
 	rumor.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	rumor.add_theme_font_size_override("font_size", 30)
+	rumor.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	rumor.add_theme_font_size_override("font_size", 24)
+	rumor.add_theme_color_override("font_color", UIKit.MUTED)
 	content.add_child(rumor)
 
 	var view_button := Button.new()
 	view_button.name = "ViewButton"
-	view_button.text = "进塘看看"
-	view_button.custom_minimum_size = Vector2(0, 72)
-	view_button.add_theme_font_size_override("font_size", 32)
+	view_button.text = "进塘验货"
+	view_button.custom_minimum_size = Vector2(540, 76)
+	UIKit.style_button(view_button, "primary")
 	view_button.pressed.connect(_on_view_pressed.bind(pond))
-	content.add_child(view_button)
+	var button_row := HBoxContainer.new()
+	button_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	button_row.add_child(view_button)
+	content.add_child(button_row)
+
+	var quote_badge := _make_quote_badge(int(pond["quote_price"]))
+	card.add_child(quote_badge)
+	quote_badge.anchor_left = 1.0
+	quote_badge.anchor_right = 1.0
+	quote_badge.offset_left = -270
+	quote_badge.offset_top = 30
+	quote_badge.offset_right = -38
+	quote_badge.offset_bottom = 92
 
 	return card
+
+func _make_card_tag(text: String, color: Color) -> PanelContainer:
+	var tag := PanelContainer.new()
+	tag.custom_minimum_size = Vector2(0, 44)
+	tag.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	tag.add_theme_stylebox_override("panel", UIKit.make_style(color, Color(0.48, 0.29, 0.11, 0.55), 18, 1, false))
+	var label := UIKit.make_label(text, 24, UIKit.INK, HORIZONTAL_ALIGNMENT_CENTER)
+	label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	tag.add_child(label)
+	return tag
+
+func _make_quote_badge(quote_price: int) -> PanelContainer:
+	var badge := PanelContainer.new()
+	badge.add_theme_stylebox_override(
+		"panel",
+		UIKit.make_style(Color(0.70, 0.10, 0.065, 1.0), Color(0.96, 0.62, 0.18, 1.0), 12, 3, true)
+	)
+	var label := UIKit.make_label("要价 %d 元" % quote_price, 26, Color.WHITE, HORIZONTAL_ALIGNMENT_CENTER)
+	label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	badge.add_child(label)
+	return badge
+
+func _make_pond_card_style() -> StyleBoxTexture:
+	return _make_texture_style(
+		POND_CARD_TEXTURE,
+		Rect2(75, 315, 1110, 580),
+		Vector4(100, 80, 100, 85)
+	)
+
+func _make_texture_style(texture: Texture2D, region: Rect2, margins: Vector4, modulate_color := Color.WHITE) -> StyleBoxTexture:
+	var cropped := AtlasTexture.new()
+	cropped.atlas = texture
+	cropped.region = region
+
+	var style := StyleBoxTexture.new()
+	style.texture = cropped
+	style.texture_margin_left = margins.x
+	style.texture_margin_top = margins.y
+	style.texture_margin_right = margins.z
+	style.texture_margin_bottom = margins.w
+	style.modulate_color = modulate_color
+	return style
+
+func _get_pond_accent(pond: Dictionary) -> Color:
+	match str(pond.get("pond_type", pond.get("pond_type_id", ""))):
+		"artificial_pond":
+			return UIKit.GREEN_LIGHT
+		"old_pond":
+			return UIKit.GOLD
+		"reservoir_pond":
+			return Color(0.16, 0.44, 0.56, 1.0)
+		_:
+			return UIKit.GREEN
 
 func _on_view_pressed(pond: Dictionary) -> void:
 	UIController.show_pond_detail(screen_container, game_state, pond)

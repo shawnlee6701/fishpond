@@ -1,8 +1,10 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/pond_list.gd" id="1_pond_list"]
+[ext_resource type="Texture2D" path="res://assets/ui/parchment_background.png" id="2_background"]
 
 [node name="PondList" type="Control"]
+custom_minimum_size = Vector2(1080, 1920)
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -11,56 +13,72 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_pond_list")
 
+[node name="Background" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("2_background")
+expand_mode = 1
+stretch_mode = 0
+
 [node name="Panel" type="PanelContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 72.0
-offset_top = 120.0
-offset_right = -72.0
-offset_bottom = -120.0
+offset_left = 52.0
+offset_top = 42.0
+offset_right = -52.0
+offset_bottom = -48.0
 grow_horizontal = 2
 grow_vertical = 2
 
 [node name="Margin" type="MarginContainer" parent="Panel"]
 layout_mode = 2
-theme_override_constants/margin_left = 32
-theme_override_constants/margin_top = 32
-theme_override_constants/margin_right = 32
-theme_override_constants/margin_bottom = 32
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 12
 
 [node name="Content" type="VBoxContainer" parent="Panel/Margin"]
 layout_mode = 2
-theme_override_constants/separation = 28
+theme_override_constants/separation = 16
 
-[node name="Header" type="VBoxContainer" parent="Panel/Margin/Content"]
+[node name="StatusRow" type="HBoxContainer" parent="Panel/Margin/Content"]
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 24
 
-[node name="Title" type="Label" parent="Panel/Margin/Content/Header"]
+[node name="DayLabel" type="Label" parent="Panel/Margin/Content/StatusRow"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 58
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 29
+text = "第 1 天"
+horizontal_alignment = 1
+
+[node name="CashLabel" type="Label" parent="Panel/Margin/Content/StatusRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 29
+text = "本金 30000 元"
+horizontal_alignment = 1
+
+[node name="Title" type="Label" parent="Panel/Margin/Content"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 52
 text = "今日鱼塘"
-horizontal_alignment = 1
-
-[node name="DayLabel" type="Label" parent="Panel/Margin/Content/Header"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 32
-text = "第 1 天：今天有 3 口塘可谈，先看牌面再决定。"
-horizontal_alignment = 1
-
-[node name="CashLabel" type="Label" parent="Panel/Margin/Content/Header"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 32
-text = "手上本钱：10000 元"
 horizontal_alignment = 1
 
 [node name="Scroll" type="ScrollContainer" parent="Panel/Margin/Content"]
 layout_mode = 2
 size_flags_vertical = 3
+horizontal_scroll_mode = 0
+follow_focus = true
 
 [node name="CardList" type="VBoxContainer" parent="Panel/Margin/Content/Scroll"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 24
+theme_override_constants/separation = 18

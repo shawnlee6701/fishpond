@@ -2,13 +2,16 @@ const CONTROL_GROUPS = [
   {
     title: "鱼塘生成",
     controls: [
+      ["低风险 ROI 下限", "pond_generation.pond_type_roi_targets.artificial_pond.min_roi", -0.5, 0.2, 0.01],
+      ["低风险 ROI 上限", "pond_generation.pond_type_roi_targets.artificial_pond.max_roi", 0.0, 0.8, 0.01],
+      ["中风险 ROI 下限", "pond_generation.pond_type_roi_targets.old_pond.min_roi", -0.7, 0.1, 0.01],
+      ["中风险 ROI 上限", "pond_generation.pond_type_roi_targets.old_pond.max_roi", 0.1, 1.0, 0.01],
+      ["高风险 ROI 下限", "pond_generation.pond_type_roi_targets.reservoir_pond.min_roi", -0.9, 0.0, 0.01],
+      ["高风险 ROI 上限", "pond_generation.pond_type_roi_targets.reservoir_pond.max_roi", 0.2, 1.5, 0.01],
       ["报价低档最小", "pond_generation.quote_tiers.quarter.ratio_min", 0.1, 0.5, 0.01],
       ["报价低档最大", "pond_generation.quote_tiers.quarter.ratio_max", 0.1, 0.5, 0.01],
       ["报价高档最小", "pond_generation.quote_tiers.high.ratio_min", 0.4, 1.2, 0.01],
-      ["报价高档最大", "pond_generation.quote_tiers.high.ratio_max", 0.4, 1.2, 0.01],
-      ["赚塘价值倍率下限", "pond_generation.value_profiles.surplus.hidden_value_factor.0", 0.8, 2.0, 0.01],
-      ["亏塘价值倍率上限", "pond_generation.value_profiles.loss.hidden_value_factor.1", 0.3, 1.2, 0.01],
-      ["鱼王价值权重", "pond_generation.hidden_value.fish_king_weight", 1000, 18000, 250]
+      ["报价高档最大", "pond_generation.quote_tiers.high.ratio_max", 0.4, 1.2, 0.01]
     ]
   },
   {
@@ -45,6 +48,9 @@ const CONTROL_GROUPS = [
       ["转包溢价上限", "market.transfer.value_lerp_max", 0.7, 1.8, 0.01],
       ["转包随机下限", "market.transfer.random_min", 0.4, 1.0, 0.01],
       ["转包随机上限", "market.transfer.random_max", 1.0, 1.8, 0.01],
+      ["转包承包价保底", "market.transfer.min_quote_ratio", 0.5, 1.2, 0.01],
+      ["转包作业费回收", "market.transfer.work_cost_recovery", 0.0, 1.0, 0.01],
+      ["卖一网估值占比", "market.one_net.estimated_value_ratio", 0.02, 0.35, 0.01],
       ["一网承包价占比下限", "market.one_net.quote_ratio_min", 0.02, 0.4, 0.01],
       ["一网承包价占比上限", "market.one_net.quote_ratio_max", 0.05, 0.6, 0.01],
       ["转包基础概率", "market.opportunities.transfer_base", 0.0, 0.8, 0.01],
@@ -229,8 +235,8 @@ function generatePond(day, index, valueProfile, quoteTier, cash, rng) {
   const difficulty = round2((type.difficulty_modifier + ageFactor * difficultyRule.age_weight + physical.depth_factor * difficultyRule.depth_weight + randRange(rng, difficultyRule.random_min, difficultyRule.random_max)) * profile.difficulty_factor);
   const big = round2(clamp((bigRule.base + ageFactor * bigRule.age_weight + physical.value_factor * bigRule.physical_weight + type.big_fish_modifier * bigRule.type_weight) * profile.big_fish_factor, bigRule.min, bigRule.max));
   const king = round2(clamp((kingRule.base + ageFactor * kingRule.age_weight + physical.depth_factor * kingRule.depth_weight + type.fish_king_modifier * kingRule.type_weight) * profile.fish_king_factor, kingRule.min, kingRule.max));
-  const hidden = calculateHiddenValue(type.id, physical.age_years, big, king, profile.hidden_value_factor * physical.value_factor, rng);
   const quote = calculateQuote(cash, quoteTier, physical.value_factor, rng);
+  const hidden = calculateTargetFishValue(type.id, valueProfile, quote, rng);
   return {
     id: `day_${day}_pond_${index + 1}`,
     pond_type: type.id,
@@ -239,6 +245,8 @@ function generatePond(day, index, valueProfile, quoteTier, cash, rng) {
     age_years: physical.age_years,
     quote_price: quote,
     hidden_value: hidden,
+    total_fish_value: hidden,
+    target_gross_roi: quote > 0 ? round2((hidden - quote) / quote) : 0,
     big_fish_chance: big,
     fish_king_chance: king,
     difficulty
@@ -284,6 +292,22 @@ function calculateHiddenValue(typeId, age, big, king, profileFactor, rng) {
   const chanceBonus = Math.floor(big * h.big_fish_weight + king * h.fish_king_weight);
   const ageBonus = age * randInt(rng, h.age_bonus_min, h.age_bonus_max);
   return Math.max(h.min, Math.floor((base + typeBonus + chanceBonus + ageBonus) * profileFactor));
+}
+
+function calculateTargetFishValue(typeId, valueProfile, quote, rng) {
+  const target = rules.pond_generation.pond_type_roi_targets?.[typeId];
+  if (!target || quote <= 0) return quote;
+  const band = rules.pond_generation.profile_roi_bands?.[valueProfile] || { position_min: 0, position_max: 1 };
+  const positionMin = clamp(band.position_min ?? 0, 0, 1);
+  const positionMax = clamp(band.position_max ?? 1, positionMin, 1);
+  const inflationBias = clamp(target.inflation_bias ?? 0.5, 0, 1);
+  let position = randRange(rng, positionMin, positionMax);
+  position = clamp(lerp(position, positionMax, inflationBias * 0.18), positionMin, positionMax);
+  const roi = lerp(target.min_roi, target.max_roi, position);
+  const rounding = target.rounding || 100;
+  const minValue = Math.ceil(quote * (1 + target.min_roi));
+  const maxValue = Math.floor(quote * (1 + target.max_roi));
+  return clampInt(Math.max(0, Math.round((quote * (1 + roi)) / rounding) * rounding), Math.max(0, minValue), Math.max(0, maxValue));
 }
 
 function calculateQuote(cash, quoteTier, physicalFactor, rng) {
@@ -417,13 +441,16 @@ function generateTransfer(pond, result, rng) {
   const resultFactor = clamp(1 + result.quality * t.quality_weight, t.result_factor_min, t.result_factor_max);
   const randomFactor = randRange(rng, t.random_min, t.random_max);
   const offer = Math.round((pond.quote_price * lerp(t.value_lerp_min, t.value_lerp_max, valueFactor / t.value_factor_max) * resultFactor * randomFactor) / t.rounding) * t.rounding;
-  return { income: Math.max(t.min_income, offer) };
+  const recoveryFloor = Math.round((pond.quote_price * (t.min_quote_ratio || 0) + result.work_cost * (t.work_cost_recovery || 0)) / t.rounding) * t.rounding;
+  return { income: Math.max(t.min_income, recoveryFloor, offer) };
 }
 
 function generateOneNet(pond, result, rng) {
   const n = rules.market.one_net;
   const heat = clamp(1 + result.quality * n.quality_weight, n.heat_factor_min, n.heat_factor_max);
-  const income = Math.round(((pond.quote_price * randRange(rng, n.quote_ratio_min, n.quote_ratio_max)) + (pond.hidden_value * randRange(rng, n.hidden_ratio_min, n.hidden_ratio_max))) * heat / n.rounding) * n.rounding;
+  const estimatedValue = pond.estimated_transfer_value || pond.quote_price;
+  const ratio = n.estimated_value_ratio ?? 0.1;
+  const income = Math.round((estimatedValue * ratio * heat) / n.rounding) * n.rounding;
   return { income: Math.max(n.min_income, income) };
 }
 

@@ -1,16 +1,21 @@
 extends Control
 
+const UIKit := preload("res://scripts/ui_kit.gd")
+const TRANSFER_POPUP_TEXTURE := preload("res://Design/Popup/popup_clean.png")
+const TRANSFER_PERSON_TEXTURE := preload("res://Design/Other Person/screen_clean.png")
+
+@onready var panel: PanelContainer = $Panel
+@onready var title_label: Label = $Panel/Margin/Content/TitleLabel
 @onready var pond_name_label: Label = $Panel/Margin/Content/PondNameLabel
-@onready var cash_label: Label = $Panel/Margin/Content/CashLabel
+@onready var cash_label: Label = $CashLabel
+@onready var estimate_label: Label = $Panel/Margin/Content/EstimateLabel
+@onready var profit_label: Label = $Panel/Margin/Content/ProfitLabel
+@onready var choice_buttons: VBoxContainer = $Panel/Margin/Content/ChoiceButtons
 @onready var transfer_button: Button = $Panel/Margin/Content/ChoiceButtons/TransferButton
 @onready var sell_one_net_button: Button = $Panel/Margin/Content/ChoiceButtons/SellOneNetButton
 @onready var harvest_self_button: Button = $Panel/Margin/Content/ChoiceButtons/HarvestSelfButton
-@onready var abandon_button: Button = $Panel/Margin/Content/ChoiceButtons/AbandonButton
 @onready var message_label: Label = $Panel/Margin/Content/MessageLabel
-@onready var transfer_confirm_panel: VBoxContainer = $Panel/Margin/Content/TransferConfirmPanel
-@onready var transfer_offer_label: Label = $Panel/Margin/Content/TransferConfirmPanel/TransferOfferLabel
-@onready var accept_transfer_button: Button = $Panel/Margin/Content/TransferConfirmPanel/Buttons/AcceptTransferButton
-@onready var reject_transfer_button: Button = $Panel/Margin/Content/TransferConfirmPanel/Buttons/RejectTransferButton
+@onready var work_plan_back_button: Button = $Panel/Margin/Content/WorkPlanBackButton
 @onready var work_plan_panel: VBoxContainer = $Panel/Margin/Content/WorkPlanPanel
 @onready var low_work_button: Button = $Panel/Margin/Content/WorkPlanPanel/LowWorkButton
 @onready var standard_work_button: Button = $Panel/Margin/Content/WorkPlanPanel/StandardWorkButton
@@ -21,6 +26,11 @@ var screen_container: Control
 var resolver := ActionResolver.new()
 var current_transfer_offer: Dictionary = {}
 var current_one_net_offer: Dictionary = {}
+var transfer_overlay: Control
+var transfer_dialog: PanelContainer
+var transfer_offer_label: Label
+var accept_transfer_button: Button
+var reject_transfer_button: Button
 
 func setup(next_game_state: GameState, next_screen_container: Control) -> void:
 	game_state = next_game_state
@@ -30,27 +40,162 @@ func _ready() -> void:
 	if game_state == null:
 		game_state = GameState.new()
 
+	_create_transfer_dialog()
 	transfer_button.pressed.connect(_on_transfer_pressed)
 	sell_one_net_button.pressed.connect(_on_sell_one_net_pressed)
 	harvest_self_button.pressed.connect(_on_harvest_self_pressed)
-	abandon_button.pressed.connect(_on_abandon_pressed)
-	accept_transfer_button.pressed.connect(_on_accept_transfer_pressed)
-	reject_transfer_button.pressed.connect(_on_reject_transfer_pressed)
+	work_plan_back_button.pressed.connect(_on_work_plan_back_pressed)
 	low_work_button.pressed.connect(_on_work_plan_pressed.bind("low"))
 	standard_work_button.pressed.connect(_on_work_plan_pressed.bind("standard"))
 	full_work_button.pressed.connect(_on_work_plan_pressed.bind("full"))
+	get_viewport().size_changed.connect(_on_viewport_size_changed)
+	_apply_ui_frame()
+	_refresh_transfer_offer()
 	_render()
+
+func _apply_ui_frame() -> void:
+	UIKit.apply_root(self)
+	panel.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+	var margin := panel.get_node_or_null("Margin") as MarginContainer
+	if margin != null:
+		margin.add_theme_constant_override("margin_left", 108)
+		margin.add_theme_constant_override("margin_top", 52)
+		margin.add_theme_constant_override("margin_right", 108)
+		margin.add_theme_constant_override("margin_bottom", 52)
+	UIKit.style_page_title(title_label)
+	UIKit.style_label(pond_name_label, "panel_stat")
+	UIKit.style_top_status(cash_label)
+	UIKit.style_label(estimate_label, "panel_stat")
+	UIKit.style_label(profit_label, "panel_stat")
+	UIKit.style_label(message_label, "body_dark")
+	UIKit.style_label(transfer_offer_label, "body_dark")
+	UIKit.style_button(transfer_button, "ghost")
+	UIKit.style_button(sell_one_net_button, "secondary")
+	UIKit.style_button(harvest_self_button, "primary")
+	UIKit.style_button(work_plan_back_button, "ghost")
+	UIKit.style_button(accept_transfer_button, "primary")
+	UIKit.style_button(reject_transfer_button, "ghost")
+	UIKit.style_button(low_work_button, "secondary")
+	UIKit.style_button(standard_work_button, "secondary")
+	UIKit.style_button(full_work_button, "gold")
+	transfer_button.custom_minimum_size = Vector2(0, 82)
+	sell_one_net_button.custom_minimum_size = Vector2(0, 82)
+	harvest_self_button.custom_minimum_size = Vector2(0, 88)
+	work_plan_back_button.custom_minimum_size = Vector2(0, 64)
+	low_work_button.custom_minimum_size = Vector2(0, 220)
+	standard_work_button.custom_minimum_size = Vector2(0, 220)
+	full_work_button.custom_minimum_size = Vector2(0, 220)
+	low_work_button.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	standard_work_button.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	full_work_button.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	work_plan_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	var content := title_label.get_parent()
+	if content != null:
+		content.move_child(title_label, 0)
+		content.move_child(pond_name_label, 1)
+	_show_choice_page()
+
+func _create_transfer_dialog() -> void:
+	var modal := UIKit.create_modal_layer(self, "TransferModal", TRANSFER_POPUP_TEXTURE)
+	transfer_overlay = modal["overlay"] as Control
+	transfer_dialog = modal["card"] as PanelContainer
+
+	var content := VBoxContainer.new()
+	content.add_theme_constant_override("separation", 16)
+	transfer_dialog.add_child(content)
+
+	var title := Label.new()
+	title.text = "有人愿意接手"
+	UIKit.style_modal_title(title)
+	content.add_child(title)
+
+	var body_scroll := ScrollContainer.new()
+	body_scroll.name = "BodyScroll"
+	body_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	body_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	content.add_child(body_scroll)
+
+	var body := VBoxContainer.new()
+	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	body.add_theme_constant_override("separation", 14)
+	body_scroll.add_child(body)
+
+	transfer_offer_label = Label.new()
+	transfer_offer_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	transfer_offer_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	transfer_offer_label.add_theme_font_size_override("font_size", 23)
+	transfer_offer_label.add_theme_color_override("font_color", UIKit.INK)
+	body.add_child(transfer_offer_label)
+
+	var character_row := HBoxContainer.new()
+	character_row.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	character_row.add_theme_constant_override("separation", 12)
+	body.add_child(character_row)
+
+	var person := TextureRect.new()
+	person.custom_minimum_size = Vector2(280, 300)
+	person.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	person.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	person.texture = TRANSFER_PERSON_TEXTURE
+	person.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	person.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	person.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	character_row.add_child(person)
+
+	var bubble := PanelContainer.new()
+	bubble.custom_minimum_size = Vector2(250, 0)
+	bubble.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bubble.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	bubble.add_theme_stylebox_override("panel", UIKit.make_style(Color("fff8df"), Color("6d241f"), 24, 3, true))
+	character_row.add_child(bubble)
+
+	var bubble_margin := MarginContainer.new()
+	bubble_margin.add_theme_constant_override("margin_left", 24)
+	bubble_margin.add_theme_constant_override("margin_top", 20)
+	bubble_margin.add_theme_constant_override("margin_right", 24)
+	bubble_margin.add_theme_constant_override("margin_bottom", 20)
+	bubble.add_child(bubble_margin)
+
+	var bubble_text := Label.new()
+	bubble_text.text = "兄弟一场，把这塘包给我"
+	bubble_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	bubble_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	bubble_text.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	bubble_text.add_theme_font_size_override("font_size", 28)
+	bubble_text.add_theme_color_override("font_color", UIKit.INK)
+	bubble_margin.add_child(bubble_text)
+
+	var buttons := HBoxContainer.new()
+	buttons.add_theme_constant_override("separation", 14)
+	content.add_child(buttons)
+
+	accept_transfer_button = Button.new()
+	accept_transfer_button.text = "接受转包"
+	accept_transfer_button.custom_minimum_size = Vector2(0, 76)
+	accept_transfer_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	UIKit.style_button(accept_transfer_button, "primary")
+	accept_transfer_button.pressed.connect(_on_accept_transfer_pressed)
+	buttons.add_child(accept_transfer_button)
+
+	reject_transfer_button = Button.new()
+	reject_transfer_button.text = "继续自己扛"
+	reject_transfer_button.custom_minimum_size = Vector2(0, 76)
+	reject_transfer_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	UIKit.style_button(reject_transfer_button, "ghost")
+	reject_transfer_button.pressed.connect(_on_reject_transfer_pressed)
+	buttons.add_child(reject_transfer_button)
 
 func _render() -> void:
 	var pond := game_state.current_pond
 	pond_name_label.text = "已包下：%s" % str(pond.get("name", "未承包鱼塘"))
-	cash_label.text = "剩余本钱：%d 元" % game_state.cash
+	cash_label.text = UIKit.format_run_status(game_state.day, game_state.cash)
+	estimate_label.text = "塘口估值：%d 元" % game_state.get_current_pond_estimated_value()
+	profit_label.text = "账面净赚：%+d 元" % game_state.get_mark_to_market_profit()
 
 	transfer_button.text = "转包脱手"
 	sell_one_net_button.text = "卖一网给别人"
 	harvest_self_button.text = "自己下网"
-	abandon_button.text = "认亏收手"
-	transfer_button.disabled = current_transfer_offer.is_empty()
+	transfer_button.disabled = current_transfer_offer.is_empty() or game_state.drained
 	sell_one_net_button.disabled = current_one_net_offer.is_empty() or game_state.sold_one_net
 	if current_transfer_offer.is_empty():
 		transfer_button.text = "转包脱手（暂无报价）"
@@ -59,15 +204,38 @@ func _render() -> void:
 	elif current_one_net_offer.is_empty():
 		sell_one_net_button.text = "卖一网（暂无买家）"
 	if not game_state.can_pay(game_state.get_work_cost("low")):
-		message_label.text = "剩下的钱连低成本下一网都不够了，只能认亏收手，看看这一局账面。"
+		message_label.text = "钱不够下一网了。可以转包脱手，留本钱去下一地方。"
 	elif game_state.self_net_count <= 0:
-		message_label.text = "先自己下一网，把鱼情打出来。没见到鱼，外面的人不会给你真价。"
+		message_label.text = "先自己下一网。没见到鱼，外面不给真价。"
 
 	_update_work_buttons()
 
 func _hide_detail_panels() -> void:
-	transfer_confirm_panel.visible = false
+	_close_transfer_dialog()
+	_show_choice_page()
+
+func _show_choice_page() -> void:
+	title_label.text = "塘已经包下"
+	estimate_label.visible = true
+	profit_label.visible = true
+	choice_buttons.visible = true
+	work_plan_back_button.visible = false
 	work_plan_panel.visible = false
+
+func _show_work_plan_page() -> void:
+	title_label.text = "自己下网"
+	estimate_label.visible = false
+	profit_label.visible = false
+	choice_buttons.visible = false
+	work_plan_back_button.visible = true
+	work_plan_panel.visible = true
+
+func _close_transfer_dialog() -> void:
+	UIKit.hide_modal(transfer_overlay)
+
+func _refresh_transfer_offer() -> void:
+	game_state.current_pond["estimated_transfer_value"] = game_state.get_current_pond_estimated_value()
+	current_transfer_offer = resolver.generate_transfer_offer(game_state.current_pond)
 
 func _on_transfer_pressed() -> void:
 	if current_transfer_offer.is_empty():
@@ -76,18 +244,23 @@ func _on_transfer_pressed() -> void:
 
 	_hide_detail_panels()
 	transfer_offer_label.text = str(current_transfer_offer.get("text", ""))
-	transfer_confirm_panel.visible = true
+	UIKit.show_modal(self, transfer_overlay, transfer_dialog, 0.86, 980, Vector2i(340, 560), Vector2i(860, 1040))
 	message_label.text = ""
 
 func _on_accept_transfer_pressed() -> void:
+	_close_transfer_dialog()
 	game_state.apply_transfer(int(current_transfer_offer.get("income", 0)))
 	UIController.show_settlement(screen_container, game_state)
 
 func _on_reject_transfer_pressed() -> void:
-	current_transfer_offer = {}
-	transfer_confirm_panel.visible = false
+	_close_transfer_dialog()
 	message_label.text = "你没接这个转包价。后面是赚是亏，继续自己扛。"
 	_render()
+
+func _on_viewport_size_changed() -> void:
+	if transfer_overlay == null or not transfer_overlay.visible:
+		return
+	UIKit.layout_modal(self, transfer_dialog, 0.86, 980, Vector2i(340, 560), Vector2i(860, 1040))
 
 func _on_sell_one_net_pressed() -> void:
 	_hide_detail_panels()
@@ -101,20 +274,21 @@ func _on_sell_one_net_pressed() -> void:
 		return
 
 	if game_state.apply_one_net(int(current_one_net_offer.get("income", 0)), str(current_one_net_offer.get("text", ""))):
-		message_label.text = "%s\n买家当场付 %d 元。这钱稳了，但这一网里有什么鱼就归他了。" % [str(current_one_net_offer.get("text", "")), int(current_one_net_offer.get("income", 0))]
+		message_label.text = str(game_state.last_result.get("message", "买家这一网已经开出来，塘口估值已更新。"))
 		current_one_net_offer = {}
+		_refresh_transfer_offer()
 	_render()
 
-func _on_abandon_pressed() -> void:
-	_hide_detail_panels()
-	game_state.apply_abandon()
-	UIController.show_settlement(screen_container, game_state)
-
 func _on_harvest_self_pressed() -> void:
-	_hide_detail_panels()
-	work_plan_panel.visible = true
-	message_label.text = "三种干法：省钱试一网、正常下一网、直接抽干收尾。抽干做完就结算，钱不够的方案不能选。"
+	_close_transfer_dialog()
+	_show_work_plan_page()
+	message_label.text = "选一种下网方式。抽干会直接结算，钱不够的方案不能选。"
 	_update_work_buttons()
+
+func _on_work_plan_back_pressed() -> void:
+	message_label.text = ""
+	_show_choice_page()
+	_render()
 
 func _on_work_plan_pressed(plan_id: String) -> void:
 	var cost := game_state.get_work_cost(plan_id)
@@ -131,10 +305,12 @@ func _on_work_plan_pressed(plan_id: String) -> void:
 
 		var opportunities := resolver.generate_disposal_opportunities(game_state.current_pond, result)
 		current_transfer_offer = opportunities.get("transfer_offer", {})
+		if current_transfer_offer.is_empty():
+			_refresh_transfer_offer()
 		if not game_state.sold_one_net:
 			current_one_net_offer = opportunities.get("one_net_offer", {})
 		message_label.text = "%s\n%s" % [str(result.get("text", "")), str(opportunities.get("message", ""))]
-		work_plan_panel.visible = false
+		_show_choice_page()
 		_render()
 	else:
 		message_label.text = "本钱不够，干不了这个作业方案。"
@@ -145,9 +321,9 @@ func _update_work_buttons() -> void:
 	var standard_cost := game_state.get_work_cost("standard")
 	var full_cost := game_state.get_work_cost("full")
 
-	low_work_button.text = "省着下网：小捞一网（%d 元）" % low_cost
-	standard_work_button.text = "正常作业：稳捞一网（%d 元）" % standard_cost
-	full_work_button.text = "抽干收尾：一次结算（%d 元）" % full_cost
+	low_work_button.text = "小捞一网\n%d 元 · 捞完还能继续" % low_cost
+	standard_work_button.text = "稳捞一网\n%d 元 · 捞完还能继续" % standard_cost
+	full_work_button.text = "抽干收尾\n%d 元 · 本轮直接结算" % full_cost
 	low_work_button.disabled = not game_state.can_pay(low_cost)
 	standard_work_button.disabled = not game_state.can_pay(standard_cost)
 	full_work_button.disabled = game_state.drained or not game_state.can_pay(full_cost)

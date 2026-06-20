@@ -5,6 +5,7 @@ const POND_LIST_SCENE := preload("res://scenes/PondList.tscn")
 const POND_DETAIL_SCENE := preload("res://scenes/PondDetail.tscn")
 const AFTER_CONTRACT_CHOICE_SCENE := preload("res://scenes/AfterContractChoice.tscn")
 const SETTLEMENT_SCENE := preload("res://scenes/Settlement.tscn")
+const SaveSystem := preload("res://scripts/save_system.gd")
 
 static func replace_screen(container: Control, next_screen: Control) -> void:
 	for child in container.get_children():
@@ -13,10 +14,12 @@ static func replace_screen(container: Control, next_screen: Control) -> void:
 	container.add_child(next_screen)
 	next_screen.set_anchors_preset(Control.PRESET_FULL_RECT)
 
-static func show_pond_list(container: Control, game_state: GameState) -> void:
+static func show_pond_list(container: Control, game_state: GameState, save_checkpoint := false) -> void:
 	var screen := POND_LIST_SCENE.instantiate()
 	screen.setup(game_state, container)
 	replace_screen(container, screen)
+	if save_checkpoint:
+		SaveSystem.save_checkpoint(game_state)
 
 static func show_pond_detail(container: Control, game_state: GameState, pond: Dictionary) -> void:
 	if str(game_state.current_pond.get("id", "")) != str(pond.get("id", "")):

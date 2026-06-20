@@ -20,14 +20,15 @@ func _init(seed_value: int = 0) -> void:
 	fishing_rules = BalanceRulesScript.section(rules, "fishing")
 
 func generate_harvest_result(pond: Dictionary, plan_id: String, work_cost: int) -> Dictionary:
-	var main_fish_type := _roll_fish_type(pond, plan_id)
-	var catch_details := _generate_catch_details(pond, plan_id, main_fish_type)
+	_ensure_fish_stock(pond)
+	var catch_details := _take_catch_from_stock(pond, plan_id)
 	var fish_income := _sum_catch_income(catch_details)
 	var plan_name := _get_plan_name(plan_id)
 	var is_final := plan_id == "drain" or plan_id == "full"
-	var fish_name := str(main_fish_type.get("name", "未知鱼获"))
+	var main_fish_type := _get_main_catch_item(catch_details)
+	var fish_name := str(main_fish_type.get("name", "暂无鱼获"))
 	var description := _build_fish_description(fish_income, work_cost, fish_name)
-	var quality := _get_quality_score(str(main_fish_type.get("id", "normal_fish")), fish_income, work_cost)
+	var quality := _get_quality_score(str(main_fish_type.get("id", "small_fish")), fish_income, work_cost)
 
 	return {
 		"plan_id": plan_id,
@@ -37,11 +38,156 @@ func generate_harvest_result(pond: Dictionary, plan_id: String, work_cost: int) 
 		"catch_details": catch_details,
 		"is_final": is_final,
 		"quality": quality,
-		"fish_result_id": str(main_fish_type.get("id", "normal_fish")),
+		"fish_result_id": str(main_fish_type.get("id", "")),
 		"fish_result_name": fish_name,
 		"fish_description": description,
 		"text": "%s：%s\n%s\n本次卖鱼回款 %d 元。" % [plan_name, description, _format_catch_details(catch_details), fish_income]
 	}
+
+func _ensure_fish_stock(pond: Dictionary) -> void:
+	if pond.has("fish_stock") and Array(pond.get("fish_stock", [])).size() > 0:
+		return
+
+	var fallback_value := int(pond.get("hidden_value", pond.get("quote_price", 0)))
+	var unit_price := maxi(1, _get_random_unit_price_by_id("small_fish"))
+	var weight := int(fallback_value / unit_price)
+	pond["fish_stock"] = [{
+		"id": "small_fish",
+		"name": _get_fish_name_by_id("small_fish"),
+		"weight_jin": weight,
+		"remaining_weight_jin": weight,
+		"unit_price": unit_price,
+		"income": weight * unit_price,
+		"remaining_income": weight * unit_price
+	}]
+
+func _take_catch_from_stock(pond: Dictionary, plan_id: String) -> Array[Dictionary]:
+	var catch_details: Array[Dictionary] = []
+	var stock := Array(pond.get("fish_stock", []))
+	var is_final := plan_id == "drain" or plan_id == "full"
+	var catch_ratio := _get_stock_catch_ratio(pond, plan_id)
+
+	for index in range(stock.size()):
+		var stock_item := Dictionary(stock[index])
+		var fish_id := str(stock_item.get("id", ""))
+		var remaining_weight := int(stock_item.get("remaining_weight_jin", stock_item.get("weight_jin", 0)))
+		if remaining_weight <= 0:
+			continue
+
+		var unit_price := int(stock_item.get("unit_price", _get_random_unit_price_by_id(fish_id)))
+		var catch_weight := remaining_weight
+		if not is_final:
+			catch_weight = _snap_weight_down(float(remaining_weight) * catch_ratio * _get_species_catch_factor(fish_id, plan_id), _get_weight_unit(fish_id))
+			catch_weight = mini(catch_weight, remaining_weight)
+		if catch_weight <= 0:
+			continue
+
+		var catch_item := {
+			"id": fish_id,
+			"name": str(stock_item.get("name", _get_fish_name_by_id(fish_id))),
+			"weight_jin": catch_weight,
+			"unit_price": unit_price,
+			"income": catch_weight * unit_price
+		}
+		if fish_id == "fish_king":
+			_add_fish_king_detail(catch_item)
+		catch_details.append(catch_item)
+
+		stock_item["remaining_weight_jin"] = remaining_weight - catch_weight
+		stock_item["remaining_income"] = int(stock_item.get("remaining_weight_jin", 0)) * unit_price
+		stock[index] = stock_item
+
+	pond["fish_stock"] = stock
+	pond["remaining_fish_value"] = _sum_remaining_stock_income(stock)
+	return catch_details
+
+func _get_stock_catch_ratio(pond: Dictionary, plan_id: String) -> float:
+	if plan_id == "full" or plan_id == "drain":
+		return 1.0
+
+	var difficulty := maxf(float(pond.get("difficulty", 1.0)), BalanceRulesScript.number(fishing_rules, "min_difficulty", 0.2))
+	var base_ratio := 0.34
+	match plan_id:
+		"low":
+			base_ratio = 0.24
+		"standard":
+			base_ratio = 0.38
+		_:
+			base_ratio = 0.34
+	var difficulty_factor := clampf(1.08 - (difficulty - 1.0) * 0.18, 0.68, 1.16)
+	return clampf(base_ratio * difficulty_factor, 0.08, 0.55)
+
+func _get_species_catch_factor(fish_id: String, plan_id: String) -> float:
+	var factors := {
+		"low": {
+			"small_fish": 1.15,
+			"normal_fish": 0.9,
+			"big_fish": 0.35,
+			"fish_king": 0.0
+		},
+		"standard": {
+			"small_fish": 0.9,
+			"normal_fish": 1.0,
+			"big_fish": 0.75,
+			"fish_king": 0.25
+		}
+	}
+	return float(Dictionary(factors.get(plan_id, {})).get(fish_id, 1.0))
+
+func _snap_weight_down(weight: float, unit: int) -> int:
+	if weight <= 0.0:
+		return 0
+	var safe_unit := maxi(1, unit)
+	return int(floor(weight / float(safe_unit))) * safe_unit
+
+func _add_fish_king_detail(catch_item: Dictionary) -> void:
+	var integrity_rules := BalanceRulesScript.dict_value(fishing_rules, "fish_king_integrity")
+	var integrity := BalanceRulesScript.random_int_range(rng, integrity_rules, "min", "max", 80, 100)
+	catch_item["integrity"] = integrity
+	if integrity < BalanceRulesScript.integer(integrity_rules, "premium_threshold", 90):
+		catch_item["price_note"] = "鱼王有损伤，但按塘口固定鱼货价计入本局回款"
+
+func _get_main_catch_item(catch_details: Array[Dictionary]) -> Dictionary:
+	if catch_details.is_empty():
+		return {
+			"id": "",
+			"name": "暂无鱼获",
+			"income": 0
+		}
+
+	var best: Dictionary = catch_details.front()
+	for item in catch_details:
+		var item_rank := _fish_rank(str(item.get("id", "")))
+		var best_rank := _fish_rank(str(best.get("id", "")))
+		if item_rank > best_rank or (item_rank == best_rank and int(item.get("income", 0)) > int(best.get("income", 0))):
+			best = item
+	return best
+
+func _fish_rank(fish_id: String) -> int:
+	match fish_id:
+		"fish_king":
+			return 4
+		"big_fish":
+			return 3
+		"normal_fish":
+			return 2
+		"small_fish":
+			return 1
+		_:
+			return 0
+
+func _sum_remaining_stock_income(stock: Array) -> int:
+	var total := 0
+	for item_variant in stock:
+		var item := Dictionary(item_variant)
+		total += int(item.get("remaining_income", int(item.get("remaining_weight_jin", 0)) * int(item.get("unit_price", 0))))
+	return total
+
+func _get_fish_name_by_id(fish_id: String) -> String:
+	for fish_type in fish_types:
+		if str(fish_type.get("id", "")) == fish_id:
+			return str(fish_type.get("name", fish_id))
+	return fish_id
 
 func _roll_fish_type(pond: Dictionary, plan_id: String) -> Dictionary:
 	if fish_types.is_empty():

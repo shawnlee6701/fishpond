@@ -1,0 +1,264 @@
+extends RefCounted
+class_name FishPoolUIKit
+
+const BG := Color(0.055, 0.11, 0.095, 1.0)
+const SURFACE := Color(0.94, 0.86, 0.68, 1.0)
+const SURFACE_DARK := Color(0.16, 0.25, 0.19, 1.0)
+const CARD := Color(0.99, 0.94, 0.80, 1.0)
+const CARD_ALT := Color(0.90, 0.80, 0.58, 1.0)
+const INK := Color(0.12, 0.10, 0.06, 1.0)
+const MUTED := Color(0.34, 0.31, 0.23, 1.0)
+const CREAM := Color(1.0, 0.96, 0.83, 1.0)
+const GREEN := Color(0.12, 0.36, 0.24, 1.0)
+const GREEN_LIGHT := Color(0.22, 0.53, 0.34, 1.0)
+const GOLD := Color(0.92, 0.62, 0.20, 1.0)
+const RED := Color(0.66, 0.16, 0.11, 1.0)
+const DISABLED := Color(0.42, 0.43, 0.38, 1.0)
+const DESIGN_SIZE := Vector2(1080, 1920)
+const PAGE_SAFE_X := 52.0
+const PAGE_TOP := 32.0
+const PAGE_BOTTOM := 48.0
+const STATUS_HEIGHT := 64.0
+const CONTENT_TOP := 110.0
+const ACTION_TOP := 1660.0
+const ACTION_BOTTOM := 1810.0
+
+static func make_style(bg: Color, border: Color, radius: int = 18, border_width: int = 3, shadow := false) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = bg
+	style.border_color = border
+	style.set_border_width_all(border_width)
+	style.set_corner_radius_all(radius)
+	if shadow:
+		style.shadow_color = Color(0, 0, 0, 0.24)
+		style.shadow_size = 10
+		style.shadow_offset = Vector2(0, 5)
+	return style
+
+static func apply_root(root: Control) -> void:
+	root.custom_minimum_size = DESIGN_SIZE
+	root.add_theme_color_override("font_color", CREAM)
+	root.add_theme_font_size_override("font_size", 28)
+
+static func style_top_status(label: Label) -> void:
+	style_label(label, "top_status")
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	var style := make_style(Color(0.93, 0.85, 0.67, 0.94), Color(0.43, 0.31, 0.16, 0.70), 18, 2, true)
+	style.content_margin_left = 20.0
+	style.content_margin_right = 20.0
+	label.add_theme_stylebox_override("normal", style)
+
+static func style_page_title(label: Label) -> void:
+	style_label(label, "panel_title")
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+
+static func style_modal_title(label: Label) -> void:
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.add_theme_font_size_override("font_size", 34)
+	label.add_theme_color_override("font_color", Color("6d241f"))
+
+static func style_main_panel(panel: PanelContainer) -> void:
+	panel.add_theme_stylebox_override("panel", make_style(SURFACE, Color(0.61, 0.45, 0.25), 20, 3, true))
+	var margin := panel.get_node_or_null("Margin") as MarginContainer
+	if margin != null:
+		margin.add_theme_constant_override("margin_left", 22)
+		margin.add_theme_constant_override("margin_top", 22)
+		margin.add_theme_constant_override("margin_right", 22)
+		margin.add_theme_constant_override("margin_bottom", 22)
+
+static func style_card(card: PanelContainer, accent := GREEN) -> void:
+	card.add_theme_stylebox_override("panel", make_style(CARD, accent, 14, 3, true))
+
+static func style_message_panel(panel: PanelContainer) -> void:
+	panel.add_theme_stylebox_override("panel", make_style(Color(0.18, 0.30, 0.22, 1.0), Color(0.43, 0.62, 0.39, 1.0), 12, 2, false))
+
+static func style_button(button: Button, role := "secondary") -> void:
+	var normal := GREEN
+	var hover := GREEN_LIGHT
+	var pressed := Color(0.08, 0.26, 0.18, 1.0)
+	var border := Color(0.58, 0.76, 0.47, 1.0)
+	var font := CREAM
+	if role == "primary":
+		normal = RED
+		hover = Color(0.78, 0.24, 0.15, 1.0)
+		pressed = Color(0.48, 0.09, 0.07, 1.0)
+		border = GOLD
+	elif role == "gold":
+		normal = GOLD
+		hover = Color(1.0, 0.72, 0.28, 1.0)
+		pressed = Color(0.72, 0.42, 0.12, 1.0)
+		border = Color(1.0, 0.92, 0.45, 1.0)
+		font = Color(0.18, 0.10, 0.04, 1.0)
+	elif role == "ghost":
+		normal = Color(0.78, 0.72, 0.57, 1.0)
+		hover = Color(0.88, 0.80, 0.62, 1.0)
+		pressed = Color(0.60, 0.55, 0.44, 1.0)
+		border = Color(0.44, 0.36, 0.23, 1.0)
+		font = INK
+
+	button.add_theme_stylebox_override("normal", make_style(normal, border, 14, 3, true))
+	button.add_theme_stylebox_override("hover", make_style(hover, border, 14, 3, true))
+	button.add_theme_stylebox_override("pressed", make_style(pressed, border, 14, 3, false))
+	button.add_theme_stylebox_override("disabled", make_style(DISABLED, Color(0.30, 0.32, 0.29, 1.0), 14, 2, false))
+	button.add_theme_color_override("font_color", font)
+	button.add_theme_color_override("font_hover_color", font)
+	button.add_theme_color_override("font_pressed_color", font)
+	button.add_theme_color_override("font_disabled_color", Color(0.74, 0.74, 0.66, 1.0))
+	button.add_theme_font_size_override("font_size", 30)
+
+static func style_label(label: Label, role := "body") -> void:
+	if role == "title":
+		label.add_theme_color_override("font_color", Color(1.0, 0.82, 0.32, 1.0))
+		label.add_theme_font_size_override("font_size", 56)
+	elif role == "panel_title":
+		label.add_theme_color_override("font_color", RED)
+		label.add_theme_font_size_override("font_size", 44)
+	elif role == "panel_stat":
+		label.add_theme_color_override("font_color", INK)
+		label.add_theme_font_size_override("font_size", 27)
+	elif role == "top_status":
+		label.add_theme_color_override("font_color", Color(0.08, 0.18, 0.12, 1.0))
+		label.add_theme_font_size_override("font_size", 27)
+	elif role == "section":
+		label.add_theme_color_override("font_color", GREEN)
+		label.add_theme_font_size_override("font_size", 31)
+	elif role == "body_dark":
+		label.add_theme_color_override("font_color", INK)
+		label.add_theme_font_size_override("font_size", 27)
+	elif role == "muted":
+		label.add_theme_color_override("font_color", MUTED)
+		label.add_theme_font_size_override("font_size", 25)
+	elif role == "hud":
+		label.add_theme_color_override("font_color", CREAM)
+		label.add_theme_font_size_override("font_size", 28)
+	else:
+		label.add_theme_color_override("font_color", CREAM)
+		label.add_theme_font_size_override("font_size", 30)
+
+static func style_chip(label: Label, accent := GOLD) -> void:
+	label.add_theme_color_override("font_color", CREAM)
+	label.add_theme_font_size_override("font_size", 28)
+	var style := make_style(Color(accent.r * 0.45, accent.g * 0.45, accent.b * 0.45, 1.0), accent, 999, 2, false)
+	label.add_theme_stylebox_override("normal", style)
+
+static func make_label(text: String, font_size := 28, color := INK, align := HORIZONTAL_ALIGNMENT_LEFT) -> Label:
+	var label := Label.new()
+	label.text = text
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.horizontal_alignment = align
+	label.add_theme_font_size_override("font_size", font_size)
+	label.add_theme_color_override("font_color", color)
+	return label
+
+static func make_chip(text: String, accent := GREEN) -> PanelContainer:
+	var panel := PanelContainer.new()
+	panel.add_theme_stylebox_override("panel", make_style(Color(accent.r * 0.55, accent.g * 0.55, accent.b * 0.55, 1.0), accent, 999, 2, false))
+	var margin := MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 14)
+	margin.add_theme_constant_override("margin_top", 6)
+	margin.add_theme_constant_override("margin_right", 14)
+	margin.add_theme_constant_override("margin_bottom", 6)
+	panel.add_child(margin)
+	var label := make_label(text, 23, CREAM, HORIZONTAL_ALIGNMENT_CENTER)
+	margin.add_child(label)
+	return panel
+
+static func set_safe_panel(panel: Control, left := 22, top := 26, right := -22, bottom := -22) -> void:
+	panel.set_anchors_preset(Control.PRESET_FULL_RECT)
+	panel.offset_left = left
+	panel.offset_top = top
+	panel.offset_right = right
+	panel.offset_bottom = bottom
+
+static func create_modal_layer(root: Control, modal_name: String, paper_texture: Texture2D) -> Dictionary:
+	var overlay := Control.new()
+	overlay.name = modal_name
+	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	overlay.z_index = 100
+	overlay.visible = false
+	root.add_child(overlay)
+
+	var mask := ColorRect.new()
+	mask.name = "Mask"
+	mask.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	mask.color = Color(0.015, 0.02, 0.018, 0.72)
+	mask.mouse_filter = Control.MOUSE_FILTER_STOP
+	overlay.add_child(mask)
+
+	var card := PanelContainer.new()
+	card.name = "Card"
+	card.mouse_filter = Control.MOUSE_FILTER_STOP
+	card.clip_contents = true
+	var paper_style := StyleBoxTexture.new()
+	paper_style.texture = paper_texture
+	paper_style.texture_margin_left = 84.0
+	paper_style.texture_margin_top = 84.0
+	paper_style.texture_margin_right = 84.0
+	paper_style.texture_margin_bottom = 84.0
+	paper_style.content_margin_left = 72.0
+	paper_style.content_margin_top = 64.0
+	paper_style.content_margin_right = 72.0
+	paper_style.content_margin_bottom = 64.0
+	card.add_theme_stylebox_override("panel", paper_style)
+	overlay.add_child(card)
+
+	return {"overlay": overlay, "mask": mask, "card": card}
+
+static func layout_modal(root: Control, card: PanelContainer, width_ratio: float, preferred_height: int, min_size: Vector2i, max_size: Vector2i) -> void:
+	var viewport_size := Vector2i(root.size)
+	if viewport_size.x <= 0 or viewport_size.y <= 0:
+		viewport_size = Vector2i(root.get_viewport_rect().size)
+	var safe_width := maxi(1, viewport_size.x - 48)
+	var safe_height := maxi(1, viewport_size.y - 48)
+	var target_width := clampi(int(viewport_size.x * width_ratio), mini(min_size.x, safe_width), mini(max_size.x, safe_width))
+	var target_height := clampi(preferred_height, mini(min_size.y, safe_height), mini(max_size.y, safe_height))
+	card.size = Vector2(target_width, target_height)
+	card.position = Vector2((viewport_size.x - target_width) * 0.5, (viewport_size.y - target_height) * 0.5)
+
+static func show_modal(root: Control, overlay: Control, card: PanelContainer, width_ratio: float, preferred_height: int, min_size: Vector2i, max_size: Vector2i) -> void:
+	layout_modal(root, card, width_ratio, preferred_height, min_size, max_size)
+	overlay.visible = true
+	root.move_child(overlay, root.get_child_count() - 1)
+
+static func hide_modal(overlay: Control) -> void:
+	if overlay != null:
+		overlay.visible = false
+
+static func format_run_status(day: int, cash: int, suffix := "") -> String:
+	var text := "第 %d 天  |  本金 %d 元" % [day, cash]
+	if not suffix.is_empty():
+		text = "%s  |  %s" % [text, suffix]
+	return text
+
+static func wrap_nodes_in_scroll(parent: VBoxContainer, nodes: Array[Control], scroll_name := "MobileScroll") -> ScrollContainer:
+	var existing := parent.get_node_or_null(scroll_name) as ScrollContainer
+	if existing != null:
+		return existing
+
+	var insert_index := parent.get_child_count()
+	if not nodes.is_empty() and nodes[0].get_parent() == parent:
+		insert_index = nodes[0].get_index()
+
+	var scroll := ScrollContainer.new()
+	scroll.name = scroll_name
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.follow_focus = true
+
+	var inner := VBoxContainer.new()
+	inner.name = "Content"
+	inner.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	inner.add_theme_constant_override("separation", 12)
+	scroll.add_child(inner)
+
+	parent.add_child(scroll)
+	parent.move_child(scroll, insert_index)
+	for node in nodes:
+		if node != null and node.get_parent() == parent:
+			parent.remove_child(node)
+			inner.add_child(node)
+
+	return scroll
