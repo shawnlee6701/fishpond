@@ -1,22 +1,35 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=5 format=3]
 
-[ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
-[ext_resource type="Texture2D" path="res://assets/ui/parchment_background.png" id="2_background"]
-[ext_resource type="Texture2D" path="res://assets/ui/homepage.png" id="3_homepage"]
-[ext_resource type="Texture2D" path="res://assets/ui/icon_droplet.svg" id="4_droplet"]
-[ext_resource type="Texture2D" path="res://assets/ui/icon_restart.svg" id="5_restart"]
+[ext_resource type="Theme" path="res://themes/UI_Theme.tres" id="1_theme"]
+[ext_resource type="Script" path="res://scripts/UI_Manager.gd" id="2_ui_manager"]
+[ext_resource type="Script" path="res://scripts/main.gd" id="3_main"]
+[ext_resource type="Script" path="res://scripts/pond_placeholder.gd" id="4_pond_placeholder"]
 
-[node name="Main" type="Control"]
-custom_minimum_size = Vector2(1080, 1920)
+[node name="MainUI" type="CanvasLayer"]
+
+[node name="UIRoot" type="Control" parent="."]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-script = ExtResource("1_main")
+mouse_filter = 2
+theme = ExtResource("1_theme")
+script = ExtResource("2_ui_manager")
 
-[node name="Background" type="TextureRect" parent="."]
+[node name="GameRoot" type="Control" parent="UIRoot"]
+custom_minimum_size = Vector2(1080, 1920)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("3_main")
+
+; Future replacement slot: use a background texture here without touching homepage content.
+[node name="Background" type="ColorRect" parent="UIRoot/GameRoot"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -24,23 +37,9 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-texture = ExtResource("2_background")
-expand_mode = 1
-stretch_mode = 6
+color = Color(0.184314, 0.419608, 0.309804, 1)
 
-[node name="HomepageBackground" type="TextureRect" parent="."]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-texture = ExtResource("3_homepage")
-expand_mode = 1
-stretch_mode = 6
-
-[node name="MainMenu" type="Control" parent="."]
+[node name="HomeScreen" type="Control" parent="UIRoot/GameRoot"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -48,37 +47,125 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="BottomActions" type="VBoxContainer" parent="MainMenu"]
+[node name="SafeArea" type="MarginContainer" parent="UIRoot/GameRoot/HomeScreen"]
 layout_mode = 1
-anchors_preset = 12
-anchor_top = 1.0
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 72.0
-offset_top = -380.0
-offset_right = -72.0
-offset_bottom = -24.0
 grow_horizontal = 2
-grow_vertical = 0
+grow_vertical = 2
+theme_override_constants/margin_left = 72
+theme_override_constants/margin_top = 88
+theme_override_constants/margin_right = 72
+theme_override_constants/margin_bottom = 72
+
+[node name="PageLayout" type="VBoxContainer" parent="UIRoot/GameRoot/HomeScreen/SafeArea"]
+layout_mode = 2
+theme_override_constants/separation = 28
+
+[node name="TopArea" type="VBoxContainer" parent="UIRoot/GameRoot/HomeScreen/SafeArea/PageLayout"]
+custom_minimum_size = Vector2(0, 330)
+layout_mode = 2
 theme_override_constants/separation = 20
 
-[node name="StartButton" type="Button" parent="MainMenu/BottomActions"]
-custom_minimum_size = Vector2(0, 168)
+[node name="TitleSignCenter" type="CenterContainer" parent="UIRoot/GameRoot/HomeScreen/SafeArea/PageLayout/TopArea"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 36
-icon = ExtResource("4_droplet")
-icon_max_width = 42
+
+[node name="TitleSign" type="Control" parent="UIRoot/GameRoot/HomeScreen/SafeArea/PageLayout/TopArea/TitleSignCenter"]
+custom_minimum_size = Vector2(720, 190)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="TitleSignShadow" type="Panel" parent="UIRoot/GameRoot/HomeScreen/SafeArea/PageLayout/TopArea/TitleSignCenter/TitleSign"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = 10.0
+offset_right = 8.0
+offset_bottom = 10.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+; Future replacement slot: TitleSignBg can become title_sign.png.
+[node name="TitleSignBg" type="Panel" parent="UIRoot/GameRoot/HomeScreen/SafeArea/PageLayout/TopArea/TitleSignCenter/TitleSign"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="TitleLabel" type="Label" parent="UIRoot/GameRoot/HomeScreen/SafeArea/PageLayout/TopArea/TitleSignCenter/TitleSign"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 72
+text = "这塘我包了"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="SubtitleLabel" type="Label" parent="UIRoot/GameRoot/HomeScreen/SafeArea/PageLayout/TopArea"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+text = "承包鱼塘，一网暴富"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="MainVisualArea" type="VBoxContainer" parent="UIRoot/GameRoot/HomeScreen/SafeArea/PageLayout"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 24
+
+[node name="PondCenter" type="CenterContainer" parent="UIRoot/GameRoot/HomeScreen/SafeArea/PageLayout/MainVisualArea"]
+layout_mode = 2
+size_flags_vertical = 3
+
+; Future replacement slot: PondPlaceholder can become pond_main_visual.png.
+[node name="PondPlaceholder" type="Control" parent="UIRoot/GameRoot/HomeScreen/SafeArea/PageLayout/MainVisualArea/PondCenter"]
+custom_minimum_size = Vector2(820, 720)
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("4_pond_placeholder")
+
+[node name="HintLabel" type="Label" parent="UIRoot/GameRoot/HomeScreen/SafeArea/PageLayout/MainVisualArea"]
+custom_minimum_size = Vector2(0, 72)
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "看准鱼情，决定要不要包塘"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="BottomActionCenter" type="CenterContainer" parent="UIRoot/GameRoot/HomeScreen/SafeArea/PageLayout"]
+custom_minimum_size = Vector2(0, 250)
+layout_mode = 2
+
+[node name="BottomActionArea" type="VBoxContainer" parent="UIRoot/GameRoot/HomeScreen/SafeArea/PageLayout/BottomActionCenter"]
+custom_minimum_size = Vector2(620, 0)
+layout_mode = 2
+theme_override_constants/separation = 22
+
+; Future replacement slot: ContinueButton can use button_primary.png.
+[node name="ContinueButton" type="Button" parent="UIRoot/GameRoot/HomeScreen/SafeArea/PageLayout/BottomActionCenter/BottomActionArea"]
+custom_minimum_size = Vector2(620, 104)
+layout_mode = 2
+theme_override_font_sizes/font_size = 38
 text = "开始包塘"
 
-[node name="RestartButton" type="Button" parent="MainMenu/BottomActions"]
-custom_minimum_size = Vector2(0, 168)
+; Future replacement slot: RestartButton can use button_secondary.png.
+[node name="RestartButton" type="Button" parent="UIRoot/GameRoot/HomeScreen/SafeArea/PageLayout/BottomActionCenter/BottomActionArea"]
+custom_minimum_size = Vector2(620, 96)
 layout_mode = 2
-theme_override_font_sizes/font_size = 36
-icon = ExtResource("5_restart")
-icon_max_width = 42
+theme_override_font_sizes/font_size = 30
 text = "重新开始"
 
-[node name="ScreenContainer" type="Control" parent="."]
+[node name="ScreenContainer" type="Control" parent="UIRoot/GameRoot"]
 visible = false
 layout_mode = 1
 anchors_preset = 15

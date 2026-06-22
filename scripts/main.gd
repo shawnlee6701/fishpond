@@ -2,60 +2,81 @@ extends Control
 
 const UIKit := preload("res://scripts/ui_kit.gd")
 const SaveSystem := preload("res://scripts/save_system.gd")
-const BUTTON_BOARD := preload("res://assets/ui/button_board.png")
 
-@onready var main_menu: Control = $MainMenu
+@onready var home_screen: Control = $HomeScreen
 @onready var screen_container: Control = $ScreenContainer
-@onready var homepage_background: TextureRect = $HomepageBackground
-@onready var start_button: Button = $MainMenu/BottomActions/StartButton
-@onready var restart_button: Button = $MainMenu/BottomActions/RestartButton
+@onready var title_sign_shadow: Panel = $HomeScreen/SafeArea/PageLayout/TopArea/TitleSignCenter/TitleSign/TitleSignShadow
+@onready var title_sign_bg: Panel = $HomeScreen/SafeArea/PageLayout/TopArea/TitleSignCenter/TitleSign/TitleSignBg
+@onready var title_label: Label = $HomeScreen/SafeArea/PageLayout/TopArea/TitleSignCenter/TitleSign/TitleLabel
+@onready var subtitle_label: Label = $HomeScreen/SafeArea/PageLayout/TopArea/SubtitleLabel
+@onready var hint_label: Label = $HomeScreen/SafeArea/PageLayout/MainVisualArea/HintLabel
+@onready var continue_button: Button = $HomeScreen/SafeArea/PageLayout/BottomActionCenter/BottomActionArea/ContinueButton
+@onready var restart_button: Button = $HomeScreen/SafeArea/PageLayout/BottomActionCenter/BottomActionArea/RestartButton
 
 var game_state: GameState = GameState.new()
 
+
 func _ready() -> void:
-	start_button.text = "继续包塘" if SaveSystem.has_checkpoint() else "开始包塘"
-	_apply_ui_frame()
-	start_button.pressed.connect(_on_start_pressed)
+	continue_button.text = "继续包塘" if SaveSystem.has_checkpoint() else "开始包塘"
+	UIKit.apply_root(self)
+	# UIRoot applies the shared theme after child _ready() calls, so apply homepage-only
+	# graybox styles deferred. These are replaceable presentation slots, not gameplay logic.
+	_apply_home_styles.call_deferred()
+	continue_button.pressed.connect(_on_continue_pressed)
 	restart_button.pressed.connect(_on_restart_pressed)
 
-func _apply_ui_frame() -> void:
-	UIKit.apply_root(self)
-	_style_wood_button(start_button, false)
-	_style_wood_button(restart_button, true)
 
-func _style_wood_button(button: Button, secondary: bool) -> void:
-	var normal_tint := Color(0.78, 0.73, 0.62, 1.0) if secondary else Color.WHITE
-	var hover_tint := Color(0.88, 0.82, 0.68, 1.0) if secondary else Color(1.0, 0.94, 0.80, 1.0)
-	button.add_theme_stylebox_override("normal", _make_wood_style(normal_tint))
-	button.add_theme_stylebox_override("hover", _make_wood_style(hover_tint))
-	button.add_theme_stylebox_override("pressed", _make_wood_style(Color(0.68, 0.63, 0.53, 1.0)))
+func _apply_home_styles() -> void:
+	# Future art replacement: swap TitleSignBg for title_sign.png.
+	title_sign_shadow.add_theme_stylebox_override(
+		"panel", UIKit.make_style(Color(0.08, 0.07, 0.04, 0.46), Color(0.08, 0.07, 0.04, 0.0), 24, 0)
+	)
+	title_sign_bg.add_theme_stylebox_override(
+		"panel", UIKit.make_style(Color("D5A94D"), Color("4A321C"), 24, 6, true)
+	)
+	title_label.add_theme_color_override("font_color", Color("38240F"))
+	title_label.add_theme_color_override("font_outline_color", Color("F5D98B"))
+	title_label.add_theme_constant_override("outline_size", 4)
+	subtitle_label.add_theme_color_override("font_color", Color("F7EAC5"))
+	subtitle_label.add_theme_color_override("font_outline_color", Color(0.08, 0.16, 0.11, 0.9))
+	subtitle_label.add_theme_constant_override("outline_size", 4)
+	hint_label.add_theme_color_override("font_color", Color("E9E1C1"))
+	hint_label.add_theme_color_override("font_outline_color", Color(0.08, 0.16, 0.11, 0.9))
+	hint_label.add_theme_constant_override("outline_size", 3)
+
+	# Future art replacement: use button_primary.png for ContinueButton.
+	_style_home_button(continue_button, true)
+	# Future art replacement: use button_secondary.png for RestartButton.
+	_style_home_button(restart_button, false)
+
+
+func _style_home_button(button: Button, primary: bool) -> void:
+	var normal := Color("E4B940") if primary else Color(0.12, 0.27, 0.20, 0.92)
+	var hover := Color("F1CD5B") if primary else Color(0.16, 0.34, 0.25, 0.96)
+	var pressed := Color("C79627") if primary else Color(0.08, 0.22, 0.16, 1.0)
+	var border := Color("4A321C") if primary else Color("B7C9A8")
+	var font := Color("2E200E") if primary else Color("E8E2C8")
+	var border_width := 5 if primary else 3
+	var radius := 20 if primary else 16
+
+	button.add_theme_stylebox_override("normal", UIKit.make_style(normal, border, radius, border_width, primary))
+	button.add_theme_stylebox_override("hover", UIKit.make_style(hover, border, radius, border_width, primary))
+	button.add_theme_stylebox_override("pressed", UIKit.make_style(pressed, border, radius, border_width, false))
 	button.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
-	button.add_theme_color_override("font_color", UIKit.INK)
-	button.add_theme_color_override("font_hover_color", UIKit.INK)
-	button.add_theme_color_override("font_pressed_color", UIKit.INK)
-	button.add_theme_color_override("font_outline_color", Color(0.98, 0.86, 0.61, 0.9))
-	button.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.28))
-	button.add_theme_constant_override("outline_size", 3)
-	button.add_theme_constant_override("shadow_offset_x", 1)
-	button.add_theme_constant_override("shadow_offset_y", 2)
-	button.add_theme_constant_override("h_separation", 18)
-	button.add_theme_font_size_override("font_size", 48)
+	button.add_theme_color_override("font_color", font)
+	button.add_theme_color_override("font_hover_color", font)
+	button.add_theme_color_override("font_pressed_color", font)
+	button.add_theme_color_override("font_outline_color", Color(1, 1, 1, 0.16) if primary else Color(0, 0, 0, 0.55))
+	button.add_theme_constant_override("outline_size", 2)
 
-func _make_wood_style(modulate: Color) -> StyleBoxTexture:
-	var style := StyleBoxTexture.new()
-	style.texture = BUTTON_BOARD
-	style.texture_margin_left = 150.0
-	style.texture_margin_top = 60.0
-	style.texture_margin_right = 150.0
-	style.texture_margin_bottom = 60.0
-	style.modulate_color = modulate
-	return style
 
-func _on_start_pressed() -> void:
+func _on_continue_pressed() -> void:
 	_open_game(true)
+
 
 func _on_restart_pressed() -> void:
 	_open_game(false)
+
 
 func _open_game(continue_existing: bool) -> void:
 	game_state = GameState.new()
@@ -64,7 +85,6 @@ func _open_game(continue_existing: bool) -> void:
 	else:
 		SaveSystem.clear_checkpoint()
 
-	main_menu.visible = false
-	homepage_background.visible = false
+	home_screen.visible = false
 	screen_container.visible = true
 	UIController.show_pond_list(screen_container, game_state, true)
