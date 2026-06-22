@@ -1,7 +1,6 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=2 format=3]
 
 [ext_resource type="Script" path="res://scripts/pond_detail.gd" id="1_pond_detail"]
-[ext_resource type="Texture2D" path="res://assets/ui/parchment_background.png" id="2_background"]
 
 [node name="PondDetail" type="Control"]
 custom_minimum_size = Vector2(1080, 1920)
@@ -13,130 +12,198 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_pond_detail")
 
-[node name="Background" type="TextureRect" parent="."]
+[node name="SafeArea" type="MarginContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = 52.0
+offset_top = 32.0
+offset_right = -52.0
+offset_bottom = -48.0
 grow_horizontal = 2
 grow_vertical = 2
-mouse_filter = 2
-texture = ExtResource("2_background")
-expand_mode = 1
-stretch_mode = 0
 
-[node name="CashLabel" type="Label" parent="."]
-layout_mode = 1
-anchors_preset = 10
-anchor_right = 1.0
-offset_left = 42.0
-offset_top = 32.0
-offset_right = -42.0
-offset_bottom = 96.0
-grow_horizontal = 2
-theme_override_font_sizes/font_size = 27
-text = "第 1 天  |  本钱 30000 元"
+[node name="PageLayout" type="VBoxContainer" parent="SafeArea"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="TopStatusBar" type="PanelContainer" parent="SafeArea/PageLayout"]
+custom_minimum_size = Vector2(0, 86)
+layout_mode = 2
+theme_type_variation = &"InspectTopStatusPanel"
+
+[node name="StatusRow" type="HBoxContainer" parent="SafeArea/PageLayout/TopStatusBar"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="DayLabel" type="Label" parent="SafeArea/PageLayout/TopStatusBar/StatusRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"InspectStatusLabel"
+text = "第 1 天"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="PageTitleLabel" type="Label" parent="."]
-layout_mode = 1
-anchors_preset = 10
-anchor_right = 1.0
-offset_left = 72.0
-offset_top = 112.0
-offset_right = -72.0
-offset_bottom = 194.0
-grow_horizontal = 2
+[node name="MoneyLabel" type="Label" parent="SafeArea/PageLayout/TopStatusBar/StatusRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"InspectStatusLabel"
+text = "本钱：30000 元"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="InspectionCostLabel" type="Label" parent="SafeArea/PageLayout/TopStatusBar/StatusRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"InspectCostStatusLabel"
+text = "已花验塘费：0 元"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="PageHeader" type="VBoxContainer" parent="SafeArea/PageLayout"]
+custom_minimum_size = Vector2(0, 116)
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="TitleLabel" type="Label" parent="SafeArea/PageLayout/PageHeader"]
+custom_minimum_size = Vector2(0, 66)
+layout_mode = 2
+theme_override_font_sizes/font_size = 44
 text = "进塘验货"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Panel" type="PanelContainer" parent="."]
-custom_minimum_size = Vector2(940, 1430)
-layout_mode = 1
-anchors_preset = 10
-anchor_left = 0.5
-anchor_right = 0.5
-offset_left = -470.0
-offset_top = 210.0
-offset_right = 470.0
-offset_bottom = 1640.0
-grow_horizontal = 2
-
-[node name="Content" type="Control" parent="Panel"]
+[node name="SubtitleLabel" type="Label" parent="SafeArea/PageLayout/PageHeader"]
+custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
-mouse_filter = 1
-
-[node name="TitleLabel" type="Label" parent="Panel/Content"]
-layout_mode = 0
-offset_left = 90.0
-offset_top = 46.0
-offset_right = 850.0
-offset_bottom = 116.0
-theme_override_font_sizes/font_size = 48
-text = "鱼塘详情"
+theme_override_font_sizes/font_size = 25
+text = "花点钱多看几眼，包不包你自己判断"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="QuoteLabel" type="Label" parent="Panel/Content"]
-layout_mode = 0
-offset_left = 110.0
-offset_top = 124.0
-offset_right = 830.0
-offset_bottom = 188.0
-theme_override_font_sizes/font_size = 24
-text = "¥ 00000"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="InfoLabel" type="Label" parent="Panel/Content"]
-layout_mode = 0
-offset_left = 86.0
-offset_top = 202.0
-offset_right = 854.0
-offset_bottom = 515.0
-theme_override_font_sizes/font_size = 27
-text = "塘口信息"
-vertical_alignment = 1
-autowrap_mode = 2
-
-[node name="InspectionScroll" type="ScrollContainer" parent="Panel/Content"]
-layout_mode = 0
-offset_left = 88.0
-offset_top = 530.0
-offset_right = 852.0
-offset_bottom = 1325.0
+[node name="ContentScroll" type="ScrollContainer" parent="SafeArea/PageLayout"]
+layout_mode = 2
+size_flags_vertical = 3
 horizontal_scroll_mode = 0
 follow_focus = true
 
-[node name="InspectionButtons" type="VBoxContainer" parent="Panel/Content/InspectionScroll"]
+[node name="Content" type="VBoxContainer" parent="SafeArea/PageLayout/ContentScroll"]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_constants/separation = 22
+
+[node name="PondSummaryCard" type="PanelContainer" parent="SafeArea/PageLayout/ContentScroll/Content"]
+layout_mode = 2
+theme_type_variation = &"InspectPondSummaryPanel"
+metadata/_future_texture_slot = "pond_detail_card_background"
+
+[node name="SummaryContent" type="VBoxContainer" parent="SafeArea/PageLayout/ContentScroll/Content/PondSummaryCard"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="HeaderRow" type="HBoxContainer" parent="SafeArea/PageLayout/ContentScroll/Content/PondSummaryCard/SummaryContent"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="PondNameLabel" type="Label" parent="SafeArea/PageLayout/ContentScroll/Content/PondSummaryCard/SummaryContent/HeaderRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"InspectPondNameLabel"
+text = "柳树塘"
+vertical_alignment = 1
+
+[node name="PriceBadge" type="Label" parent="SafeArea/PageLayout/ContentScroll/Content/PondSummaryCard/SummaryContent/HeaderRow"]
+custom_minimum_size = Vector2(220, 62)
+layout_mode = 2
+theme_type_variation = &"InspectPriceBadge"
+text = "6000 元"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="TagRow" type="HBoxContainer" parent="SafeArea/PageLayout/ContentScroll/Content/PondSummaryCard/SummaryContent"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="KnownInfoGrid" type="GridContainer" parent="SafeArea/PageLayout/ContentScroll/Content/PondSummaryCard/SummaryContent"]
+layout_mode = 2
+theme_override_constants/h_separation = 12
+columns = 3
+
+[node name="RiskHintLabel" type="Label" parent="SafeArea/PageLayout/ContentScroll/Content/PondSummaryCard/SummaryContent"]
+custom_minimum_size = Vector2(0, 70)
+layout_mode = 2
+theme_type_variation = &"InspectRiskLabel"
+text = "塘边提醒"
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="InspectionSection" type="VBoxContainer" parent="SafeArea/PageLayout/ContentScroll/Content"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="SectionTitleLabel" type="Label" parent="SafeArea/PageLayout/ContentScroll/Content/InspectionSection"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+theme_type_variation = &"InspectSectionTitleLabel"
+text = "花钱买线索"
+vertical_alignment = 1
+
+[node name="InspectionCards" type="VBoxContainer" parent="SafeArea/PageLayout/ContentScroll/Content/InspectionSection"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="DecisionSummaryCard" type="PanelContainer" parent="SafeArea/PageLayout/ContentScroll/Content"]
+layout_mode = 2
+theme_type_variation = &"InspectDecisionSummaryPanel"
+
+[node name="Summary" type="VBoxContainer" parent="SafeArea/PageLayout/ContentScroll/Content/DecisionSummaryCard"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="SummaryTitleLabel" type="Label" parent="SafeArea/PageLayout/ContentScroll/Content/DecisionSummaryCard/Summary"]
+layout_mode = 2
+theme_type_variation = &"InspectSectionTitleLabel"
+text = "承包前算一笔"
+
+[node name="SummaryNumbersLabel" type="Label" parent="SafeArea/PageLayout/ContentScroll/Content/DecisionSummaryCard/Summary"]
+layout_mode = 2
+theme_type_variation = &"InspectSummaryNumbersLabel"
+text = "已花验塘费：0 元\n承包价：6000 元\n承包后剩余：24000 元"
+autowrap_mode = 2
+
+[node name="ReserveHintLabel" type="Label" parent="SafeArea/PageLayout/ContentScroll/Content/DecisionSummaryCard/Summary"]
+layout_mode = 2
+theme_type_variation = &"InspectReserveHintLabel"
+text = "提醒：承包后还要预留捞鱼、抽水、鱼车和运输成本"
+autowrap_mode = 2
+
+[node name="BottomContentPadding" type="Control" parent="SafeArea/PageLayout/ContentScroll/Content"]
+custom_minimum_size = Vector2(0, 28)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="BottomDecisionBar" type="PanelContainer" parent="SafeArea/PageLayout"]
+custom_minimum_size = Vector2(0, 128)
+layout_mode = 2
+theme_type_variation = &"InspectBottomDecisionPanel"
+
+[node name="DecisionButtons" type="HBoxContainer" parent="SafeArea/PageLayout/BottomDecisionBar"]
+layout_mode = 2
 theme_override_constants/separation = 18
 
-[node name="ActionRow" type="HBoxContainer" parent="."]
-layout_mode = 1
-anchors_preset = 10
-anchor_left = 0.5
-anchor_right = 0.5
-offset_left = -450.0
-offset_top = 1670.0
-offset_right = 450.0
-offset_bottom = 1810.0
-grow_horizontal = 2
-theme_override_constants/separation = 20
-
-[node name="BackButton" type="Button" parent="ActionRow"]
-custom_minimum_size = Vector2(0, 110)
+[node name="GiveUpButton" type="Button" parent="SafeArea/PageLayout/BottomDecisionBar/DecisionButtons"]
+custom_minimum_size = Vector2(0, 88)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 30
-text = "返回列表"
+theme_type_variation = &"InspectGiveUpButton"
+text = "放弃此塘"
+metadata/_future_texture_button = "button_give_up"
 
-[node name="ContractButton" type="Button" parent="ActionRow"]
-custom_minimum_size = Vector2(0, 110)
+[node name="CommitButton" type="Button" parent="SafeArea/PageLayout/BottomDecisionBar/DecisionButtons"]
+custom_minimum_size = Vector2(0, 88)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 30
-text = "谈好承包"
+theme_type_variation = &"PondActionButton"
+text = "承包 6000 元"
+metadata/_future_texture_button = "button_commit_pond"

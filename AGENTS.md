@@ -22,7 +22,7 @@ This file is the live handoff guide for agents working on **这塘我包了**. K
 - `UIRoot` fills the viewport, ignores mouse input, and applies `themes/UI_Theme.tres` for inherited styling.
 - `UIRoot` runs `scripts/UI_Manager.gd` on ready to apply the shared theme recursively, remove selected per-control overrides, and add a 2 px black outline to every `Label`.
 - `scripts/pond_list.gd` generates or reuses 3 ponds for the current day.
-- `scripts/pond_detail.gd` shows pond info, inspection tools, and contract confirmation.
+- `scripts/pond_detail.gd` presents inspection as three data-driven clue cards, updates cash and cumulative inspection spend, separates each unlocked result into a conclusion and detail, and owns explicit give-up / contract confirmations.
 - `scripts/after_contract_choice.gd` preserves transfer, one-net sale, and self-fishing/work-plan logic.
 - `scripts/settlement.gd` preserves settlement, fish-king presentation, and next-place progression.
 - `scripts/settlement_history.gd` renders the persistent ledger newest-first with day/cash status, total pond/profit/cash summary, player-facing profit/loss badges, and independently expandable result, income, expense, and final-ledger sections.
@@ -62,6 +62,7 @@ This file is the live handoff guide for agents working on **这塘我包了**. K
 - The hidden value profile intentionally includes one surplus, one break-even, and one loss pond per day.
 - Inspection should narrow uncertainty, not reveal exact hidden values.
 - Each inspection tool can be used once per pond round.
+- Paid inspection spend is not refunded when the player gives up the pond; giving up after paid inspection requires confirmation.
 - Contracting deducts the pond quote immediately.
 - The player cannot contract if the remaining cash would be below `min_working_capital`.
 - Work plans must require available cash before applying harvest results.
@@ -182,10 +183,15 @@ HOME=/private/tmp/fish_pool_history_test_home godot --headless --log-file /priva
 - The pond thumbnail is a native self-drawn placeholder with no `×`; card background, thumbnail, price badge, and action button carry named future-texture metadata.
 - If a pond quote exceeds current cash, its price badge switches to warning styling and its disabled action reads “钱不够”.
 - At the 1080 × 1920 design resolution, each pond card is 500 logical pixels tall; a bottom spacer keeps the last card from ending hard against the scroll boundary.
-- Pond detail uses the shared native framed page card; inspection actions use standard `FishPoolUIKit` buttons and no hand-drawn textures.
-- At 1080 × 1920, pond detail uses 70 px horizontal card margins, separate top status/card/bottom-action zones, and a bottom safe area; the card-internal inspection region scrolls independently when needed.
+- Pond detail uses native themed cards and buttons with no hand-drawn textures.
+- Pond detail uses a fixed bottom decision bar and one scrollable content column containing a pond summary card, three clue-purchase cards, and a contract-cost summary; no external texture is loaded.
+- Pond detail top status shows day, current cash, and cumulative inspection spend; paid inspection updates both cash and spend immediately without allowing a second charge.
+- Unused inspection cards show method, price, short purpose, and a clue-purchase action; used cards switch to a readable beige state with an `已验` badge plus a prominent conclusion and supporting detail.
+- Pond detail decision summary shows inspection spend, contract price, post-contract cash, and the need to reserve fishing, draining, fish-truck, and transport costs.
+- Pond detail bottom actions read `放弃此塘` and `承包 XXXX 元`; paid give-up and all contract actions use blocking confirmation dialogs.
+- At 1080 × 1920, pond detail uses 52 px safe horizontal margins with separate top-status, page-header, scrollable-content, and fixed bottom-decision zones.
 - Pond detail, post-contract choice/work-plan, and settlement titles sit outside their framed cards between the global status and page content; pond names and result details remain inside the card.
-- Each inspection result appears only beneath its matching button; the inspection list scrolls inside the framed card so multiple expanded results cannot overflow the card or cover the bottom actions.
+- Each inspection result appears only inside its matching clue card; the full content column scrolls so expanded results cannot cover the fixed bottom decisions.
 - Backtracking from pond detail preserves the same day's ponds.
 - Each inspection tool deducts the expected cash and cannot be reused.
 - Contract confirmation blocks insufficient remaining working capital.

@@ -13,10 +13,13 @@ func _init() -> void:
 	inspection_rules = BalanceRulesScript.section(rules, "inspection")
 
 func generate_result(tool: Dictionary, pond: Dictionary) -> String:
+	var result := generate_result_data(tool, pond)
+	return "%s\n%s" % [result.get("headline", "验塘结果"), result.get("detail", "暂时看不准。")]
+
+func generate_result_data(tool: Dictionary, pond: Dictionary) -> Dictionary:
 	var tool_id := str(tool.get("id", "observe"))
-	var tool_name := str(tool.get("name", "验塘"))
 	var profile := _build_signal_profile(pond)
-	var lines: Array[String] = ["%s结果：" % tool_name]
+	var lines: Array[String] = []
 
 	match tool_id:
 		"fish_finder":
@@ -26,8 +29,41 @@ func generate_result(tool: Dictionary, pond: Dictionary) -> String:
 		_:
 			lines.append_array(_build_observe_lines(profile))
 
-	lines.append(_uncertainty_note(tool_id))
-	return "\n".join(lines)
+	var detail := " ".join(lines)
+	if not detail.is_empty():
+		detail += " "
+	detail += _uncertainty_note(tool_id)
+	return {
+		"headline": _build_result_headline(tool_id, profile),
+		"detail": detail
+	}
+
+func _build_result_headline(tool_id: String, profile: Dictionary) -> String:
+	match tool_id:
+		"fish_finder":
+			match str(profile.get("big", "low")):
+				"high":
+					return "鱼群信号较强，有大鱼机会"
+				"medium":
+					return "扫到一些鱼影，密度还不算稳"
+				_:
+					return "鱼群信号偏散，需要谨慎"
+		"master":
+			var price_level := str(profile.get("price", "fair"))
+			var difficulty_level := str(profile.get("difficulty", "normal"))
+			if price_level == "expensive" or difficulty_level == "hard":
+				return "老师傅建议谨慎承包"
+			if price_level == "cheap" and difficulty_level != "hard":
+				return "报价有机会，但不能算稳赚"
+			return "这塘能谈，后续成本要留足"
+		_:
+			match str(profile.get("big", "low")):
+				"high":
+					return "水面动静明显，像是有大鱼"
+				"medium":
+					return "水面有些动静，鱼活动一般"
+				_:
+					return "水面较平静，暂时看不出大货"
 
 func _build_signal_profile(pond: Dictionary) -> Dictionary:
 	var big_chance := float(pond.get("big_fish_chance", 0.0))

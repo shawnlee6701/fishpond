@@ -3,13 +3,15 @@
     "id": "observe",
     "name": "目测水面",
     "cost": 0,
+    "short_desc": "观察水面、水色和鱼浮头",
     "description": "看看水色、鱼花和塘边痕迹，免费但只能摸个大概。",
     "accuracy": 0.35
   },
   {
     "id": "fish_finder",
-    "name": "探鱼器",
+    "name": "探鱼密度",
     "cost": 300,
+    "short_desc": "用简单工具估算鱼群密度",
     "description": "用设备扫一遍水下情况，能看出大致鱼群和底况。",
     "accuracy": 0.65
   },
@@ -17,6 +19,7 @@
     "id": "master",
     "name": "请老师傅",
     "cost": 1000,
+    "short_desc": "请老师傅判断这口塘值不值得包",
     "description": "请懂行老师傅看塘，费用高，但报价和风险会说得更透。",
     "accuracy": 0.85
   }

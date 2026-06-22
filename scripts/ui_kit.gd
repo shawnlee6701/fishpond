@@ -217,7 +217,7 @@ static func set_safe_panel(panel: Control, left := 22, top := 26, right := -22, 
 	panel.offset_right = right
 	panel.offset_bottom = bottom
 
-static func create_modal_layer(root: Control, modal_name: String, paper_texture: Texture2D) -> Dictionary:
+static func create_modal_layer(root: Control, modal_name: String, paper_texture: Texture2D = null) -> Dictionary:
 	var overlay := Control.new()
 	overlay.name = modal_name
 	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -237,17 +237,18 @@ static func create_modal_layer(root: Control, modal_name: String, paper_texture:
 	card.name = "Card"
 	card.mouse_filter = Control.MOUSE_FILTER_STOP
 	card.clip_contents = true
-	var paper_style := StyleBoxTexture.new()
-	paper_style.texture = paper_texture
-	paper_style.texture_margin_left = 84.0
-	paper_style.texture_margin_top = 84.0
-	paper_style.texture_margin_right = 84.0
-	paper_style.texture_margin_bottom = 84.0
-	paper_style.content_margin_left = 72.0
-	paper_style.content_margin_top = 64.0
-	paper_style.content_margin_right = 72.0
-	paper_style.content_margin_bottom = 64.0
-	card.add_theme_stylebox_override("panel", paper_style)
+	if paper_texture != null:
+		var paper_style := StyleBoxTexture.new()
+		paper_style.texture = paper_texture
+		paper_style.texture_margin_left = 84.0
+		paper_style.texture_margin_top = 84.0
+		paper_style.texture_margin_right = 84.0
+		paper_style.texture_margin_bottom = 84.0
+		paper_style.content_margin_left = 72.0
+		paper_style.content_margin_top = 64.0
+		paper_style.content_margin_right = 72.0
+		paper_style.content_margin_bottom = 64.0
+		card.add_theme_stylebox_override("panel", paper_style)
 	overlay.add_child(card)
 
 	return {"overlay": overlay, "mask": mask, "card": card}
