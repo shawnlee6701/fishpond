@@ -1,7 +1,6 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=2 format=3]
 
 [ext_resource type="Script" path="res://scripts/pond_list.gd" id="1_pond_list"]
-[ext_resource type="Texture2D" path="res://assets/ui/parchment_background.png" id="2_background"]
 
 [node name="PondList" type="Control"]
 custom_minimum_size = Vector2(1080, 1920)
@@ -13,7 +12,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_pond_list")
 
-[node name="Background" type="TextureRect" parent="."]
+[node name="Background" type="ColorRect" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -21,53 +20,83 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-texture = ExtResource("2_background")
-expand_mode = 1
-stretch_mode = 0
+color = Color(0.184314, 0.419608, 0.309804, 1)
 
-[node name="Panel" type="PanelContainer" parent="."]
+[node name="SafeArea" type="MarginContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 52.0
-offset_top = 42.0
-offset_right = -52.0
-offset_bottom = -48.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_constants/margin_left = 44
+theme_override_constants/margin_top = 36
+theme_override_constants/margin_right = 44
+theme_override_constants/margin_bottom = 36
 
-[node name="Margin" type="MarginContainer" parent="Panel"]
+[node name="PageLayout" type="VBoxContainer" parent="SafeArea"]
 layout_mode = 2
-theme_override_constants/margin_left = 16
-theme_override_constants/margin_top = 12
-theme_override_constants/margin_right = 16
-theme_override_constants/margin_bottom = 12
+theme_override_constants/separation = 22
 
-[node name="Content" type="VBoxContainer" parent="Panel/Margin"]
+[node name="TopStatusBar" type="PanelContainer" parent="SafeArea/PageLayout"]
+custom_minimum_size = Vector2(0, 92)
 layout_mode = 2
-theme_override_constants/separation = 16
+theme_type_variation = &"TopStatusPanel"
 
-[node name="StatusLabel" type="Label" parent="Panel/Margin/Content"]
+[node name="StatusRow" type="HBoxContainer" parent="SafeArea/PageLayout/TopStatusBar"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 29
-text = "第 1 天  |  本钱 30000 元"
+theme_override_constants/separation = 18
+
+[node name="DayLabel" type="Label" parent="SafeArea/PageLayout/TopStatusBar/StatusRow"]
+custom_minimum_size = Vector2(170, 0)
+layout_mode = 2
+theme_type_variation = &"StatusValueLabel"
+text = "第 1 天"
+vertical_alignment = 1
+
+[node name="StatusDivider" type="VSeparator" parent="SafeArea/PageLayout/TopStatusBar/StatusRow"]
+custom_minimum_size = Vector2(2, 0)
+layout_mode = 2
+
+[node name="MoneyLabel" type="Label" parent="SafeArea/PageLayout/TopStatusBar/StatusRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"StatusValueLabel"
+text = "本钱：30000 元"
+vertical_alignment = 1
+
+[node name="RecordButton" type="Button" parent="SafeArea/PageLayout/TopStatusBar/StatusRow"]
+custom_minimum_size = Vector2(190, 64)
+layout_mode = 2
+theme_type_variation = &"RecordButton"
+text = "包塘记录"
+
+[node name="PageHeader" type="VBoxContainer" parent="SafeArea/PageLayout"]
+custom_minimum_size = Vector2(0, 124)
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="TitleLabel" type="Label" parent="SafeArea/PageLayout/PageHeader"]
+layout_mode = 2
+theme_type_variation = &"PondListTitleLabel"
+text = "今日鱼塘"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Title" type="Label" parent="Panel/Margin/Content"]
+[node name="HintLabel" type="Label" parent="SafeArea/PageLayout/PageHeader"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 52
-text = "今日鱼塘"
+theme_type_variation = &"PondListHintLabel"
+text = "看报价、水况和塘龄，选一个进去验货"
 horizontal_alignment = 1
+vertical_alignment = 1
 
-[node name="Scroll" type="ScrollContainer" parent="Panel/Margin/Content"]
+[node name="PondListScroll" type="ScrollContainer" parent="SafeArea/PageLayout"]
 layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
 follow_focus = true
 
-[node name="CardList" type="VBoxContainer" parent="Panel/Margin/Content/Scroll"]
+[node name="PondListContainer" type="VBoxContainer" parent="SafeArea/PageLayout/PondListScroll"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 18
+theme_override_constants/separation = 24
