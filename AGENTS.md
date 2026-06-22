@@ -166,7 +166,7 @@ For gameplay/UI changes, also run the project in the Godot editor or player and 
 - Contract confirmation blocks insufficient remaining working capital.
 - Contract confirmation uses `Design/Popup/popup_clean.png`, stays centered, and resizes with the game window without stretching its paper border.
 - All confirmation popups use an opaque-input modal overlay with a dark mask; popup cards remain inside a 24 px viewport safe area and oversized body content scrolls instead of expanding the card.
-- Contract and transfer popups both visibly retain title, highlighted decision value, scroll-safe content, and accept/cancel actions at 1080 × 1920; the harvest-result popup highlights per-net profit/loss above its dismiss action.
+- Contract and transfer popups both visibly retain title, highlighted decision value, scroll-safe content, and accept/cancel actions at 1080 × 1920; the harvest-result popup lists the catch by fish type with weight, unit price, subtotal, and total fish income, then highlights per-net profit/loss above its dismiss action.
 - Pond detail, post-contract choice/work-plan, and settlement use the same native framed page card with no large paper-sticker texture.
 - “自己下网” switches to a dedicated page state with a return control and three equal-height work-plan buttons; the original bottom choice buttons must not remain visible.
 - The default post-contract choice page keeps “转包脱手” / “卖一网” / “自己下网” grouped at the bottom of the framed card instead of directly under the title block.

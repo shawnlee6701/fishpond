@@ -39,6 +39,7 @@ var harvest_result_overlay: Control
 var harvest_result_dialog: PanelContainer
 var harvest_result_title: Label
 var harvest_result_illustration: TextureRect
+var harvest_catch_label: Label
 var harvest_result_label: Label
 
 func setup(next_game_state: GameState, next_screen_container: Control) -> void:
@@ -227,7 +228,15 @@ func _create_harvest_result_dialog() -> void:
 	harvest_result_illustration.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	body.add_child(harvest_result_illustration)
 
+	harvest_catch_label = Label.new()
+	harvest_catch_label.name = "HarvestCatchLabel"
+	harvest_catch_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	harvest_catch_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	UIKit.style_label(harvest_catch_label, "body_dark")
+	body.add_child(harvest_catch_label)
+
 	harvest_result_label = Label.new()
+	harvest_result_label.name = "HarvestProfitLabel"
 	harvest_result_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	harvest_result_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	UIKit.style_label(harvest_result_label, "body_dark")
@@ -396,12 +405,34 @@ func _show_harvest_result(result: Dictionary) -> void:
 		harvest_result_title.text = "这一网没回本"
 		harvest_result_illustration.texture = EARN_LESS_TEXTURE
 
-	harvest_result_label.text = "%s\n本次赚亏 %+d 元" % [
-		str(result.get("fish_result_name", "下网结果")),
-		round_profit
-	]
+	harvest_catch_label.text = _format_harvest_catch(result)
+	harvest_result_label.text = "本次赚亏 %+d 元" % round_profit
 	UIKit.style_highlight_label(harvest_result_label, "positive" if round_profit > 0 else "negative")
 	UIKit.show_modal(self, harvest_result_overlay, harvest_result_dialog, 0.86, 1060, Vector2i(340, 700), Vector2i(860, 1160))
+
+func _format_harvest_catch(result: Dictionary) -> String:
+	var lines: Array[String] = ["鱼获明细"]
+	var catch_details := Array(result.get("catch_details", []))
+	if catch_details.is_empty():
+		lines.append("这一网没有起货。")
+	else:
+		lines.append("这网主货：%s" % str(result.get("fish_result_name", "暂无鱼获")))
+		for item_variant in catch_details:
+			var item := Dictionary(item_variant)
+			var line := "%s：%d 斤 × %d 元/斤 = %d 元" % [
+				str(item.get("name", "未知鱼获")),
+				int(item.get("weight_jin", 0)),
+				int(item.get("unit_price", 0)),
+				int(item.get("income", 0))
+			]
+			if str(item.get("id", "")) == "fish_king" and item.has("integrity"):
+				line += "，完整度 %d%%" % int(item.get("integrity", 0))
+			lines.append(line)
+			var price_note := str(item.get("price_note", ""))
+			if not price_note.is_empty():
+				lines.append(price_note)
+	lines.append("卖鱼回款：%d 元" % int(result.get("fish_income", 0)))
+	return "\n".join(lines)
 
 func _on_harvest_result_continue_pressed() -> void:
 	UIKit.hide_modal(harvest_result_overlay)
