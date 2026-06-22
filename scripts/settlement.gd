@@ -1,13 +1,13 @@
 extends Control
 
 const UIKit := preload("res://scripts/ui_kit.gd")
+const SaveSystem := preload("res://scripts/save_system.gd")
 
 @onready var title_label: Label = $TitleLabel
 @onready var detail_label: Label = $Panel/Margin/Content/Scroll/DetailLabel
 @onready var summary_label: Label = $Panel/Margin/Content/SummaryLabel
 @onready var cash_label: Label = $CashLabel
 @onready var panel: PanelContainer = $Panel
-@onready var result_illustration: TextureRect = $Panel/Margin/Content/ResultIllustration
 @onready var fish_king_panel: PanelContainer = $Panel/Margin/Content/FishKingPanel
 @onready var fish_king_scene_label: Label = $Panel/Margin/Content/FishKingPanel/Margin/Content/SceneLabel
 @onready var fish_king_name_label: Label = $Panel/Margin/Content/FishKingPanel/Margin/Content/NameLabel
@@ -18,10 +18,6 @@ const UIKit := preload("res://scripts/ui_kit.gd")
 const FISH_KING_ID := "fish_king"
 const FISH_KING_NAME := "青背老塘王"
 const BANKRUPT_CASH_THRESHOLD := 3000
-const FISH_KING_TEXTURE := preload("res://Design/Catch Fish King/screen_clean.png")
-const WIN_MORE_TEXTURE := preload("res://Design/Win More/screen_clean.png")
-const WIN_LESS_TEXTURE := preload("res://Design/Win Less/screen_clean.png")
-const BANKRUPT_TEXTURE := preload("res://Design/Bankrupt/screen_clean.png")
 
 var game_state: GameState
 var screen_container: Control
@@ -36,19 +32,11 @@ func _ready() -> void:
 
 	next_day_button.pressed.connect(_on_next_day_pressed)
 	_apply_ui_frame()
+	SaveSystem.record_settlement(game_state)
 	_render()
 
 func _apply_ui_frame() -> void:
-	UIKit.apply_root(self)
-	UIKit.style_page_frame(panel)
-	UIKit.style_page_title(title_label)
-	UIKit.style_top_status(cash_label)
-	UIKit.style_label(detail_label, "body_dark")
-	UIKit.style_highlight_label(summary_label, "gold")
-	UIKit.style_button(next_day_button, "gold")
-	UIKit.style_card(fish_king_panel, UIKit.GOLD)
-	next_day_button.custom_minimum_size = Vector2(0, UIKit.PAGE_ACTION_HEIGHT)
-	detail_label.add_theme_font_size_override("font_size", UIKit.FONT_BODY)
+	pass
 
 func _render() -> void:
 	var result := game_state.last_result
@@ -60,41 +48,50 @@ func _render() -> void:
 		title_label.text = "鱼王出现！"
 	else:
 		title_label.text = str(result.get("title", "本局结算"))
-	_render_result_illustration(is_bankrupt, is_fish_king)
 	_render_fish_king_panel(is_fish_king and not is_bankrupt)
 
-	var lines: Array[String] = []
+	var contract_cost := int(game_state.current_pond.get("quote_price", 0))
+	var other_income := game_state.one_net_income + game_state.transfer_income
+	var total_income := game_state.fish_income + other_income
+	var total_cost := contract_cost + game_state.inspection_cost_total + game_state.work_cost
+	var net_profit := game_state.get_net_profit()
+
+	var lines: Array[String] = ["本塘最终成绩"]
 	lines.append("这口塘：%s" % str(game_state.current_pond.get("name", "未知鱼塘")))
-	lines.append("本局结果：%s" % _get_fish_result_text())
-	lines.append("原因说明：%s" % _get_fish_description_text())
-	if not game_state.catch_details.is_empty():
-		lines.append("鱼获明细：")
+	lines.append("收尾方式：%s" % str(result.get("title", "本局结算")))
+	lines.append("")
+	lines.append("鱼获收入")
+	if game_state.catch_details.is_empty():
+		lines.append("暂无自己捕捞的鱼获")
+	else:
 		for item in game_state.catch_details:
 			lines.append(_format_catch_detail_line(item))
+	lines.append("鱼获回款合计：+%d 元" % game_state.fish_income)
+
 	lines.append("")
-	lines.append("账本（承包后经营）：")
-	lines.append("承包费：%d 元（已扣，不重复算净利）" % int(game_state.current_pond.get("quote_price", 0)))
-	lines.append("验塘费：-%d 元" % game_state.inspection_cost_total)
-	lines.append("作业成本：-%d 元" % game_state.work_cost)
+	lines.append("其他收入")
 	lines.append("卖一网回款：+%d 元" % game_state.one_net_income)
 	lines.append("转包回款：+%d 元" % game_state.transfer_income)
-	lines.append("卖鱼回款：+%d 元" % game_state.fish_income)
-	var net_profit := game_state.get_net_profit()
-	summary_label.text = "承包后经营账：%s" % _format_profit_line(net_profit)
+	lines.append("其他收入合计：+%d 元" % other_income)
+
+	lines.append("")
+	lines.append("各项支出")
+	lines.append("承包费：-%d 元" % contract_cost)
+	lines.append("验塘费：-%d 元" % game_state.inspection_cost_total)
+	lines.append("下网作业费：-%d 元" % game_state.work_cost)
+	lines.append("支出合计：-%d 元" % total_cost)
+
+	lines.append("")
+	lines.append("最终结算")
+	lines.append("总收入：+%d 元" % total_income)
+	lines.append("总支出：-%d 元" % total_cost)
+	lines.append("本塘净成绩：%+d 元" % net_profit)
+	lines.append("结算后本钱：%d 元" % game_state.cash)
+	summary_label.text = "本塘最终成绩：%s" % _format_profit_line(net_profit)
 	UIKit.style_highlight_label(summary_label, "positive" if net_profit >= 0 else "negative")
 
 	detail_label.text = "\n".join(lines)
 	cash_label.text = UIKit.format_run_status(game_state.day, game_state.cash)
-
-func _render_result_illustration(is_bankrupt: bool, is_fish_king: bool) -> void:
-	if is_bankrupt:
-		result_illustration.texture = BANKRUPT_TEXTURE
-	elif is_fish_king:
-		result_illustration.texture = FISH_KING_TEXTURE
-	elif game_state.get_net_profit() > 0:
-		result_illustration.texture = WIN_MORE_TEXTURE
-	else:
-		result_illustration.texture = WIN_LESS_TEXTURE
 
 func _is_fish_king_result() -> bool:
 	if game_state.fish_result_id == FISH_KING_ID:
@@ -188,10 +185,10 @@ func _get_fish_description_text() -> String:
 
 func _format_profit_line(net_profit: int) -> String:
 	if net_profit > 0:
-		return "+%d 元，赚在回款盖过验塘费和作业成本。" % net_profit
+		return "盈利 +%d 元" % net_profit
 	if net_profit < 0:
-		return "%d 元，亏在回款没盖住验塘费和作业成本。" % net_profit
-	return "0 元，刚好打平。"
+		return "亏损 %d 元" % net_profit
+	return "收支打平 0 元"
 
 func _on_next_day_pressed() -> void:
 	game_state.advance_to_next_day()

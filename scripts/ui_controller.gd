@@ -5,6 +5,7 @@ const POND_LIST_SCENE := preload("res://scenes/PondList.tscn")
 const POND_DETAIL_SCENE := preload("res://scenes/PondDetail.tscn")
 const AFTER_CONTRACT_CHOICE_SCENE := preload("res://scenes/AfterContractChoice.tscn")
 const SETTLEMENT_SCENE := preload("res://scenes/Settlement.tscn")
+const SETTLEMENT_HISTORY_SCENE := preload("res://scenes/SettlementHistory.tscn")
 const SaveSystem := preload("res://scripts/save_system.gd")
 
 static func replace_screen(container: Control, next_screen: Control) -> void:
@@ -38,4 +39,9 @@ static func show_settlement(container: Control, game_state: GameState) -> void:
 	var screen := SETTLEMENT_SCENE.instantiate()
 	if screen.has_method("setup"):
 		screen.setup(game_state, container)
+	replace_screen(container, screen)
+
+static func show_settlement_history(container: Control, game_state: GameState) -> void:
+	var screen := SETTLEMENT_HISTORY_SCENE.instantiate()
+	screen.setup(game_state, container)
 	replace_screen(container, screen)

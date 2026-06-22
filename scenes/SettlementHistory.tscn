@@ -1,0 +1,185 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/settlement_history.gd" id="1_history"]
+
+[node name="PondRecordScreen" type="Control"]
+custom_minimum_size = Vector2(1080, 1920)
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_history")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.184314, 0.419608, 0.309804, 1)
+
+[node name="SafeArea" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 44
+theme_override_constants/margin_top = 36
+theme_override_constants/margin_right = 44
+theme_override_constants/margin_bottom = 36
+
+[node name="PageLayout" type="VBoxContainer" parent="SafeArea"]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="TopStatusBar" type="PanelContainer" parent="SafeArea/PageLayout"]
+custom_minimum_size = Vector2(0, 92)
+layout_mode = 2
+theme_type_variation = &"TopStatusPanel"
+
+[node name="StatusRow" type="HBoxContainer" parent="SafeArea/PageLayout/TopStatusBar"]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="DayLabel" type="Label" parent="SafeArea/PageLayout/TopStatusBar/StatusRow"]
+custom_minimum_size = Vector2(220, 0)
+layout_mode = 2
+theme_type_variation = &"StatusValueLabel"
+text = "第 1 天"
+vertical_alignment = 1
+
+[node name="StatusDivider" type="VSeparator" parent="SafeArea/PageLayout/TopStatusBar/StatusRow"]
+custom_minimum_size = Vector2(2, 0)
+layout_mode = 2
+
+[node name="MoneyLabel" type="Label" parent="SafeArea/PageLayout/TopStatusBar/StatusRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"StatusValueLabel"
+text = "本钱：0 元"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="PageHeader" type="VBoxContainer" parent="SafeArea/PageLayout"]
+custom_minimum_size = Vector2(0, 122)
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="TitleLabel" type="Label" parent="SafeArea/PageLayout/PageHeader"]
+layout_mode = 2
+theme_type_variation = &"PondListTitleLabel"
+text = "包塘记录"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="SubtitleLabel" type="Label" parent="SafeArea/PageLayout/PageHeader"]
+layout_mode = 2
+theme_type_variation = &"PondListHintLabel"
+text = "每一口塘的投入和盈亏都会记在这里"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="RecordSummaryBar" type="PanelContainer" parent="SafeArea/PageLayout"]
+custom_minimum_size = Vector2(0, 132)
+layout_mode = 2
+theme_type_variation = &"RecordSummaryPanel"
+metadata/_future_texture = "record_summary_bar.png"
+
+[node name="StatsRow" type="HBoxContainer" parent="SafeArea/PageLayout/RecordSummaryBar"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="TotalPondCountStat" type="Label" parent="SafeArea/PageLayout/RecordSummaryBar/StatsRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"RecordSummaryStatLabel"
+text = "已包塘\n0 口"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="DividerA" type="VSeparator" parent="SafeArea/PageLayout/RecordSummaryBar/StatsRow"]
+layout_mode = 2
+
+[node name="TotalProfitLossStat" type="Label" parent="SafeArea/PageLayout/RecordSummaryBar/StatsRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"RecordSummaryStatLabel"
+text = "累计打平\n0 元"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="DividerB" type="VSeparator" parent="SafeArea/PageLayout/RecordSummaryBar/StatsRow"]
+layout_mode = 2
+
+[node name="CurrentMoneyStat" type="Label" parent="SafeArea/PageLayout/RecordSummaryBar/StatsRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"RecordSummaryStatLabel"
+text = "当前本钱\n0 元"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ContentArea" type="Control" parent="SafeArea/PageLayout"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="EmptyState" type="PanelContainer" parent="SafeArea/PageLayout/ContentArea"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_type_variation = &"RecordEmptyPanel"
+
+[node name="EmptyContent" type="VBoxContainer" parent="SafeArea/PageLayout/ContentArea/EmptyState"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 24
+
+[node name="EmptyTitleLabel" type="Label" parent="SafeArea/PageLayout/ContentArea/EmptyState/EmptyContent"]
+layout_mode = 2
+theme_type_variation = &"RecordSectionTitleLabel"
+text = "账本还是空的"
+horizontal_alignment = 1
+
+[node name="EmptyBodyLabel" type="Label" parent="SafeArea/PageLayout/ContentArea/EmptyState/EmptyContent"]
+layout_mode = 2
+theme_type_variation = &"RecordBodyLabel"
+text = "先去今日鱼塘选一口塘，包塘后的投入和盈亏都会记在这里。"
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="GoPondListButton" type="Button" parent="SafeArea/PageLayout/ContentArea/EmptyState/EmptyContent"]
+custom_minimum_size = Vector2(0, 88)
+layout_mode = 2
+theme_type_variation = &"PondActionButton"
+text = "去看今日鱼塘"
+
+[node name="RecordListScroll" type="ScrollContainer" parent="SafeArea/PageLayout/ContentArea"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_scroll_mode = 0
+follow_focus = true
+
+[node name="RecordListContainer" type="VBoxContainer" parent="SafeArea/PageLayout/ContentArea/RecordListScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 20
+
+[node name="BottomButton" type="Button" parent="SafeArea/PageLayout"]
+custom_minimum_size = Vector2(0, 96)
+layout_mode = 2
+theme_type_variation = &"RecordButton"
+text = "返回今日鱼塘"

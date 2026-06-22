@@ -27,6 +27,7 @@ var last_result: Dictionary = {}
 var sold_one_net: bool = false
 var self_net_count: int = 0
 var drained: bool = false
+var settlement_recorded: bool = false
 var game_balance: Dictionary = {}
 
 func _init() -> void:
@@ -54,6 +55,7 @@ func reset_round() -> void:
 	sold_one_net = false
 	self_net_count = 0
 	drained = false
+	settlement_recorded = false
 
 func can_pay(amount: int) -> bool:
 	return amount <= 0 or cash >= amount
@@ -385,7 +387,8 @@ func _find_catch_detail(fish_id: String) -> Dictionary:
 	return {}
 
 func get_net_profit() -> int:
-	return transfer_income + one_net_income + fish_income - inspection_cost_total - work_cost
+	var contract_cost := int(current_pond.get("quote_price", 0))
+	return transfer_income + one_net_income + fish_income - contract_cost - inspection_cost_total - work_cost
 
 func advance_to_next_day() -> void:
 	day += 1
