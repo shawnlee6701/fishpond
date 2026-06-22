@@ -170,6 +170,7 @@ For gameplay/UI changes, also run the project in the Godot editor or player and 
 - Pond detail, post-contract choice/work-plan, and settlement use the same native framed page card with no large paper-sticker texture.
 - “自己下网” switches to a dedicated page state with a return control and three equal-height work-plan buttons; the original bottom choice buttons must not remain visible.
 - The default post-contract choice page keeps “转包脱手” / “卖一网” / “自己下网” grouped at the bottom of the framed card instead of directly under the title block.
+- After the first self-fishing result, the post-contract page's flexible middle area shows a cumulative pond ledger rather than the latest-net narrative: fish weight and income by type, other income, contract/inspection/work costs, realized net cash, remaining pond estimate, and current mark-to-market profit.
 - “转包脱手” opens a centered responsive popup using `Design/Popup/popup_clean.png`; a full-screen dim mask blocks the underlying page while open, and the offer appears above the cleaned buyer illustration and the speech bubble “兄弟一场，把这塘包给我”, with accept/reject actions at the bottom.
 - After contracting, low/standard/full work buttons reflect available cash.
 - Non-final harvest can create market opportunities and continue the round.

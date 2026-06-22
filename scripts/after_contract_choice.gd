@@ -269,9 +269,14 @@ func _render() -> void:
 		sell_one_net_button.text = "卖一网（已卖出）"
 	elif current_one_net_offer.is_empty():
 		sell_one_net_button.text = "卖一网（暂无买家）"
-	if not game_state.can_pay(game_state.get_work_cost("low")):
+	if game_state.self_net_count > 0 or game_state.sold_one_net:
+		message_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		message_label.text = _build_pond_ledger()
+	elif not game_state.can_pay(game_state.get_work_cost("low")):
+		message_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		message_label.text = "钱不够下一网了。可以转包脱手，留本钱去下一地方。"
-	elif game_state.self_net_count <= 0:
+	else:
+		message_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		message_label.text = "先自己下一网。没见到鱼，外面不给真价。"
 
 	_update_work_buttons()
@@ -386,6 +391,45 @@ func _on_work_plan_pressed(plan_id: String) -> void:
 	else:
 		message_label.text = "本钱不够，干不了这个作业方案。"
 		_update_work_buttons()
+
+func _build_pond_ledger() -> String:
+	var lines: Array[String] = ["塘口累计账"]
+	lines.append("鱼获收入")
+	if game_state.catch_details.is_empty():
+		lines.append("暂无鱼获")
+	else:
+		for item in game_state.catch_details:
+			lines.append("%s：%d 斤，收入 %d 元" % [
+				str(item.get("name", "未知鱼获")),
+				int(item.get("weight_jin", 0)),
+				int(item.get("income", 0))
+			])
+	lines.append("鱼获收入合计：%d 元" % game_state.fish_income)
+
+	lines.append("其他收入")
+	if game_state.one_net_income <= 0 and game_state.transfer_income <= 0:
+		lines.append("暂无其他收入")
+	else:
+		if game_state.one_net_income > 0:
+			lines.append("卖一网收入：%d 元" % game_state.one_net_income)
+		if game_state.transfer_income > 0:
+			lines.append("转包收入：%d 元" % game_state.transfer_income)
+
+	var contract_cost := int(game_state.current_pond.get("quote_price", 0))
+	var total_cost := contract_cost + game_state.inspection_cost_total + game_state.work_cost
+	lines.append("各项支出")
+	lines.append("承包费：%d 元" % contract_cost)
+	lines.append("验塘费：%d 元" % game_state.inspection_cost_total)
+	lines.append("下网作业费：%d 元" % game_state.work_cost)
+	lines.append("支出合计：%d 元" % total_cost)
+
+	var received_income := game_state.fish_income + game_state.one_net_income + game_state.transfer_income
+	var realized_net := received_income - total_cost
+	lines.append("截至目前")
+	lines.append("已回款净额：%+d 元" % realized_net)
+	lines.append("塘内剩余估值：%d 元" % game_state.get_current_pond_estimated_value())
+	lines.append("当前账面盈亏：%+d 元" % game_state.get_mark_to_market_profit())
+	return "\n".join(lines)
 
 func _show_harvest_result(result: Dictionary) -> void:
 	var caught_fish_king := false
