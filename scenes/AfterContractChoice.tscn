@@ -368,13 +368,6 @@ custom_minimum_size = Vector2(120, 120)
 layout_mode = 2
 mouse_filter = 2
 
-[node name="PlaceholderMarker" type="Label" parent="SafeArea/PageLayout/ContentScroll/Content/WorkPlanScroll/WorkPlanPanel/LowWorkCard/CardContent/ImagePlaceholder"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 64
-text = "×"
-horizontal_alignment = 1
-vertical_alignment = 1
-
 [node name="LowWorkButton" type="Button" parent="SafeArea/PageLayout/ContentScroll/Content/WorkPlanScroll/WorkPlanPanel/LowWorkCard/CardContent"]
 custom_minimum_size = Vector2(200, 70)
 layout_mode = 2
@@ -395,13 +388,6 @@ custom_minimum_size = Vector2(120, 120)
 layout_mode = 2
 mouse_filter = 2
 
-[node name="PlaceholderMarker" type="Label" parent="SafeArea/PageLayout/ContentScroll/Content/WorkPlanScroll/WorkPlanPanel/StandardWorkCard/CardContent/ImagePlaceholder"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 64
-text = "×"
-horizontal_alignment = 1
-vertical_alignment = 1
-
 [node name="StandardWorkButton" type="Button" parent="SafeArea/PageLayout/ContentScroll/Content/WorkPlanScroll/WorkPlanPanel/StandardWorkCard/CardContent"]
 custom_minimum_size = Vector2(200, 70)
 layout_mode = 2
@@ -421,13 +407,6 @@ theme_override_constants/separation = 20
 custom_minimum_size = Vector2(120, 120)
 layout_mode = 2
 mouse_filter = 2
-
-[node name="PlaceholderMarker" type="Label" parent="SafeArea/PageLayout/ContentScroll/Content/WorkPlanScroll/WorkPlanPanel/FullWorkCard/CardContent/ImagePlaceholder"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 64
-text = "×"
-horizontal_alignment = 1
-vertical_alignment = 1
 
 [node name="FullWorkButton" type="Button" parent="SafeArea/PageLayout/ContentScroll/Content/WorkPlanScroll/WorkPlanPanel/FullWorkCard/CardContent"]
 custom_minimum_size = Vector2(200, 70)

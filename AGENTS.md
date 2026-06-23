@@ -24,7 +24,8 @@ This file is the live handoff guide for agents working on **这塘我包了**. K
 - `scripts/pond_list.gd` generates or reuses 3 ponds for the current day.
 - `scripts/pond_detail.gd` presents inspection as three data-driven clue cards, updates cash and cumulative inspection spend, separates each unlocked result into a conclusion and detail, and owns explicit give-up / contract confirmations.
 - `scripts/after_contract_choice.gd` preserves transfer, one-net sale, and self-fishing/work-plan logic; its transfer offer modal is a decision popup with offer price, total invested, transfer profit/loss, money after accept, buyer speech bubble, and a self-drawn buyer/contract placeholder.
-- `scripts/settlement.gd` preserves settlement, fish-king presentation, and next-place progression.
+- `scripts/after_contract_choice.gd` also owns the dedicated self-net decision page and one-net result modal. The three net options use self-drawn method placeholders, cost badges, consequence copy, and a separate confirmation for final drain settlement; the result modal shows catch rows plus fish revenue, net cost, and per-net profit before applying the harvest.
+- `scripts/settlement.gd` renders the final pond scorecard dynamically from `GameState`: self-drawn settlement placeholder, prominent final profit/loss, pond summary, income section, expense section, and final ledger formula.
 - `scripts/settlement_history.gd` renders the persistent ledger newest-first with day/cash status, total pond/profit/cash summary, player-facing profit/loss badges, and independently expandable result, income, expense, and final-ledger sections.
 
 ## Core Architecture
@@ -78,8 +79,8 @@ This file is the live handoff guide for agents working on **这塘我包了**. K
 - On the post-contract management page, use calculated ledger variables from `GameState` rather than vague copy such as “塘口账面”; current total invested is contract total cost + inspection spend + work cost + transport cost, and current profit/loss is revenue - total invested.
 - On the post-contract management page, “转包脱手”, “卖一网”, and “自己下网” are ActionCards with title, consequence copy, status, and button; “自己下网” is the primary action, “转包脱手” is secondary stop-loss, and “卖一网” stays disabled with “暂无买家” until fish-result data creates an offer.
 - The transfer offer popup must compute its bill from state variables: current cash, contract total cost, inspection spend, work cost, transport cost, revenue, and offer price. It shows current total invested, offer price, transfer profit/loss with status text, and cash after accepting; the accept button states the gain/loss and loss-making transfers require a second confirmation.
-- Choosing "自己下网" opens a dedicated work-plan page: the original transfer/sell/self-fishing buttons are hidden, the three work plans appear as scrollable list cards with `×` image placeholders, and the return control stays fixed below the list.
-- Final settlement net profit includes every income and cost for the pond: fish sales, one-net sale, transfer income, contract fee, inspection costs, and work costs. The contract fee is shown once and deducted once.
+- Choosing "自己下网" opens a dedicated net-method decision page: the original transfer/sell/self-fishing buttons are hidden, the three work plans appear as scrollable cards with self-drawn method placeholders, and the return control stays fixed below the list.
+- Final settlement net profit includes every income and cost for the pond: fish sales, one-net sale, transfer income, contract fee, inspection costs, and work costs. The contract fee, inspection fee, and work cost are paid when they happen; settlement only displays and records the final ledger, so costs are not deducted twice.
 - Entering a final settlement records it once with a record ID, local settlement time, pond/day/method, catch details, canonical income/cost line items, calculated totals/net profit, and ending cash.
 - “今日鱼塘” exposes “包塘记录” at the upper right; the history page supports empty and populated states, summarizes total ponds/cumulative profit/current cash, and expands/collapses full settlement details per record.
 - Continue restores the latest pond-list checkpoint; incomplete inspection, contract, and harvest actions are intentionally not persisted.
@@ -205,7 +206,7 @@ HOME=/private/tmp/fish_pool_history_test_home godot --headless --log-file /priva
 - All confirmation popups use an opaque-input modal overlay with a dark mask; popup cards remain inside a 24 px viewport safe area and oversized body content scrolls instead of expanding the card.
 - Contract and transfer popups both visibly retain title, highlighted decision value, scroll-safe content, and accept/cancel actions at 1080 × 1920; the harvest-result popup lists the catch by fish type with weight, unit price, subtotal, and total fish income, then highlights per-net profit/loss above its dismiss action.
 - Pond detail, post-contract choice/work-plan, and settlement use the same native framed page card with no large paper-sticker texture.
-- “自己下网” switches to a dedicated page state with three scrollable work-plan cards; “返回处置选择” remains fixed at the bottom and the original choice buttons must not remain visible.
+- “自己下网” switches to a dedicated page state with a mini owned-pond ledger and three scrollable net-option cards; “返回处置选择” remains fixed at the bottom and the original choice buttons must not remain visible.
 - The default post-contract management page shows the OwnedPondCard first, then the “先自己下一网，见到鱼，外面才有人信。” hint card, then the three ActionCards for “转包脱手” / “卖一网” / “自己下网”.
 - After the first self-fishing result, the post-contract page's flexible middle area shows a cumulative pond ledger rather than the latest-net narrative: fish weight and income by type, other income, contract/inspection/work costs, realized net cash, remaining pond estimate, and current mark-to-market profit.
 - “转包脱手” first opens a global confirmation dialog, then the centered responsive native offer popup; “自己下网” first opens a global cost confirmation dialog, then the work-plan page.
@@ -215,7 +216,7 @@ HOME=/private/tmp/fish_pool_history_test_home godot --headless --log-file /priva
 - "下一地方" advances the internal day counter, resets round-only state, and generates new ponds.
 - Fish-king result displays the special panel without breaking settlement totals.
 - Non-final self-fishing results show a blocking text/result popup until dismissed.
-- Settlement shows the correct bankrupt / fish-king / profit / loss text state without illustration textures.
+- Settlement shows the correct bankrupt / fish-king / profit / loss state without illustration textures, and the scorecard separates summary, income, expense, and final ledger sections.
 - Every settlement route, including transfer, shows one final pond scorecard with fish income by type, other income, all costs, total income, total cost, net result, and ending cash.
 - Final settlement writes one persistent history record; “包塘记录” keeps it across restart, recomputes every displayed total from ledger line items, and remains scroll-safe at 540 × 960, 720 × 1280, and 1080 × 1920.
 

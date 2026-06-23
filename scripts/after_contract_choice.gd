@@ -67,6 +67,81 @@ class TransferBuyerPlaceholder:
 			points.append(center + Vector2(cos(angle) * radius, sin(angle) * radius))
 		draw_colored_polygon(points, color)
 
+class NetMethodPlaceholder:
+	extends Control
+
+	var method_id := "low"
+
+	func _init(next_method_id := "low") -> void:
+		method_id = next_method_id
+
+	func _draw() -> void:
+		var rect := Rect2(Vector2.ZERO, size)
+		var base := Color(0.18, 0.46, 0.58, 1.0)
+		var ink := Color(0.07, 0.16, 0.13, 1.0)
+		if method_id == "full":
+			base = Color(0.64, 0.42, 0.22, 1.0)
+			ink = Color(0.22, 0.12, 0.06, 1.0)
+		_draw_round_rect(Rect2(Vector2(size.x * 0.08, size.y * 0.20), Vector2(size.x * 0.84, size.y * 0.62)), base, 22.0)
+		if method_id == "full":
+			var pump := Rect2(Vector2(size.x * 0.20, size.y * 0.32), Vector2(size.x * 0.32, size.y * 0.25))
+			draw_rect(pump, Color(0.22, 0.29, 0.25, 1.0), true)
+			draw_rect(pump, ink, false, 4.0)
+			draw_line(Vector2(size.x * 0.52, size.y * 0.44), Vector2(size.x * 0.78, size.y * 0.34), ink, 5.0, true)
+			draw_line(Vector2(size.x * 0.52, size.y * 0.52), Vector2(size.x * 0.80, size.y * 0.68), ink, 5.0, true)
+			draw_arc(Vector2(size.x * 0.72, size.y * 0.44), size.x * 0.10, 0.0, TAU, 32, Color(0.94, 0.86, 0.58, 1.0), 4.0, true)
+			for index in range(3):
+				draw_line(Vector2(size.x * (0.22 + index * 0.18), size.y * 0.74), Vector2(size.x * (0.34 + index * 0.18), size.y * 0.72), Color(0.93, 0.78, 0.48, 1.0), 4.0, true)
+			return
+
+		var net_center := Vector2(size.x * (0.46 if method_id == "low" else 0.50), size.y * 0.48)
+		var net_radius := minf(size.x, size.y) * (0.22 if method_id == "low" else 0.30)
+		draw_arc(net_center, net_radius, 0.0, TAU, 48, Color(0.88, 0.96, 0.90, 1.0), 5.0, true)
+		for index in range(-2, 3):
+			var x := net_center.x + float(index) * net_radius * 0.34
+			draw_line(Vector2(x, net_center.y - net_radius * 0.78), Vector2(x, net_center.y + net_radius * 0.78), Color(0.88, 0.96, 0.90, 0.72), 2.0, true)
+			var y := net_center.y + float(index) * net_radius * 0.26
+			draw_line(Vector2(net_center.x - net_radius * 0.82, y), Vector2(net_center.x + net_radius * 0.82, y), Color(0.88, 0.96, 0.90, 0.72), 2.0, true)
+		draw_line(Vector2(net_center.x + net_radius * 0.68, net_center.y + net_radius * 0.60), Vector2(size.x * 0.86, size.y * 0.78), ink, 7.0, true)
+
+	func _draw_round_rect(rect: Rect2, color: Color, radius: float) -> void:
+		draw_rect(rect, color, true)
+		draw_rect(rect, Color(0.06, 0.18, 0.14, 0.85), false, 4.0)
+
+class CatchVisualPlaceholder:
+	extends Control
+
+	func _draw() -> void:
+		var bag_center := Vector2(size.x * 0.50, size.y * 0.48)
+		var bag_radius := minf(size.x, size.y) * 0.30
+		draw_arc(bag_center, bag_radius, 0.0, TAU, 64, Color(0.08, 0.18, 0.15, 1.0), 5.0, true)
+		for index in range(-3, 4):
+			var x := bag_center.x + float(index) * bag_radius * 0.22
+			draw_line(Vector2(x, bag_center.y - bag_radius * 0.82), Vector2(x, bag_center.y + bag_radius * 0.82), Color(0.82, 0.94, 0.88, 0.70), 2.0, true)
+		for index in range(4):
+			var fish_center := Vector2(size.x * (0.35 + index * 0.10), size.y * (0.42 + (index % 2) * 0.12))
+			_draw_fish(fish_center, 38.0 + float(index % 2) * 10.0, Color(0.08, 0.30, 0.24, 0.70))
+		for index in range(5):
+			draw_circle(Vector2(size.x * (0.18 + index * 0.14), size.y * (0.24 + (index % 3) * 0.10)), 7.0 + index % 2 * 3.0, Color(0.80, 0.95, 0.94, 0.72))
+
+	func _draw_fish(center: Vector2, length: float, color: Color) -> void:
+		_draw_ellipse(Rect2(center - Vector2(length * 0.32, length * 0.16), Vector2(length * 0.64, length * 0.32)), color)
+		var tail := PackedVector2Array([
+			center + Vector2(length * 0.34, 0.0),
+			center + Vector2(length * 0.55, -length * 0.16),
+			center + Vector2(length * 0.55, length * 0.16)
+		])
+		draw_colored_polygon(tail, color)
+
+	func _draw_ellipse(rect: Rect2, color: Color) -> void:
+		var points := PackedVector2Array()
+		var center := rect.get_center()
+		var radius := rect.size * 0.5
+		for index in range(40):
+			var angle := float(index) / 40.0 * TAU
+			points.append(center + Vector2(cos(angle) * radius.x, sin(angle) * radius.y))
+		draw_colored_polygon(points, color)
+
 @onready var safe_area: MarginContainer = $SafeArea
 @onready var top_status_bar: PanelContainer = $SafeArea/PageLayout/TopStatusBar
 @onready var day_label: Label = $SafeArea/PageLayout/TopStatusBar/StatusRow/DayLabel
@@ -124,8 +199,14 @@ var reject_transfer_button: Button
 var harvest_result_overlay: Control
 var harvest_result_dialog: PanelContainer
 var harvest_result_title: Label
-var harvest_catch_label: Label
+var harvest_catch_list: VBoxContainer
+var harvest_fish_revenue_value: Label
+var harvest_net_cost_value: Label
+var harvest_net_profit_value: Label
 var harvest_result_label: Label
+var harvest_continue_button: Button
+var pending_harvest_result: Dictionary = {}
+var harvest_collect_locked := false
 
 func setup(next_game_state: GameState, next_screen_container: Control) -> void:
 	game_state = next_game_state
@@ -136,15 +217,13 @@ func _ready() -> void:
 		game_state = GameState.new()
 
 	_create_owned_pond_visual()
+	_rebuild_work_plan_cards()
 	_create_transfer_dialog()
 	_create_harvest_result_dialog()
 	transfer_button.pressed.connect(_on_transfer_pressed)
 	sell_one_net_button.pressed.connect(_on_sell_one_net_pressed)
 	harvest_self_button.pressed.connect(_on_harvest_self_pressed)
 	work_plan_back_button.pressed.connect(_on_work_plan_back_pressed)
-	low_work_button.pressed.connect(_on_work_plan_pressed.bind("low"))
-	standard_work_button.pressed.connect(_on_work_plan_pressed.bind("standard"))
-	full_work_button.pressed.connect(_on_work_plan_pressed.bind("full"))
 	get_viewport().size_changed.connect(_on_viewport_size_changed)
 	_apply_ui_frame()
 	_refresh_transfer_offer()
@@ -420,14 +499,50 @@ func _create_harvest_result_dialog() -> void:
 	body.add_theme_constant_override("separation", 14)
 	body_scroll.add_child(body)
 
-	body.add_child(UIKit.make_image_placeholder(Vector2(0, 360)))
+	# Future art pass: replace this drawn placeholder with catch_result_visual.png.
+	var catch_visual := CatchVisualPlaceholder.new()
+	catch_visual.name = "CatchVisualPlaceholder"
+	catch_visual.custom_minimum_size = Vector2(0, 280)
+	catch_visual.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	catch_visual.set_meta("_future_texture_slot", "catch_result_visual.png")
+	body.add_child(catch_visual)
 
-	harvest_catch_label = Label.new()
-	harvest_catch_label.name = "HarvestCatchLabel"
-	harvest_catch_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	harvest_catch_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	UIKit.style_label(harvest_catch_label, "body_dark")
-	body.add_child(harvest_catch_label)
+	var catch_card := PanelContainer.new()
+	catch_card.name = "CatchListCard"
+	UIKit.style_card(catch_card, UIKit.GREEN)
+	body.add_child(catch_card)
+
+	var catch_margin := MarginContainer.new()
+	catch_margin.add_theme_constant_override("margin_left", 16)
+	catch_margin.add_theme_constant_override("margin_top", 14)
+	catch_margin.add_theme_constant_override("margin_right", 16)
+	catch_margin.add_theme_constant_override("margin_bottom", 14)
+	catch_card.add_child(catch_margin)
+
+	harvest_catch_list = VBoxContainer.new()
+	harvest_catch_list.name = "CatchRows"
+	harvest_catch_list.add_theme_constant_override("separation", 8)
+	catch_margin.add_child(harvest_catch_list)
+
+	var summary_card := PanelContainer.new()
+	summary_card.name = "NetSummaryCard"
+	UIKit.style_card(summary_card, UIKit.GOLD)
+	body.add_child(summary_card)
+
+	var summary_margin := MarginContainer.new()
+	summary_margin.add_theme_constant_override("margin_left", 16)
+	summary_margin.add_theme_constant_override("margin_top", 14)
+	summary_margin.add_theme_constant_override("margin_right", 16)
+	summary_margin.add_theme_constant_override("margin_bottom", 14)
+	summary_card.add_child(summary_margin)
+
+	var summary_rows := VBoxContainer.new()
+	summary_rows.name = "SummaryRows"
+	summary_rows.add_theme_constant_override("separation", 8)
+	summary_margin.add_child(summary_rows)
+	harvest_fish_revenue_value = _add_transfer_summary_row(summary_rows, "FishRevenueRow", "本次鱼获收入")
+	harvest_net_cost_value = _add_transfer_summary_row(summary_rows, "NetCostRow", "本次下网成本")
+	harvest_net_profit_value = _add_transfer_summary_row(summary_rows, "NetProfitRow", "本次净收益")
 
 	harvest_result_label = Label.new()
 	harvest_result_label.name = "HarvestProfitLabel"
@@ -436,12 +551,127 @@ func _create_harvest_result_dialog() -> void:
 	UIKit.style_label(harvest_result_label, "body_dark")
 	body.add_child(harvest_result_label)
 
-	var continue_button := Button.new()
-	continue_button.text = "收下结果"
-	continue_button.custom_minimum_size = Vector2(0, UIKit.MODAL_ACTION_HEIGHT)
-	UIKit.style_button(continue_button, "primary")
-	continue_button.pressed.connect(_on_harvest_result_continue_pressed)
-	content.add_child(continue_button)
+	harvest_continue_button = Button.new()
+	harvest_continue_button.name = "CollectResultButton"
+	harvest_continue_button.text = "收下结果"
+	harvest_continue_button.custom_minimum_size = Vector2(0, UIKit.MODAL_ACTION_HEIGHT)
+	# Future art pass: replace this native button with TextureButton.
+	harvest_continue_button.set_meta("_future_texture_button", "button_primary.png")
+	UIKit.style_button(harvest_continue_button, "primary")
+	harvest_continue_button.pressed.connect(_on_harvest_result_continue_pressed)
+	content.add_child(harvest_continue_button)
+
+func _rebuild_work_plan_cards() -> void:
+	for child in work_plan_panel.get_children():
+		child.queue_free()
+	low_work_button = _create_net_option_card("low", "小捞一网", "低成本试一网，鱼获不稳定。", "捞完还能继续。", false)
+	standard_work_button = _create_net_option_card("standard", "稳捞一网", "多下点功夫，鱼获更稳定。", "捞完还能继续。", false)
+	full_work_button = _create_net_option_card("full", "抽干收尾", "直接抽干收尾，看清这口塘最后有多少货。", "本塘直接结算。", true)
+
+func _create_net_option_card(plan_id: String, title_text: String, desc_text: String, consequence_text: String, is_final: bool) -> Button:
+	var card := PanelContainer.new()
+	card.name = "NetOptionCard_%s" % ("Final" if is_final else "Small" if plan_id == "low" else "Normal")
+	card.custom_minimum_size = Vector2(0, 250 if is_final else 220)
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card.set_meta("_future_texture_slot", "net_option_card_bg.png")
+	work_plan_panel.add_child(card)
+	UIKit.style_card(card, UIKit.RED if is_final else UIKit.GREEN)
+
+	var margin := MarginContainer.new()
+	margin.name = "CardMargin"
+	margin.add_theme_constant_override("margin_left", 18)
+	margin.add_theme_constant_override("margin_top", 16)
+	margin.add_theme_constant_override("margin_right", 18)
+	margin.add_theme_constant_override("margin_bottom", 16)
+	card.add_child(margin)
+
+	var row := HBoxContainer.new()
+	row.name = "CardContent"
+	row.add_theme_constant_override("separation", 18)
+	margin.add_child(row)
+
+	# Future art pass: replace this drawn placeholder with net_method_xxx.png.
+	var visual := NetMethodPlaceholder.new(plan_id)
+	visual.name = "NetMethodPlaceholder"
+	visual.custom_minimum_size = Vector2(150, 150)
+	visual.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	visual.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	visual.set_meta("_future_texture_slot", "net_method_%s.png" % plan_id)
+	row.add_child(visual)
+
+	var info := VBoxContainer.new()
+	info.name = "Info"
+	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	info.add_theme_constant_override("separation", 8)
+	row.add_child(info)
+
+	var title_row := HBoxContainer.new()
+	title_row.name = "TitleRow"
+	title_row.add_theme_constant_override("separation", 10)
+	info.add_child(title_row)
+
+	var title := Label.new()
+	title.name = "MethodTitleLabel"
+	title.text = title_text
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	UIKit.style_label(title, "section")
+	title_row.add_child(title)
+
+	if is_final:
+		var final_badge := Label.new()
+		final_badge.name = "FinalBadge"
+		final_badge.text = "收尾"
+		final_badge.custom_minimum_size = Vector2(92, 44)
+		final_badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		final_badge.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		UIKit.style_chip(final_badge, UIKit.RED)
+		title_row.add_child(final_badge)
+
+	var cost_badge := Label.new()
+	cost_badge.name = "CostBadge"
+	cost_badge.text = "费用：0 元"
+	cost_badge.custom_minimum_size = Vector2(0, 44)
+	cost_badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	cost_badge.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	UIKit.style_highlight_label(cost_badge, "price")
+	info.add_child(cost_badge)
+
+	var desc := Label.new()
+	desc.name = "MethodDescLabel"
+	desc.text = desc_text
+	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	UIKit.style_label(desc, "body_dark")
+	info.add_child(desc)
+
+	var consequence := Label.new()
+	consequence.name = "ConsequenceLabel"
+	consequence.text = consequence_text
+	consequence.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	UIKit.style_label(consequence, "muted")
+	consequence.add_theme_color_override("font_color", UIKit.RED if is_final else UIKit.MUTED)
+	info.add_child(consequence)
+
+	if is_final:
+		var warning := Label.new()
+		warning.name = "FinalWarningLabel"
+		warning.text = "选择后本塘将进入最终结算"
+		warning.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		warning.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		UIKit.style_label(warning, "muted")
+		warning.add_theme_color_override("font_color", UIKit.RED)
+		info.add_child(warning)
+
+	var button := Button.new()
+	button.name = "%sWorkButton" % ("Low" if plan_id == "low" else "Standard" if plan_id == "standard" else "Full")
+	button.custom_minimum_size = Vector2(0, 74)
+	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	button.text = title_text
+	button.set_meta("_future_texture_button", "button_primary.png" if is_final else "button_secondary.png")
+	UIKit.style_button(button, "primary" if is_final else "secondary")
+	button.pressed.connect(_on_work_plan_pressed.bind(plan_id))
+	info.add_child(button)
+	return button
 
 func _render() -> void:
 	var pond := game_state.current_pond
@@ -592,7 +822,10 @@ func _hide_detail_panels() -> void:
 func _show_choice_page() -> void:
 	title_label.text = "塘已经包下"
 	subtitle_label.text = "本钱已经下去了，接下来要决定怎么处理这口塘"
+	owned_pond_card.custom_minimum_size = Vector2(0, 690)
 	owned_pond_card.visible = true
+	pond_visual_host.visible = true
+	_set_ledger_row_visibility(true)
 	situation_hint_card.visible = true
 	action_section.visible = true
 	work_plan_back_button.visible = false
@@ -600,12 +833,20 @@ func _show_choice_page() -> void:
 
 func _show_work_plan_page() -> void:
 	title_label.text = "自己下网"
-	subtitle_label.text = "选一种作业方式，钱不够的方案不能开工"
-	owned_pond_card.visible = false
-	situation_hint_card.visible = true
+	subtitle_label.text = "选一种下网方式，成本越高，越可能看到真东西。"
+	owned_pond_card.custom_minimum_size = Vector2(0, 238)
+	owned_pond_card.visible = true
+	pond_visual_host.visible = false
+	_set_ledger_row_visibility(false)
+	situation_hint_card.visible = false
 	action_section.visible = false
 	work_plan_back_button.visible = true
 	work_plan_scroll.visible = true
+
+func _set_ledger_row_visibility(show_full: bool) -> void:
+	$SafeArea/PageLayout/ContentScroll/Content/OwnedPondCard/Margin/CardContent/LedgerSummary/ContractPriceRow.visible = show_full
+	$SafeArea/PageLayout/ContentScroll/Content/OwnedPondCard/Margin/CardContent/LedgerSummary/InspectionSpentRow.visible = show_full
+	$SafeArea/PageLayout/ContentScroll/Content/OwnedPondCard/Margin/CardContent/LedgerSummary/RevenueRow.visible = show_full
 
 func _close_transfer_dialog() -> void:
 	UIKit.hide_modal(transfer_overlay)
@@ -725,25 +966,28 @@ func _on_work_plan_pressed(plan_id: String) -> void:
 		_update_work_buttons()
 		return
 
-	var result := resolver.generate_harvest_result(game_state.current_pond, plan_id, cost)
-	if game_state.apply_harvest(result):
-		if bool(result.get("is_final", false)):
-			UIController.show_settlement(screen_container, game_state)
-			return
+	if plan_id == "full":
+		_show_global_confirm({
+			"title": "确定抽干收尾？",
+			"body": "抽干后这口塘会直接结算，不能再继续下网。",
+			"cancel_text": "再想想",
+			"confirm_text": "抽干收尾",
+			"on_confirm": Callable(self, "_execute_work_plan").bind(plan_id)
+		})
+		return
+	_execute_work_plan(plan_id)
 
-		var opportunities := resolver.generate_disposal_opportunities(game_state.current_pond, result)
-		current_transfer_offer = opportunities.get("transfer_offer", {})
-		if current_transfer_offer.is_empty():
-			_refresh_transfer_offer()
-		if not game_state.sold_one_net:
-			current_one_net_offer = opportunities.get("one_net_offer", {})
-		message_label.text = "%s\n%s" % [str(result.get("text", "")), str(opportunities.get("message", ""))]
-		_show_choice_page()
-		_render()
-		_show_harvest_result(result)
-	else:
+func _execute_work_plan(plan_id: String) -> void:
+	var cost := game_state.get_work_cost(plan_id)
+	if not game_state.can_pay(cost):
 		message_label.text = "本钱不够，干不了这个作业方案。"
 		_update_work_buttons()
+		return
+
+	var result := resolver.generate_harvest_result(game_state.current_pond, plan_id, cost)
+	pending_harvest_result = result
+	harvest_collect_locked = false
+	_show_harvest_result(result)
 
 func _build_pond_ledger() -> String:
 	var lines: Array[String] = ["塘口累计账"]
@@ -791,54 +1035,102 @@ func _show_harvest_result(result: Dictionary) -> void:
 			caught_fish_king = true
 			break
 
-	var round_profit := int(result.get("fish_income", 0)) - int(result.get("work_cost", 0))
+	var fish_revenue := int(result.get("fish_income", 0))
+	var net_cost := int(result.get("work_cost", 0))
+	var round_profit := fish_revenue - net_cost
 	if caught_fish_king:
 		harvest_result_title.text = "鱼王出现！"
 	elif round_profit > 0:
 		harvest_result_title.text = "这一网赚到了"
+	elif round_profit == 0:
+		harvest_result_title.text = "这一网打平"
 	else:
-		harvest_result_title.text = "这一网没回本"
+		harvest_result_title.text = "这一网亏了"
 
-	harvest_catch_label.text = _format_harvest_catch(result)
+	_render_harvest_catch_rows(result)
+	harvest_fish_revenue_value.text = "%d 元" % fish_revenue
+	harvest_net_cost_value.text = "%d 元" % net_cost
+	harvest_net_profit_value.text = "%+d 元" % round_profit if round_profit != 0 else "0 元"
+	harvest_net_profit_value.add_theme_color_override("font_color", UIKit.GREEN if round_profit > 0 else UIKit.RED if round_profit < 0 else UIKit.INK)
 	harvest_result_label.text = "本次赚亏 %+d 元" % round_profit
-	UIKit.style_highlight_label(harvest_result_label, "positive" if round_profit > 0 else "negative")
+	UIKit.style_highlight_label(harvest_result_label, "positive" if round_profit > 0 else "negative" if round_profit < 0 else "gold")
+	harvest_continue_button.disabled = false
 	UIKit.show_modal(self, harvest_result_overlay, harvest_result_dialog, 0.86, 1060, Vector2i(340, 700), Vector2i(860, 1160))
 
-func _format_harvest_catch(result: Dictionary) -> String:
-	var lines: Array[String] = ["鱼获明细"]
+func _render_harvest_catch_rows(result: Dictionary) -> void:
+	for child in harvest_catch_list.get_children():
+		child.queue_free()
 	var catch_details := Array(result.get("catch_details", []))
 	if catch_details.is_empty():
-		lines.append("这一网没有起货。")
-	else:
-		lines.append("这网主货：%s" % str(result.get("fish_result_name", "暂无鱼获")))
-		for item_variant in catch_details:
-			var item := Dictionary(item_variant)
-			var line := "%s：%d 斤 × %d 元/斤 = %d 元" % [
-				str(item.get("name", "未知鱼获")),
-				int(item.get("weight_jin", 0)),
-				int(item.get("unit_price", 0)),
-				int(item.get("income", 0))
-			]
-			if str(item.get("id", "")) == "fish_king" and item.has("integrity"):
-				line += "，完整度 %d%%" % int(item.get("integrity", 0))
-			lines.append(line)
-			var price_note := str(item.get("price_note", ""))
-			if not price_note.is_empty():
-				lines.append(price_note)
-	lines.append("卖鱼回款：%d 元" % int(result.get("fish_income", 0)))
-	return "\n".join(lines)
+		var empty_label := UIKit.make_label("这一网没有起货。", UIKit.FONT_BODY, UIKit.INK, HORIZONTAL_ALIGNMENT_CENTER)
+		harvest_catch_list.add_child(empty_label)
+		return
+
+	var title := UIKit.make_label("鱼获明细", UIKit.FONT_SECTION, UIKit.GREEN, HORIZONTAL_ALIGNMENT_LEFT)
+	harvest_catch_list.add_child(title)
+	for item_variant in catch_details:
+		var item := Dictionary(item_variant)
+		var row_text := "%s：%d 斤 × %d 元/斤 = %d 元" % [
+			str(item.get("name", "未知鱼获")),
+			int(item.get("weight_jin", 0)),
+			int(item.get("unit_price", 0)),
+			int(item.get("income", 0))
+		]
+		if str(item.get("id", "")) == "fish_king" and item.has("integrity"):
+			row_text += "，完整度 %d%%" % int(item.get("integrity", 0))
+		harvest_catch_list.add_child(_make_plain_card_label(row_text))
+		var price_note := str(item.get("price_note", ""))
+		if not price_note.is_empty():
+			harvest_catch_list.add_child(UIKit.make_label(price_note, UIKit.FONT_SECONDARY, UIKit.MUTED, HORIZONTAL_ALIGNMENT_LEFT))
+
+func _make_plain_card_label(text: String) -> Label:
+	var label := UIKit.make_label(text, UIKit.FONT_BODY, UIKit.INK, HORIZONTAL_ALIGNMENT_LEFT)
+	label.custom_minimum_size = Vector2(0, 42)
+	return label
 
 func _on_harvest_result_continue_pressed() -> void:
+	if harvest_collect_locked:
+		return
+	harvest_collect_locked = true
+	harvest_continue_button.disabled = true
 	UIKit.hide_modal(harvest_result_overlay)
+	if pending_harvest_result.is_empty():
+		return
+	var result := pending_harvest_result
+	pending_harvest_result = {}
+	if not game_state.apply_harvest(result):
+		message_label.text = "本钱不够，干不了这个作业方案。"
+		_update_work_buttons()
+		return
+	if bool(result.get("is_final", false)):
+		UIController.show_settlement(screen_container, game_state)
+		return
+
+	var opportunities := resolver.generate_disposal_opportunities(game_state.current_pond, result)
+	current_transfer_offer = opportunities.get("transfer_offer", {})
+	if current_transfer_offer.is_empty():
+		_refresh_transfer_offer()
+	if not game_state.sold_one_net:
+		current_one_net_offer = opportunities.get("one_net_offer", {})
+	message_label.text = "%s\n%s" % [str(result.get("text", "")), str(opportunities.get("message", ""))]
+	_show_choice_page()
+	_render()
 
 func _update_work_buttons() -> void:
 	var low_cost := game_state.get_work_cost("low")
 	var standard_cost := game_state.get_work_cost("standard")
 	var full_cost := game_state.get_work_cost("full")
 
-	low_work_button.text = "小捞一网\n%d 元 · 捞完还能继续" % low_cost
-	standard_work_button.text = "稳捞一网\n%d 元 · 捞完还能继续" % standard_cost
-	full_work_button.text = "抽干收尾\n%d 元 · 本轮直接结算" % full_cost
+	_update_net_option_card(low_work_button, low_cost, "小捞一网")
+	_update_net_option_card(standard_work_button, standard_cost, "稳捞一网")
+	_update_net_option_card(full_work_button, full_cost, "抽干收尾")
 	low_work_button.disabled = not game_state.can_pay(low_cost)
 	standard_work_button.disabled = not game_state.can_pay(standard_cost)
 	full_work_button.disabled = game_state.drained or not game_state.can_pay(full_cost)
+
+func _update_net_option_card(button: Button, cost: int, title_text: String) -> void:
+	var card := button.get_parent().get_parent().get_parent().get_parent() as PanelContainer
+	var cost_badge := card.find_child("CostBadge", true, false) as Label
+	if cost_badge != null:
+		cost_badge.text = "费用：%d 元" % cost
+	button.text = title_text if game_state.can_pay(cost) else "钱不够"

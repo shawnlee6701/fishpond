@@ -330,7 +330,8 @@ func _run() -> void:
 	var work_scroll := choice_screen.find_child("WorkPlanScroll", true, false) as ScrollContainer
 	var work_panel := choice_screen.find_child("WorkPlanPanel", true, false) as VBoxContainer
 	_check(work_scroll.visible, "自己下网按钮打开作业方案列表")
-	_check(work_panel.find_children("ImagePlaceholder", "PanelContainer", true, false).size() == 3, "三个作业方案均显示叉号图片位")
+	_check(work_panel.find_children("NetMethodPlaceholder", "Control", true, false).size() == 3, "三个作业方案均显示自绘下网方式占位")
+	_check(work_panel.find_child("FinalBadge", true, false) != null, "抽干收尾方案显示收尾标记")
 
 	var work_back := choice_screen.find_child("WorkPlanBackButton", true, false) as Button
 	_check(work_back.get_index() > work_scroll.get_index(), "返回处置选择固定在方案列表底端")
@@ -351,7 +352,8 @@ func _run() -> void:
 		await _settle_frames()
 		var harvest_modal := choice_screen.get_node("HarvestResultModal") as Control
 		_check(harvest_modal.visible, "非最终捕捞显示结果弹窗")
-		_check(harvest_modal.find_child("ImagePlaceholder", true, false) != null, "捕捞结果图片位显示叉号占位")
+		_check(harvest_modal.find_child("CatchVisualPlaceholder", true, false) != null, "捕捞结果显示自绘鱼获占位")
+		_check(harvest_modal.find_child("NetSummaryCard", true, false) != null, "捕捞结果显示本次收入成本净收益")
 		var continue_button := _find_button_by_text(harvest_modal, "收下结果")
 		_check(continue_button != null, "捕捞结果弹窗存在继续按钮")
 		if continue_button != null:
@@ -399,11 +401,24 @@ func _run() -> void:
 		return
 	full_button.pressed.emit()
 	await _settle_frames()
-	_check_screen(screen_container, "Settlement", "抽干收尾进入结算页")
+	var drain_confirm := root.get_node("PopupManager") as CanvasLayer
+	_check(drain_confirm.visible and _find_button_by_text(drain_confirm, "抽干收尾") != null, "抽干收尾先显示最终结算确认")
+	var confirm_drain := _find_button_by_text(drain_confirm, "抽干收尾")
+	if confirm_drain != null:
+		confirm_drain.pressed.emit()
+		await _settle_frames()
+	var final_modal := choice_screen.get_node("HarvestResultModal") as Control
+	_check(final_modal.visible, "抽干收尾先显示这一网结果")
+	var final_continue := _find_button_by_text(final_modal, "收下结果")
+	if final_continue != null:
+		final_continue.pressed.emit()
+		await _settle_frames()
+	_check_screen(screen_container, "Settlement", "收下抽干结果后进入结算页")
 
 	var settlement := _current_screen(screen_container)
-	_check(settlement.get_node_or_null("Panel/Margin/Content/ResultImagePlaceholder") != null, "结算图片位显示叉号占位")
-	var next_button := settlement.get_node("Panel/Margin/Content/NextDayButton") as Button
+	_check(settlement.find_child("SettlementVisualPlaceholder", true, false) != null, "结算页显示自绘结算占位")
+	_check(settlement.find_child("FinalLedgerSection", true, false) != null, "结算页显示最终公式分区")
+	var next_button := settlement.find_child("NextButton", true, false) as Button
 	next_button.pressed.emit()
 	await _settle_frames()
 	_check_screen(screen_container, "PondList", "下一地方按钮进入新一天鱼塘列表")
