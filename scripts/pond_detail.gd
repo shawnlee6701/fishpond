@@ -322,7 +322,7 @@ func _on_commit_pressed() -> void:
 	confirm_dialog_mode = "commit"
 	confirm_dialog_submitting = false
 	_populate_contract_bill(preview)
-	_show_confirm_dialog(760)
+	_show_confirm_dialog(680)
 
 
 func _create_confirm_dialog() -> void:
@@ -338,7 +338,7 @@ func _create_confirm_dialog() -> void:
 
 	confirm_content = VBoxContainer.new()
 	confirm_content.name = "DialogContent"
-	confirm_content.add_theme_constant_override("separation", 14)
+	confirm_content.add_theme_constant_override("separation", 10)
 	confirm_dialog.add_child(confirm_content)
 
 	confirm_title_label = Label.new()
@@ -376,12 +376,12 @@ func _create_confirm_dialog() -> void:
 	var body_content := VBoxContainer.new()
 	body_content.name = "DialogBody"
 	body_content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	body_content.add_theme_constant_override("separation", 12)
+	body_content.add_theme_constant_override("separation", 8)
 	body_scroll.add_child(body_content)
 
 	confirm_bill_rows = VBoxContainer.new()
 	confirm_bill_rows.name = "BillRows"
-	confirm_bill_rows.add_theme_constant_override("separation", 8)
+	confirm_bill_rows.add_theme_constant_override("separation", 6)
 	body_content.add_child(confirm_bill_rows)
 
 	confirm_current_money_value = _add_contract_bill_row("CurrentMoneyRow", "手上钱")
@@ -455,7 +455,7 @@ func _add_contract_bill_row(row_name: String, label_text: String, is_negative :=
 	var row := PanelContainer.new()
 	row.name = row_name
 	row.theme_type_variation = &"ContractBillRowPanel"
-	row.custom_minimum_size = Vector2(0, 56)
+	row.custom_minimum_size = Vector2(0, 46)
 	confirm_bill_rows.add_child(row)
 
 	var row_content := HBoxContainer.new()
@@ -474,9 +474,11 @@ func _add_contract_bill_row(row_name: String, label_text: String, is_negative :=
 	var value_label := Label.new()
 	value_label.name = "Value"
 	value_label.theme_type_variation = &"ContractBillNegativeValueLabel" if is_negative else &"ContractBillValueLabel"
+	value_label.custom_minimum_size = Vector2(260, 0)
+	value_label.size_flags_horizontal = Control.SIZE_SHRINK_END
 	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	value_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	value_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	value_label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	row_content.add_child(value_label)
 	return value_label
 

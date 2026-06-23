@@ -135,13 +135,17 @@ func _run() -> void:
 	var pond_price_value := contract_modal.get_node("DialogCard/DialogContent/DialogBodyScroll/DialogBody/BillRows/PondPriceRow/RowContent/Value") as Label
 	var remaining_value := contract_modal.get_node("DialogCard/DialogContent/DialogBodyScroll/DialogBody/BillRows/RemainingAfterContractRow/RowContent/Value") as Label
 	var status_title := contract_modal.get_node("DialogCard/DialogContent/DialogBodyScroll/DialogBody/StatusBox/StatusContent/StatusTitleLabel") as Label
+	var bill_rows := contract_modal.get_node("DialogCard/DialogContent/DialogBodyScroll/DialogBody/BillRows") as VBoxContainer
 	_check(balance_highlight.text.contains("%d 元" % remaining_after_contract), "承包账单高亮显示包下后剩余且来自当前现金减承包价")
 	_check(inspection_spent_value.text.contains("1300 元") and inspection_spent_value.text.contains("不退"), "承包账单显示已花验塘费且标明不退")
 	_check(pond_price_value.text == "-%d 元" % pond_price, "承包账单将塘主要价显示为负数扣款")
 	_check(remaining_value.text == "%d 元" % remaining_after_contract, "承包账单行显示正确包下后剩余")
+	_check(pond_price_value.autowrap_mode == TextServer.AUTOWRAP_OFF and pond_price_value.custom_minimum_size.x >= 240.0 and pond_price_value.size.y <= 60.0, "承包账单右侧金额横排显示且不会逐字换行")
+	_check(bill_rows.get_child(0).size.y <= 60.0 and bill_rows.get_child(1).size.y <= 60.0 and bill_rows.get_child(2).size.y <= 60.0, "承包账单行高度不会被金额撑大")
 	_check(status_title.text == "资金状态：够开工", "承包账单显示系统资金状态")
 	var contract_card := contract_modal.get_node("DialogCard") as PanelContainer
 	var contract_button_row := contract_modal.get_node("DialogCard/DialogContent/ButtonRow") as HBoxContainer
+	_check(contract_button_row.position.y + contract_button_row.size.y <= contract_card.size.y, "承包账单底部按钮保持在弹窗卡片内")
 	for viewport_size in [Vector2i(540, 960), Vector2i(720, 1280), Vector2i(1080, 1920)]:
 		pond_detail.size = Vector2(1080, 1920)
 		pond_detail.call("_on_viewport_size_changed")
