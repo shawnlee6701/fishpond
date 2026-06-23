@@ -362,6 +362,32 @@ func _run() -> void:
 			continue_button.pressed.emit()
 			await process_frame
 			_check(not harvest_modal.visible, "捕捞结果继续按钮关闭弹窗")
+		var latest_card := choice_screen.find_child("LatestNetResultCard", true, false) as PanelContainer
+		var latest_method := choice_screen.find_child("LatestMethodLabel", true, false) as Label
+		var latest_revenue := choice_screen.find_child("LatestRevenueLabel", true, false) as Label
+		var latest_cost := choice_screen.find_child("LatestCostLabel", true, false) as Label
+		var latest_profit := choice_screen.find_child("LatestProfitLabel", true, false) as Label
+		var latest_result := choice_screen.get("latest_net_result") as Dictionary
+		var latest_income := int(latest_result.get("fish_income", 0))
+		var latest_work_cost := int(latest_result.get("work_cost", 0))
+		var latest_net_profit := latest_income - latest_work_cost
+		_check(latest_card != null and latest_card.visible, "完成一网后已承包页显示最新一网结果卡")
+		_check(latest_method.text.contains("小捞一网") and latest_revenue.text == "鱼获收入：%d 元" % latest_income and latest_cost.text == "本次成本：%d 元" % latest_work_cost, "最新一网结果只显示本次方法、收入和成本摘要")
+		_check(latest_profit.text.contains("%+d" % latest_net_profit) or (latest_net_profit == 0 and latest_profit.text.contains("0 元")), "最新一网结果显示本次净赚亏")
+		var action_section := choice_screen.find_child("ActionSection", true, false) as VBoxContainer
+		var ledger_accordion := choice_screen.find_child("LedgerAccordion", true, false) as PanelContainer
+		var ledger_detail := choice_screen.find_child("LedgerDetailLabel", true, false) as Label
+		var ledger_toggle := choice_screen.find_child("LedgerToggleButton", true, false) as Button
+		var choice_content_scroll := choice_screen.find_child("ContentScroll", true, false) as ScrollContainer
+		_check(action_section.get_index() < ledger_accordion.get_index(), "接下来操作区排在账本明细之前")
+		_check(not ledger_detail.visible and ledger_toggle.text.begins_with("查看账本明细：当前"), "账本明细默认收起且只显示当前盈亏摘要")
+		_check(action_section.position.y < choice_content_scroll.size.y, "完成一网后不滚动即可看到接下来怎么处理区域")
+		ledger_toggle.pressed.emit()
+		await process_frame
+		_check(ledger_detail.visible and ledger_detail.text.contains("塘口累计账") and ledger_detail.text.contains("鱼获收入"), "点击后展开完整塘口累计账")
+		choice_screen.call("_render")
+		await process_frame
+		_check(ledger_detail.visible, "手动展开账本后刷新页面不会强制收起")
 
 	var choice_state := choice_screen.get("game_state") as GameState
 	choice_screen.set("current_one_net_offer", ActionResolver.new(42).generate_one_net_offer(choice_state.current_pond))

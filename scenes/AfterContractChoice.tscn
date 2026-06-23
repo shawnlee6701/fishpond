@@ -75,7 +75,7 @@ vertical_alignment = 1
 
 [node name="SubtitleLabel" type="Label" parent="SafeArea/PageLayout/PageHeader"]
 layout_mode = 2
-text = "本钱已经下去了，接下来要决定怎么处理这口塘"
+text = "看清现在亏多少，再决定下一步。"
 horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 3
@@ -92,7 +92,7 @@ size_flags_horizontal = 3
 theme_override_constants/separation = 18
 
 [node name="OwnedPondCard" type="PanelContainer" parent="SafeArea/PageLayout/ContentScroll/Content"]
-custom_minimum_size = Vector2(0, 690)
+custom_minimum_size = Vector2(0, 360)
 layout_mode = 2
 
 [node name="Margin" type="MarginContainer" parent="SafeArea/PageLayout/ContentScroll/Content/OwnedPondCard"]
@@ -125,7 +125,7 @@ vertical_alignment = 1
 autowrap_mode = 3
 
 [node name="PondVisualHost" type="Control" parent="SafeArea/PageLayout/ContentScroll/Content/OwnedPondCard/Margin/CardContent"]
-custom_minimum_size = Vector2(0, 210)
+custom_minimum_size = Vector2(0, 112)
 layout_mode = 2
 mouse_filter = 2
 
@@ -218,22 +218,41 @@ layout_mode = 2
 text = "0 元"
 horizontal_alignment = 2
 
-[node name="SituationHintCard" type="PanelContainer" parent="SafeArea/PageLayout/ContentScroll/Content"]
-custom_minimum_size = Vector2(0, 102)
+[node name="LatestNetResultCard" type="PanelContainer" parent="SafeArea/PageLayout/ContentScroll/Content"]
+custom_minimum_size = Vector2(0, 184)
 layout_mode = 2
 
-[node name="HintMargin" type="MarginContainer" parent="SafeArea/PageLayout/ContentScroll/Content/SituationHintCard"]
+[node name="HintMargin" type="MarginContainer" parent="SafeArea/PageLayout/ContentScroll/Content/LatestNetResultCard"]
 layout_mode = 2
 theme_override_constants/margin_left = 22
 theme_override_constants/margin_top = 14
 theme_override_constants/margin_right = 22
 theme_override_constants/margin_bottom = 14
 
-[node name="MessageLabel" type="Label" parent="SafeArea/PageLayout/ContentScroll/Content/SituationHintCard/HintMargin"]
+[node name="LatestContent" type="VBoxContainer" parent="SafeArea/PageLayout/ContentScroll/Content/LatestNetResultCard/HintMargin"]
 layout_mode = 2
-text = "先自己下一网，见到鱼，外面才有人信。"
-horizontal_alignment = 1
-vertical_alignment = 1
+theme_override_constants/separation = 8
+
+[node name="LatestTitleLabel" type="Label" parent="SafeArea/PageLayout/ContentScroll/Content/LatestNetResultCard/HintMargin/LatestContent"]
+layout_mode = 2
+text = "最新一网结果"
+
+[node name="LatestMethodLabel" type="Label" parent="SafeArea/PageLayout/ContentScroll/Content/LatestNetResultCard/HintMargin/LatestContent"]
+layout_mode = 2
+text = "最新一网：-"
+autowrap_mode = 3
+
+[node name="LatestRevenueLabel" type="Label" parent="SafeArea/PageLayout/ContentScroll/Content/LatestNetResultCard/HintMargin/LatestContent"]
+layout_mode = 2
+text = "鱼获收入：0 元"
+
+[node name="LatestCostLabel" type="Label" parent="SafeArea/PageLayout/ContentScroll/Content/LatestNetResultCard/HintMargin/LatestContent"]
+layout_mode = 2
+text = "本次成本：0 元"
+
+[node name="LatestProfitLabel" type="Label" parent="SafeArea/PageLayout/ContentScroll/Content/LatestNetResultCard/HintMargin/LatestContent"]
+layout_mode = 2
+text = "本次打平：0 元"
 autowrap_mode = 3
 
 [node name="ActionSection" type="VBoxContainer" parent="SafeArea/PageLayout/ContentScroll/Content"]
@@ -244,20 +263,53 @@ theme_override_constants/separation = 14
 layout_mode = 2
 text = "接下来怎么处理？"
 
+[node name="ActionCard_ContinueNet" type="PanelContainer" parent="SafeArea/PageLayout/ContentScroll/Content/ActionSection"]
+custom_minimum_size = Vector2(0, 172)
+layout_mode = 2
+
+[node name="CardMargin" type="MarginContainer" parent="SafeArea/PageLayout/ContentScroll/Content/ActionSection/ActionCard_ContinueNet"]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 14
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 14
+
+[node name="CardContent" type="VBoxContainer" parent="SafeArea/PageLayout/ContentScroll/Content/ActionSection/ActionCard_ContinueNet/CardMargin"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ActionTitleLabel" type="Label" parent="SafeArea/PageLayout/ContentScroll/Content/ActionSection/ActionCard_ContinueNet/CardMargin/CardContent"]
+layout_mode = 2
+text = "继续下网"
+
+[node name="ActionDescLabel" type="Label" parent="SafeArea/PageLayout/ContentScroll/Content/ActionSection/ActionCard_ContinueNet/CardMargin/CardContent"]
+layout_mode = 2
+text = "再下一网，看看塘里还有多少货。"
+autowrap_mode = 3
+
+[node name="ActionStatusLabel" type="Label" parent="SafeArea/PageLayout/ContentScroll/Content/ActionSection/ActionCard_ContinueNet/CardMargin/CardContent"]
+layout_mode = 2
+text = "主操作"
+
+[node name="HarvestSelfButton" type="Button" parent="SafeArea/PageLayout/ContentScroll/Content/ActionSection/ActionCard_ContinueNet/CardMargin/CardContent"]
+custom_minimum_size = Vector2(0, 76)
+layout_mode = 2
+text = "继续下网"
+
 [node name="ActionCard_TransferOut" type="PanelContainer" parent="SafeArea/PageLayout/ContentScroll/Content/ActionSection"]
-custom_minimum_size = Vector2(0, 178)
+custom_minimum_size = Vector2(0, 156)
 layout_mode = 2
 
 [node name="CardMargin" type="MarginContainer" parent="SafeArea/PageLayout/ContentScroll/Content/ActionSection/ActionCard_TransferOut"]
 layout_mode = 2
 theme_override_constants/margin_left = 20
-theme_override_constants/margin_top = 16
+theme_override_constants/margin_top = 14
 theme_override_constants/margin_right = 20
-theme_override_constants/margin_bottom = 16
+theme_override_constants/margin_bottom = 14
 
 [node name="CardContent" type="VBoxContainer" parent="SafeArea/PageLayout/ContentScroll/Content/ActionSection/ActionCard_TransferOut/CardMargin"]
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 6
 
 [node name="ActionTitleLabel" type="Label" parent="SafeArea/PageLayout/ContentScroll/Content/ActionSection/ActionCard_TransferOut/CardMargin/CardContent"]
 layout_mode = 2
@@ -265,7 +317,7 @@ text = "转包脱手"
 
 [node name="ActionDescLabel" type="Label" parent="SafeArea/PageLayout/ContentScroll/Content/ActionSection/ActionCard_TransferOut/CardMargin/CardContent"]
 layout_mode = 2
-text = "尝试把塘转给别人，可能亏钱，但能早点止损。"
+text = "找人接手，可能止损，也可能错过后面的鱼。"
 autowrap_mode = 3
 
 [node name="ActionStatusLabel" type="Label" parent="SafeArea/PageLayout/ContentScroll/Content/ActionSection/ActionCard_TransferOut/CardMargin/CardContent"]
@@ -273,24 +325,24 @@ layout_mode = 2
 text = "止损行动"
 
 [node name="TransferButton" type="Button" parent="SafeArea/PageLayout/ContentScroll/Content/ActionSection/ActionCard_TransferOut/CardMargin/CardContent"]
-custom_minimum_size = Vector2(0, 76)
+custom_minimum_size = Vector2(0, 70)
 layout_mode = 2
 text = "去转包"
 
 [node name="ActionCard_SellOneNet" type="PanelContainer" parent="SafeArea/PageLayout/ContentScroll/Content/ActionSection"]
-custom_minimum_size = Vector2(0, 178)
+custom_minimum_size = Vector2(0, 156)
 layout_mode = 2
 
 [node name="CardMargin" type="MarginContainer" parent="SafeArea/PageLayout/ContentScroll/Content/ActionSection/ActionCard_SellOneNet"]
 layout_mode = 2
 theme_override_constants/margin_left = 20
-theme_override_constants/margin_top = 16
+theme_override_constants/margin_top = 14
 theme_override_constants/margin_right = 20
-theme_override_constants/margin_bottom = 16
+theme_override_constants/margin_bottom = 14
 
 [node name="CardContent" type="VBoxContainer" parent="SafeArea/PageLayout/ContentScroll/Content/ActionSection/ActionCard_SellOneNet/CardMargin"]
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 6
 
 [node name="ActionTitleLabel" type="Label" parent="SafeArea/PageLayout/ContentScroll/Content/ActionSection/ActionCard_SellOneNet/CardMargin/CardContent"]
 layout_mode = 2
@@ -298,7 +350,7 @@ text = "卖一网"
 
 [node name="ActionDescLabel" type="Label" parent="SafeArea/PageLayout/ContentScroll/Content/ActionSection/ActionCard_SellOneNet/CardMargin/CardContent"]
 layout_mode = 2
-text = "先下一网见到鱼，才有人愿意出价。"
+text = "暂时没人出价，可以继续下网积累鱼情。"
 autowrap_mode = 3
 
 [node name="ActionStatusLabel" type="Label" parent="SafeArea/PageLayout/ContentScroll/Content/ActionSection/ActionCard_SellOneNet/CardMargin/CardContent"]
@@ -306,43 +358,36 @@ layout_mode = 2
 text = "暂无买家"
 
 [node name="SellOneNetButton" type="Button" parent="SafeArea/PageLayout/ContentScroll/Content/ActionSection/ActionCard_SellOneNet/CardMargin/CardContent"]
-custom_minimum_size = Vector2(0, 76)
+custom_minimum_size = Vector2(0, 70)
 layout_mode = 2
 disabled = true
-text = "暂不可用"
+text = "暂无买家"
 
-[node name="ActionCard_SelfNet" type="PanelContainer" parent="SafeArea/PageLayout/ContentScroll/Content/ActionSection"]
-custom_minimum_size = Vector2(0, 188)
+[node name="LedgerAccordion" type="PanelContainer" parent="SafeArea/PageLayout/ContentScroll/Content"]
+custom_minimum_size = Vector2(0, 88)
 layout_mode = 2
 
-[node name="CardMargin" type="MarginContainer" parent="SafeArea/PageLayout/ContentScroll/Content/ActionSection/ActionCard_SelfNet"]
+[node name="AccordionMargin" type="MarginContainer" parent="SafeArea/PageLayout/ContentScroll/Content/LedgerAccordion"]
 layout_mode = 2
-theme_override_constants/margin_left = 20
-theme_override_constants/margin_top = 16
-theme_override_constants/margin_right = 20
-theme_override_constants/margin_bottom = 16
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 14
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 14
 
-[node name="CardContent" type="VBoxContainer" parent="SafeArea/PageLayout/ContentScroll/Content/ActionSection/ActionCard_SelfNet/CardMargin"]
+[node name="AccordionContent" type="VBoxContainer" parent="SafeArea/PageLayout/ContentScroll/Content/LedgerAccordion/AccordionMargin"]
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 10
 
-[node name="ActionTitleLabel" type="Label" parent="SafeArea/PageLayout/ContentScroll/Content/ActionSection/ActionCard_SelfNet/CardMargin/CardContent"]
+[node name="LedgerToggleButton" type="Button" parent="SafeArea/PageLayout/ContentScroll/Content/LedgerAccordion/AccordionMargin/AccordionContent"]
+custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
-text = "自己下网"
+text = "查看账本明细：当前亏损 0 元"
 
-[node name="ActionDescLabel" type="Label" parent="SafeArea/PageLayout/ContentScroll/Content/ActionSection/ActionCard_SelfNet/CardMargin/CardContent"]
+[node name="LedgerDetailLabel" type="Label" parent="SafeArea/PageLayout/ContentScroll/Content/LedgerAccordion/AccordionMargin/AccordionContent"]
+visible = false
 layout_mode = 2
-text = "继续投入开工成本，看看这口塘到底有没有货。"
+text = "塘口累计账"
 autowrap_mode = 3
-
-[node name="ActionStatusLabel" type="Label" parent="SafeArea/PageLayout/ContentScroll/Content/ActionSection/ActionCard_SelfNet/CardMargin/CardContent"]
-layout_mode = 2
-text = "主行动"
-
-[node name="HarvestSelfButton" type="Button" parent="SafeArea/PageLayout/ContentScroll/Content/ActionSection/ActionCard_SelfNet/CardMargin/CardContent"]
-custom_minimum_size = Vector2(0, 84)
-layout_mode = 2
-text = "开始下网"
 
 [node name="WorkPlanScroll" type="ScrollContainer" parent="SafeArea/PageLayout/ContentScroll/Content"]
 visible = false

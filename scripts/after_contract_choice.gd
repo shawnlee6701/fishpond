@@ -159,8 +159,13 @@ class CatchVisualPlaceholder:
 @onready var revenue_value: Label = $SafeArea/PageLayout/ContentScroll/Content/OwnedPondCard/Margin/CardContent/LedgerSummary/RevenueRow/RowContent/Value
 @onready var profit_loss_value: Label = $SafeArea/PageLayout/ContentScroll/Content/OwnedPondCard/Margin/CardContent/LedgerSummary/ProfitLossRow/RowContent/Value
 @onready var profit_loss_row: PanelContainer = $SafeArea/PageLayout/ContentScroll/Content/OwnedPondCard/Margin/CardContent/LedgerSummary/ProfitLossRow
-@onready var situation_hint_card: PanelContainer = $SafeArea/PageLayout/ContentScroll/Content/SituationHintCard
-@onready var message_label: Label = $SafeArea/PageLayout/ContentScroll/Content/SituationHintCard/HintMargin/MessageLabel
+@onready var latest_net_result_card: PanelContainer = $SafeArea/PageLayout/ContentScroll/Content/LatestNetResultCard
+@onready var latest_title_label: Label = $SafeArea/PageLayout/ContentScroll/Content/LatestNetResultCard/HintMargin/LatestContent/LatestTitleLabel
+@onready var latest_method_label: Label = $SafeArea/PageLayout/ContentScroll/Content/LatestNetResultCard/HintMargin/LatestContent/LatestMethodLabel
+@onready var latest_revenue_label: Label = $SafeArea/PageLayout/ContentScroll/Content/LatestNetResultCard/HintMargin/LatestContent/LatestRevenueLabel
+@onready var latest_cost_label: Label = $SafeArea/PageLayout/ContentScroll/Content/LatestNetResultCard/HintMargin/LatestContent/LatestCostLabel
+@onready var latest_profit_label: Label = $SafeArea/PageLayout/ContentScroll/Content/LatestNetResultCard/HintMargin/LatestContent/LatestProfitLabel
+@onready var message_label: Label = $SafeArea/PageLayout/ContentScroll/Content/LatestNetResultCard/HintMargin/LatestContent/LatestProfitLabel
 @onready var action_section: VBoxContainer = $SafeArea/PageLayout/ContentScroll/Content/ActionSection
 @onready var action_section_title: Label = $SafeArea/PageLayout/ContentScroll/Content/ActionSection/SectionTitleLabel
 @onready var transfer_card: PanelContainer = $SafeArea/PageLayout/ContentScroll/Content/ActionSection/ActionCard_TransferOut
@@ -170,9 +175,14 @@ class CatchVisualPlaceholder:
 @onready var sell_one_net_desc_label: Label = $SafeArea/PageLayout/ContentScroll/Content/ActionSection/ActionCard_SellOneNet/CardMargin/CardContent/ActionDescLabel
 @onready var sell_one_net_status_label: Label = $SafeArea/PageLayout/ContentScroll/Content/ActionSection/ActionCard_SellOneNet/CardMargin/CardContent/ActionStatusLabel
 @onready var sell_one_net_button: Button = $SafeArea/PageLayout/ContentScroll/Content/ActionSection/ActionCard_SellOneNet/CardMargin/CardContent/SellOneNetButton
-@onready var harvest_self_card: PanelContainer = $SafeArea/PageLayout/ContentScroll/Content/ActionSection/ActionCard_SelfNet
-@onready var harvest_self_status_label: Label = $SafeArea/PageLayout/ContentScroll/Content/ActionSection/ActionCard_SelfNet/CardMargin/CardContent/ActionStatusLabel
-@onready var harvest_self_button: Button = $SafeArea/PageLayout/ContentScroll/Content/ActionSection/ActionCard_SelfNet/CardMargin/CardContent/HarvestSelfButton
+@onready var harvest_self_card: PanelContainer = $SafeArea/PageLayout/ContentScroll/Content/ActionSection/ActionCard_ContinueNet
+@onready var harvest_self_title_label: Label = $SafeArea/PageLayout/ContentScroll/Content/ActionSection/ActionCard_ContinueNet/CardMargin/CardContent/ActionTitleLabel
+@onready var harvest_self_desc_label: Label = $SafeArea/PageLayout/ContentScroll/Content/ActionSection/ActionCard_ContinueNet/CardMargin/CardContent/ActionDescLabel
+@onready var harvest_self_status_label: Label = $SafeArea/PageLayout/ContentScroll/Content/ActionSection/ActionCard_ContinueNet/CardMargin/CardContent/ActionStatusLabel
+@onready var harvest_self_button: Button = $SafeArea/PageLayout/ContentScroll/Content/ActionSection/ActionCard_ContinueNet/CardMargin/CardContent/HarvestSelfButton
+@onready var ledger_accordion: PanelContainer = $SafeArea/PageLayout/ContentScroll/Content/LedgerAccordion
+@onready var ledger_toggle_button: Button = $SafeArea/PageLayout/ContentScroll/Content/LedgerAccordion/AccordionMargin/AccordionContent/LedgerToggleButton
+@onready var ledger_detail_label: Label = $SafeArea/PageLayout/ContentScroll/Content/LedgerAccordion/AccordionMargin/AccordionContent/LedgerDetailLabel
 @onready var work_plan_back_button: Button = $SafeArea/PageLayout/ContentScroll/Content/WorkPlanBackButton
 @onready var work_plan_scroll: ScrollContainer = $SafeArea/PageLayout/ContentScroll/Content/WorkPlanScroll
 @onready var work_plan_panel: VBoxContainer = $SafeArea/PageLayout/ContentScroll/Content/WorkPlanScroll/WorkPlanPanel
@@ -208,6 +218,8 @@ var harvest_continue_button: Button
 var pending_harvest_result: Dictionary = {}
 var harvest_collect_locked := false
 var net_option_empty_state: Label
+var latest_net_result: Dictionary = {}
+var ledger_expanded := false
 
 func setup(next_game_state: GameState, next_screen_container: Control) -> void:
 	game_state = next_game_state
@@ -225,6 +237,7 @@ func _ready() -> void:
 	sell_one_net_button.pressed.connect(_on_sell_one_net_pressed)
 	harvest_self_button.pressed.connect(_on_harvest_self_pressed)
 	work_plan_back_button.pressed.connect(_on_work_plan_back_pressed)
+	ledger_toggle_button.pressed.connect(_on_ledger_toggle_pressed)
 	get_viewport().size_changed.connect(_on_viewport_size_changed)
 	_apply_ui_frame()
 	_refresh_transfer_offer()
@@ -241,14 +254,20 @@ func _apply_ui_frame() -> void:
 	pond_visual_host.set_meta("_future_texture_slot", "owned_pond_visual.png")
 	UIKit.style_chip(pond_status_badge, UIKit.GREEN)
 	UIKit.style_label(pond_name_label, "content_title")
-	UIKit.style_message_panel(situation_hint_card)
-	UIKit.style_label(message_label, "body")
-	message_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	UIKit.style_card(latest_net_result_card, UIKit.GOLD)
+	UIKit.style_label(latest_title_label, "section")
+	UIKit.style_label(latest_method_label, "body_dark")
+	UIKit.style_label(latest_revenue_label, "body_dark")
+	UIKit.style_label(latest_cost_label, "body_dark")
+	UIKit.style_label(latest_profit_label, "body_dark")
 	UIKit.style_label(action_section_title, "section")
 	_style_ledger_rows()
 	_style_action_card(transfer_card, transfer_button, "secondary")
 	_style_action_card(sell_one_net_card, sell_one_net_button, "ghost")
 	_style_action_card(harvest_self_card, harvest_self_button, "primary")
+	UIKit.style_card(ledger_accordion, UIKit.GOLD)
+	UIKit.style_button(ledger_toggle_button, "ghost")
+	UIKit.style_label(ledger_detail_label, "body_dark")
 	work_plan_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	work_plan_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_show_choice_page()
@@ -678,19 +697,24 @@ func _create_net_option_card(plan_id: String, title_text: String, desc_text: Str
 
 func _render() -> void:
 	var pond := game_state.current_pond
-	pond_name_label.text = str(pond.get("name", "未承包鱼塘"))
+	pond_name_label.text = "已包下：%s" % str(pond.get("name", "未承包鱼塘"))
 	day_label.text = "第 %d 天" % game_state.day
 	cash_label.text = "本钱：%d 元" % game_state.cash
 	_render_ledger()
+	_render_latest_net_result()
+	_render_ledger_accordion()
 
+	var has_net_result := not latest_net_result.is_empty() or game_state.self_net_count > 0 or game_state.fish_income > 0
+	harvest_self_title_label.text = "继续下网" if has_net_result else "自己下网"
+	harvest_self_desc_label.text = "再下一网，看看塘里还有多少货。" if has_net_result else "继续投入开工成本，看看这口塘到底有没有货。"
+	harvest_self_button.text = "继续下网" if has_net_result else "开始下网"
 	transfer_button.text = "去转包"
-	sell_one_net_button.text = "卖一网"
-	harvest_self_button.text = "开始下网"
+	sell_one_net_button.text = "去卖一网"
 	transfer_button.disabled = current_transfer_offer.is_empty() or game_state.drained
 	sell_one_net_button.disabled = current_one_net_offer.is_empty() or game_state.sold_one_net
 	harvest_self_button.disabled = not game_state.can_pay(game_state.get_work_cost("low"))
 	transfer_status_label.text = "有接手价" if not transfer_button.disabled else "暂无报价"
-	harvest_self_status_label.text = "主行动" if not harvest_self_button.disabled else "本钱不够"
+	harvest_self_status_label.text = "主操作" if not harvest_self_button.disabled else "本钱不够"
 	if current_transfer_offer.is_empty():
 		transfer_button.text = "暂无报价"
 	if game_state.sold_one_net:
@@ -699,21 +723,12 @@ func _render() -> void:
 		sell_one_net_button.text = "已卖出"
 	elif current_one_net_offer.is_empty():
 		sell_one_net_status_label.text = "暂无买家"
-		sell_one_net_desc_label.text = "先下一网见到鱼，才有人出价。"
-		sell_one_net_button.text = "暂不可用"
+		sell_one_net_desc_label.text = "暂时没人出价，可以继续下网积累鱼情。"
+		sell_one_net_button.text = "暂无买家"
 	else:
-		sell_one_net_status_label.text = "已有买家"
-		sell_one_net_desc_label.text = "有人愿意买一网，收钱快，但这一网里的好货归买家。"
-		sell_one_net_button.text = "卖一网"
-	if game_state.self_net_count > 0 or game_state.sold_one_net:
-		message_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-		message_label.text = _build_pond_ledger()
-	elif not game_state.can_pay(game_state.get_work_cost("low")):
-		message_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		message_label.text = "钱不够下一网了。可以转包脱手，留本钱去下一地方。"
-	else:
-		message_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		message_label.text = "先自己下一网，见到鱼，外面才有人信。"
+		sell_one_net_status_label.text = "可用"
+		sell_one_net_desc_label.text = "拿已有鱼获去找买家报价。"
+		sell_one_net_button.text = "去卖一网"
 
 	_update_work_buttons()
 
@@ -728,6 +743,52 @@ func _render_ledger() -> void:
 	UIKit.style_label(profit_loss_value, "body_dark")
 	profit_loss_value.add_theme_color_override("font_color", UIKit.GREEN if current_profit_loss > 0 else UIKit.RED if current_profit_loss < 0 else UIKit.INK)
 	profit_loss_row.add_theme_stylebox_override("panel", UIKit.make_style(Color(1.0, 0.92, 0.70, 0.95), UIKit.GREEN_LIGHT if current_profit_loss > 0 else UIKit.RED if current_profit_loss < 0 else UIKit.GOLD, 8, 3, false))
+
+func _render_latest_net_result() -> void:
+	latest_net_result_card.visible = not latest_net_result.is_empty()
+	if latest_net_result.is_empty():
+		return
+	var method_name := _plan_display_name(str(latest_net_result.get("plan_id", "")))
+	var fish_revenue := int(latest_net_result.get("fish_income", 0))
+	var net_cost := int(latest_net_result.get("work_cost", 0))
+	var latest_net_profit := fish_revenue - net_cost
+	latest_method_label.text = "最新一网：%s" % method_name
+	latest_revenue_label.text = "鱼获收入：%d 元" % fish_revenue
+	latest_cost_label.text = "本次成本：%d 元" % net_cost
+	if latest_net_profit > 0:
+		latest_profit_label.text = "本次净赚：+%d 元" % latest_net_profit
+	elif latest_net_profit < 0:
+		latest_profit_label.text = "本次净亏：%d 元" % latest_net_profit
+	else:
+		latest_profit_label.text = "本次打平：0 元"
+	latest_profit_label.add_theme_color_override("font_color", UIKit.GREEN if latest_net_profit > 0 else UIKit.RED if latest_net_profit < 0 else UIKit.INK)
+
+func _render_ledger_accordion() -> void:
+	var ledger := _get_current_ledger()
+	var current_profit_loss := int(ledger.get("current_profit_loss", 0))
+	var status_text := "当前打平 0 元"
+	if current_profit_loss < 0:
+		status_text = "当前亏损 %d 元" % current_profit_loss
+	elif current_profit_loss > 0:
+		status_text = "当前盈利 +%d 元" % current_profit_loss
+	ledger_toggle_button.text = "收起账本明细：%s" % status_text if ledger_expanded else "查看账本明细：%s" % status_text
+	ledger_detail_label.visible = ledger_expanded
+	ledger_detail_label.text = _build_pond_ledger() if ledger_expanded else ""
+
+func _plan_display_name(plan_id: String) -> String:
+	match plan_id:
+		"low":
+			return "小捞一网"
+		"standard":
+			return "稳捞一网"
+		"full", "drain":
+			return "抽干收尾"
+		_:
+			return "这一网"
+
+func _on_ledger_toggle_pressed() -> void:
+	ledger_expanded = not ledger_expanded
+	_render_ledger_accordion()
 
 func _get_current_ledger() -> Dictionary:
 	var current_money := game_state.cash
@@ -824,13 +885,15 @@ func _hide_detail_panels() -> void:
 
 func _show_choice_page() -> void:
 	title_label.text = "塘已经包下"
-	subtitle_label.text = "本钱已经下去了，接下来要决定怎么处理这口塘"
-	owned_pond_card.custom_minimum_size = Vector2(0, 690)
+	subtitle_label.text = "看清现在亏多少，再决定下一步。"
+	owned_pond_card.custom_minimum_size = Vector2(0, 360)
 	owned_pond_card.visible = true
 	pond_visual_host.visible = true
-	_set_ledger_row_visibility(true)
-	situation_hint_card.visible = true
+	pond_visual_host.custom_minimum_size = Vector2(0, 112)
+	_set_ledger_row_visibility(false)
+	latest_net_result_card.visible = not latest_net_result.is_empty()
 	action_section.visible = true
+	ledger_accordion.visible = true
 	work_plan_back_button.visible = false
 	work_plan_scroll.visible = false
 
@@ -841,8 +904,9 @@ func _show_work_plan_page() -> void:
 	owned_pond_card.visible = true
 	pond_visual_host.visible = false
 	_set_ledger_row_visibility(false)
-	situation_hint_card.visible = false
+	latest_net_result_card.visible = false
 	action_section.visible = false
+	ledger_accordion.visible = false
 	work_plan_back_button.visible = true
 	work_plan_scroll.visible = true
 	_ensure_net_option_list_layout()
@@ -850,7 +914,7 @@ func _show_work_plan_page() -> void:
 func _set_ledger_row_visibility(show_full: bool) -> void:
 	$SafeArea/PageLayout/ContentScroll/Content/OwnedPondCard/Margin/CardContent/LedgerSummary/ContractPriceRow.visible = show_full
 	$SafeArea/PageLayout/ContentScroll/Content/OwnedPondCard/Margin/CardContent/LedgerSummary/InspectionSpentRow.visible = show_full
-	$SafeArea/PageLayout/ContentScroll/Content/OwnedPondCard/Margin/CardContent/LedgerSummary/RevenueRow.visible = show_full
+	$SafeArea/PageLayout/ContentScroll/Content/OwnedPondCard/Margin/CardContent/LedgerSummary/RevenueRow.visible = true
 
 func _close_transfer_dialog() -> void:
 	UIKit.hide_modal(transfer_overlay)
@@ -1110,6 +1174,7 @@ func _on_harvest_result_continue_pressed() -> void:
 		UIController.show_settlement(screen_container, game_state)
 		return
 
+	latest_net_result = result.duplicate(true)
 	var opportunities := resolver.generate_disposal_opportunities(game_state.current_pond, result)
 	current_transfer_offer = opportunities.get("transfer_offer", {})
 	if current_transfer_offer.is_empty():
