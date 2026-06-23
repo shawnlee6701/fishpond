@@ -322,7 +322,7 @@ func _on_commit_pressed() -> void:
 	confirm_dialog_mode = "commit"
 	confirm_dialog_submitting = false
 	_populate_contract_bill(preview)
-	_show_confirm_dialog(680)
+	_show_confirm_dialog(560)
 
 
 func _create_confirm_dialog() -> void:
@@ -367,8 +367,9 @@ func _create_confirm_dialog() -> void:
 
 	var body_scroll := ScrollContainer.new()
 	body_scroll.name = "DialogBodyScroll"
+	body_scroll.custom_minimum_size = Vector2(0, 260)
 	body_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	body_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	body_scroll.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	body_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	body_scroll.follow_focus = true
 	confirm_content.add_child(body_scroll)
