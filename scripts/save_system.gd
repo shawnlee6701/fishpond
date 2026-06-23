@@ -80,7 +80,7 @@ static func record_settlement(game_state: GameState) -> bool:
 		"settlement_title": str(game_state.last_result.get("title", "本局结算")),
 		"result_name": game_state.fish_result_name,
 		"result_description": game_state.fish_description,
-		"contract_cost": int(game_state.current_pond.get("quote_price", 0)),
+		"contract_cost": int(game_state.current_pond.get("contract_total_cost", game_state.current_pond.get("quote_price", 0))),
 		"inspection_cost": game_state.inspection_cost_total,
 		"fishing_cost": game_state.work_cost,
 		"transport_cost": 0,

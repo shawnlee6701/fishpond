@@ -50,7 +50,7 @@ func _render() -> void:
 		title_label.text = str(result.get("title", "本局结算"))
 	_render_fish_king_panel(is_fish_king and not is_bankrupt)
 
-	var contract_cost := int(game_state.current_pond.get("quote_price", 0))
+	var contract_cost := int(game_state.current_pond.get("contract_total_cost", game_state.current_pond.get("quote_price", 0)))
 	var other_income := game_state.one_net_income + game_state.transfer_income
 	var total_income := game_state.fish_income + other_income
 	var total_cost := contract_cost + game_state.inspection_cost_total + game_state.work_cost

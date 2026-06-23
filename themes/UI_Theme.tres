@@ -1,4 +1,4 @@
-[gd_resource type="Theme" load_steps=43 format=3 uid="uid://dkdb2cnx8rg6j"]
+[gd_resource type="Theme" load_steps=44 format=3 uid="uid://dkdb2cnx8rg6j"]
 
 [ext_resource type="FontFile" path="res://fonts/ZCOOL_KuaiLe/ZCOOLKuaiLe-Regular.ttf" id="1_font"]
 
@@ -599,6 +599,22 @@ corner_radius_top_right = 14
 corner_radius_bottom_right = 14
 corner_radius_bottom_left = 14
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_contract_status_tight"]
+content_margin_left = 16.0
+content_margin_top = 10.0
+content_margin_right = 16.0
+content_margin_bottom = 10.0
+bg_color = Color(0.945098, 0.858824, 0.603922, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.690196, 0.45098, 0.141176, 1)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_contract_status_bad"]
 content_margin_left = 16.0
 content_margin_top = 10.0
@@ -909,6 +925,8 @@ ContractBillNegativeValueLabel/colors/font_color = Color(0.58, 0.09, 0.05, 1)
 ContractBillNegativeValueLabel/font_sizes/font_size = 27
 ContractStatusOkPanel/base_type = &"PanelContainer"
 ContractStatusOkPanel/styles/panel = SubResource("StyleBoxFlat_contract_status_ok")
+ContractStatusTightPanel/base_type = &"PanelContainer"
+ContractStatusTightPanel/styles/panel = SubResource("StyleBoxFlat_contract_status_tight")
 ContractStatusBadPanel/base_type = &"PanelContainer"
 ContractStatusBadPanel/styles/panel = SubResource("StyleBoxFlat_contract_status_bad")
 ContractStatusTitleLabel/base_type = &"Label"

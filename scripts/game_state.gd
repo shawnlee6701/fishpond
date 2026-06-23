@@ -89,24 +89,50 @@ func get_inspection_feedback(tool_id: String) -> String:
 
 func get_contract_preview(pond: Dictionary) -> Dictionary:
 	var quote_price := int(pond.get("quote_price", 0))
-	var remaining_cash := cash - quote_price
+	var contract_extra_cost := get_contract_extra_cost(pond)
+	var contract_total_cost := quote_price + contract_extra_cost
+	var remaining_cash := cash - contract_total_cost
+	var recommended_working_capital := get_recommended_working_capital(pond)
 	return {
 		"current_cash": cash,
 		"quote_price": quote_price,
+		"pond_price": quote_price,
+		"contract_extra_cost": contract_extra_cost,
+		"contract_total_cost": contract_total_cost,
 		"remaining_cash": remaining_cash,
+		"remaining_after_contract": remaining_cash,
 		"min_working_capital": min_working_capital,
+		"recommended_working_capital": recommended_working_capital,
 		"can_contract": remaining_cash >= min_working_capital
 	}
+
+func get_contract_extra_cost(pond: Dictionary) -> int:
+	return maxi(0, int(pond.get("contract_extra_cost", game_balance.get("contract_extra_cost", 0))))
+
+func get_recommended_working_capital(pond: Dictionary) -> int:
+	var configured := int(game_balance.get("recommended_working_capital", 0))
+	if configured > 0:
+		return maxi(min_working_capital, configured)
+
+	var standard_cost := int(game_balance.get("standard_work_cost", 1200))
+	var quote_price := int(pond.get("quote_price", 0))
+	var full_work_min_cost := int(game_balance.get("full_work_min_cost", 2000))
+	var full_work_quote_ratio := float(game_balance.get("full_work_quote_ratio", 0.2))
+	var likely_big_work_cost := maxi(full_work_min_cost, int(round(float(quote_price) * full_work_quote_ratio)))
+	return maxi(min_working_capital, standard_cost + likely_big_work_cost)
 
 func can_contract_pond(pond: Dictionary) -> bool:
 	return bool(get_contract_preview(pond).get("can_contract", false))
 
 func contract_pond(pond: Dictionary) -> bool:
-	if not can_contract_pond(pond):
+	var preview := get_contract_preview(pond)
+	if not bool(preview.get("can_contract", false)):
 		return false
 
-	cash -= int(pond.get("quote_price", 0))
+	cash -= int(preview.get("contract_total_cost", 0))
 	current_pond = pond.duplicate(true)
+	current_pond["contract_extra_cost"] = int(preview.get("contract_extra_cost", 0))
+	current_pond["contract_total_cost"] = int(preview.get("contract_total_cost", current_pond.get("quote_price", 0)))
 	current_pond_estimated_value = int(current_pond.get("quote_price", 0))
 	current_pond["estimated_transfer_value"] = current_pond_estimated_value
 	return true
@@ -120,7 +146,7 @@ func get_mark_to_market_profit() -> int:
 	if current_pond.is_empty():
 		return get_net_profit()
 
-	return get_current_pond_estimated_value() + one_net_income + fish_income - int(current_pond.get("quote_price", 0)) - inspection_cost_total - work_cost
+	return get_current_pond_estimated_value() + one_net_income + fish_income - _current_contract_cost() - inspection_cost_total - work_cost
 
 func get_work_cost(plan_id: String) -> int:
 	match plan_id:
@@ -387,8 +413,11 @@ func _find_catch_detail(fish_id: String) -> Dictionary:
 	return {}
 
 func get_net_profit() -> int:
-	var contract_cost := int(current_pond.get("quote_price", 0))
+	var contract_cost := _current_contract_cost()
 	return transfer_income + one_net_income + fish_income - contract_cost - inspection_cost_total - work_cost
+
+func _current_contract_cost() -> int:
+	return int(current_pond.get("contract_total_cost", current_pond.get("quote_price", 0)))
 
 func advance_to_next_day() -> void:
 	day += 1

@@ -42,6 +42,9 @@ var confirm_current_money_value: Label
 var confirm_inspection_spent_row: Control
 var confirm_inspection_spent_value: Label
 var confirm_pond_price_value: Label
+var confirm_extra_cost_row: Control
+var confirm_extra_cost_value: Label
+var confirm_total_contract_cost_value: Label
 var confirm_remaining_value: Label
 var confirm_min_working_capital_value: Label
 var confirm_status_box: PanelContainer
@@ -289,7 +292,7 @@ func _decode_inspection_result(stored_text: String) -> Dictionary:
 func _render_decision_summary() -> void:
 	var preview := game_state.get_contract_preview(pond)
 	var quote_price := int(preview.get("quote_price", 0))
-	var remaining_cash := int(preview.get("remaining_cash", 0))
+	var remaining_cash := int(preview.get("remaining_after_contract", preview.get("remaining_cash", 0)))
 	var can_contract := bool(preview.get("can_contract", false))
 
 	summary_numbers_label.text = "已花验塘费：%d 元\n承包价：%d 元\n承包后剩余：%d 元" % [game_state.inspection_cost_total, quote_price, remaining_cash]
@@ -336,10 +339,17 @@ func _create_confirm_dialog() -> void:
 	confirm_dialog.theme_type_variation = &"ContractDialogCard"
 	confirm_dialog.set_meta("_future_texture_slot", "contract_dialog_bg.png")
 
+	var content_holder := Control.new()
+	content_holder.name = "DialogContent"
+	content_holder.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	content_holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	confirm_dialog.add_child(content_holder)
+
 	confirm_content = VBoxContainer.new()
-	confirm_content.name = "DialogContent"
+	confirm_content.name = "ContentStack"
+	confirm_content.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	confirm_content.add_theme_constant_override("separation", 10)
-	confirm_dialog.add_child(confirm_content)
+	content_holder.add_child(confirm_content)
 
 	confirm_title_label = Label.new()
 	confirm_title_label.name = "TitleLabel"
@@ -362,23 +372,14 @@ func _create_confirm_dialog() -> void:
 	confirm_summary_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	confirm_summary_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	confirm_summary_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	confirm_summary_label.set_meta("_future_texture_slot", "balance_highlight_badge")
+	confirm_summary_label.set_meta("_future_texture_slot", "balance_highlight_bg.png")
 	confirm_content.add_child(confirm_summary_label)
-
-	var body_scroll := ScrollContainer.new()
-	body_scroll.name = "DialogBodyScroll"
-	body_scroll.custom_minimum_size = Vector2(0, 260)
-	body_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	body_scroll.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	body_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	body_scroll.follow_focus = true
-	confirm_content.add_child(body_scroll)
 
 	var body_content := VBoxContainer.new()
 	body_content.name = "DialogBody"
 	body_content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	body_content.add_theme_constant_override("separation", 8)
-	body_scroll.add_child(body_content)
+	confirm_content.add_child(body_content)
 
 	confirm_bill_rows = VBoxContainer.new()
 	confirm_bill_rows.name = "BillRows"
@@ -389,12 +390,16 @@ func _create_confirm_dialog() -> void:
 	confirm_inspection_spent_value = _add_contract_bill_row("InspectionSpentRow", "已花验塘费")
 	confirm_inspection_spent_row = confirm_inspection_spent_value.get_parent().get_parent() as Control
 	confirm_pond_price_value = _add_contract_bill_row("PondPriceRow", "塘主要价", true)
+	confirm_extra_cost_value = _add_contract_bill_row("ExtraCostRow", "包塘杂费", true)
+	confirm_extra_cost_row = confirm_extra_cost_value.get_parent().get_parent() as Control
+	confirm_total_contract_cost_value = _add_contract_bill_row("TotalContractCostRow", "合计扣款", true)
 	confirm_remaining_value = _add_contract_bill_row("RemainingAfterContractRow", "包下后剩余")
 	confirm_min_working_capital_value = _add_contract_bill_row("MinWorkingCapitalRow", "最低开工资金")
 
 	confirm_status_box = PanelContainer.new()
 	confirm_status_box.name = "StatusBox"
 	confirm_status_box.theme_type_variation = &"ContractStatusOkPanel"
+	confirm_status_box.set_meta("_future_texture_slot", "status_box_bg.png")
 	body_content.add_child(confirm_status_box)
 
 	var status_content := VBoxContainer.new()
@@ -447,7 +452,7 @@ func _create_confirm_dialog() -> void:
 	confirm_ok_button.custom_minimum_size = Vector2(0, 96)
 	confirm_ok_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	confirm_ok_button.theme_type_variation = &"PondActionButton"
-	confirm_ok_button.set_meta("_future_texture_button", "button_confirm.png")
+	confirm_ok_button.set_meta("_future_texture_button", "button_danger_confirm.png")
 	confirm_ok_button.pressed.connect(_on_confirm_dialog_accepted)
 	action_row.add_child(confirm_ok_button)
 
@@ -486,10 +491,13 @@ func _add_contract_bill_row(row_name: String, label_text: String, is_negative :=
 
 func _populate_contract_bill(preview: Dictionary) -> void:
 	var current_money := int(preview.get("current_cash", game_state.cash))
-	var pond_price := int(preview.get("quote_price", pond.get("quote_price", 0)))
+	var pond_price := int(preview.get("pond_price", preview.get("quote_price", pond.get("quote_price", 0))))
+	var contract_extra_cost := int(preview.get("contract_extra_cost", 0))
+	var contract_total_cost := int(preview.get("contract_total_cost", pond_price + contract_extra_cost))
 	var inspection_spent := game_state.inspection_cost_total
 	var min_working_capital := int(preview.get("min_working_capital", game_state.min_working_capital))
-	var remaining_after_contract := current_money - pond_price
+	var recommended_working_capital := int(preview.get("recommended_working_capital", min_working_capital))
+	var remaining_after_contract := current_money - contract_total_cost
 	var can_contract := remaining_after_contract >= min_working_capital
 
 	_set_contract_bill_visible(true)
@@ -500,16 +508,29 @@ func _populate_contract_bill(preview: Dictionary) -> void:
 	confirm_inspection_spent_value.text = "%d 元（不退）" % inspection_spent if inspection_spent > 0 else "0 元"
 	confirm_inspection_spent_row.visible = inspection_spent > 0
 	confirm_pond_price_value.text = "-%d 元" % pond_price
+	confirm_extra_cost_value.text = "-%d 元" % contract_extra_cost
+	confirm_extra_cost_row.visible = contract_extra_cost > 0
+	confirm_total_contract_cost_value.text = "-%d 元" % contract_total_cost
 	confirm_remaining_value.text = "%d 元" % remaining_after_contract
 	confirm_min_working_capital_value.text = "%d 元" % min_working_capital
-	confirm_status_box.theme_type_variation = &"ContractStatusOkPanel" if can_contract else &"ContractStatusBadPanel"
-	confirm_status_title_label.text = "资金状态：够开工" if can_contract else "资金状态：余额不足"
-	confirm_status_desc_label.text = "能包，但后面还要支付下网、人工、抽水和鱼车成本。" if can_contract else "包下后连基本开工资金都不够，建议先别包。"
+	if not can_contract:
+		confirm_status_box.theme_type_variation = &"ContractStatusBadPanel"
+		confirm_status_title_label.text = "资金状态：资金不足"
+		confirm_status_desc_label.text = "包下后连基本开工资金都不够，建议别包。"
+	elif remaining_after_contract < recommended_working_capital:
+		confirm_status_box.theme_type_variation = &"ContractStatusTightPanel"
+		confirm_status_title_label.text = "资金状态：余额偏紧"
+		confirm_status_desc_label.text = "能包，但后续下网、人工、抽水和鱼车成本会比较吃紧。"
+	else:
+		confirm_status_box.theme_type_variation = &"ContractStatusOkPanel"
+		confirm_status_title_label.text = "资金状态：够开工"
+		confirm_status_desc_label.text = "能包，但后面还要支付下网、人工、抽水和鱼车成本。"
 	confirm_warning_label.text = "承包后还要支付下网、人工、抽水、鱼车等成本。"
 	confirm_message_label.text = ""
 	confirm_cancel_button.text = "再想想"
-	confirm_ok_button.text = "就包这塘" if can_contract else "钱不够"
+	confirm_ok_button.text = "就包这塘（-%d）" % contract_total_cost if can_contract else "钱不够"
 	confirm_ok_button.disabled = not can_contract
+	_fit_confirm_dialog_to_content.call_deferred()
 
 
 func _set_contract_bill_visible(is_visible: bool) -> void:
@@ -527,8 +548,35 @@ func _show_confirm_dialog(preferred_height: int) -> void:
 	confirm_dialog_preferred_height = preferred_height
 	confirm_overlay.modulate.a = 0.0
 	UIKit.show_modal(self, confirm_overlay, confirm_dialog, 0.9, preferred_height, Vector2i(360, 360), Vector2i(980, 820))
+	_fit_confirm_dialog_to_content.call_deferred()
 	var tween := create_tween()
 	tween.tween_property(confirm_overlay, "modulate:a", 1.0, 0.12)
+
+
+func _fit_confirm_dialog_to_content() -> void:
+	if confirm_overlay == null or confirm_dialog == null or not confirm_overlay.visible:
+		return
+
+	var viewport_size := Vector2i(size)
+	if viewport_size.x <= 0 or viewport_size.y <= 0:
+		viewport_size = Vector2i(get_viewport_rect().size)
+
+	var body_content := confirm_dialog.get_node_or_null("DialogContent/ContentStack/DialogBody") as VBoxContainer
+	if body_content == null:
+		UIKit.layout_modal(self, confirm_dialog, 0.9, confirm_dialog_preferred_height, Vector2i(360, 360), Vector2i(980, 820))
+		return
+
+	var safe_width := maxi(1, viewport_size.x - 48)
+	var dialog_width := clampi(int(viewport_size.x * 0.9), mini(360, safe_width), mini(980, safe_width))
+	var max_dialog_height := int(viewport_size.y * 0.8)
+	var fixed_header_footer_height := 292.0
+	var body_content_height := minf(body_content.get_combined_minimum_size().y, 430.0)
+	var max_body_height := maxf(140.0, float(max_dialog_height) - fixed_header_footer_height)
+	var body_height := minf(body_content_height, max_body_height)
+
+	var dialog_height := clampi(int(ceil(fixed_header_footer_height + body_height)), 360, max_dialog_height)
+	confirm_dialog.size = Vector2(dialog_width, dialog_height)
+	confirm_dialog.position = Vector2((viewport_size.x - dialog_width) * 0.5, (viewport_size.y - dialog_height) * 0.5)
 
 
 func _close_confirm_dialog() -> void:
@@ -564,7 +612,7 @@ func _return_to_pond_list() -> void:
 func _on_viewport_size_changed() -> void:
 	if confirm_overlay == null or not confirm_overlay.visible:
 		return
-	UIKit.layout_modal(self, confirm_dialog, 0.9, confirm_dialog_preferred_height, Vector2i(360, 360), Vector2i(980, 820))
+	_fit_confirm_dialog_to_content()
 
 
 func _restore_content_scroll(scroll_value: int) -> void:

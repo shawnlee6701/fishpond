@@ -129,23 +129,36 @@ func _run() -> void:
 	var contract_state := pond_detail.get("game_state") as GameState
 	var pond := pond_detail.get("pond") as Dictionary
 	var pond_price := int(pond.get("quote_price", 0))
-	var remaining_after_contract := contract_state.cash - pond_price
-	var balance_highlight := contract_modal.get_node("DialogCard/DialogContent/BalanceHighlight") as Label
-	var inspection_spent_value := contract_modal.get_node("DialogCard/DialogContent/DialogBodyScroll/DialogBody/BillRows/InspectionSpentRow/RowContent/Value") as Label
-	var pond_price_value := contract_modal.get_node("DialogCard/DialogContent/DialogBodyScroll/DialogBody/BillRows/PondPriceRow/RowContent/Value") as Label
-	var remaining_value := contract_modal.get_node("DialogCard/DialogContent/DialogBodyScroll/DialogBody/BillRows/RemainingAfterContractRow/RowContent/Value") as Label
-	var status_title := contract_modal.get_node("DialogCard/DialogContent/DialogBodyScroll/DialogBody/StatusBox/StatusContent/StatusTitleLabel") as Label
-	var bill_rows := contract_modal.get_node("DialogCard/DialogContent/DialogBodyScroll/DialogBody/BillRows") as VBoxContainer
+	var preview := contract_state.get_contract_preview(pond)
+	var contract_extra_cost := int(preview.get("contract_extra_cost", 0))
+	var contract_total_cost := int(preview.get("contract_total_cost", pond_price + contract_extra_cost))
+	var remaining_after_contract := int(preview.get("remaining_after_contract", contract_state.cash - contract_total_cost))
+	var balance_highlight := contract_modal.get_node("DialogCard/DialogContent/ContentStack/BalanceHighlight") as Label
+	var inspection_spent_value := contract_modal.get_node("DialogCard/DialogContent/ContentStack/DialogBody/BillRows/InspectionSpentRow/RowContent/Value") as Label
+	var pond_price_value := contract_modal.get_node("DialogCard/DialogContent/ContentStack/DialogBody/BillRows/PondPriceRow/RowContent/Value") as Label
+	var extra_cost_row := contract_modal.get_node("DialogCard/DialogContent/ContentStack/DialogBody/BillRows/ExtraCostRow") as PanelContainer
+	var total_contract_cost_value := contract_modal.get_node("DialogCard/DialogContent/ContentStack/DialogBody/BillRows/TotalContractCostRow/RowContent/Value") as Label
+	var remaining_value := contract_modal.get_node("DialogCard/DialogContent/ContentStack/DialogBody/BillRows/RemainingAfterContractRow/RowContent/Value") as Label
+	var status_title := contract_modal.get_node("DialogCard/DialogContent/ContentStack/DialogBody/StatusBox/StatusContent/StatusTitleLabel") as Label
+	var dialog_body_scroll := contract_modal.get_node_or_null("DialogCard/DialogContent/ContentStack/DialogBodyScroll") as ScrollContainer
+	var bill_rows := contract_modal.get_node("DialogCard/DialogContent/ContentStack/DialogBody/BillRows") as VBoxContainer
 	_check(balance_highlight.text.contains("%d 元" % remaining_after_contract), "承包账单高亮显示包下后剩余且来自当前现金减承包价")
 	_check(inspection_spent_value.text.contains("1300 元") and inspection_spent_value.text.contains("不退"), "承包账单显示已花验塘费且标明不退")
 	_check(pond_price_value.text == "-%d 元" % pond_price, "承包账单将塘主要价显示为负数扣款")
+	_check(not extra_cost_row.visible and contract_extra_cost == 0, "承包账单无杂费时隐藏包塘杂费行")
+	_check(total_contract_cost_value.text == "-%d 元" % contract_total_cost, "承包账单显示合计扣款")
 	_check(remaining_value.text == "%d 元" % remaining_after_contract, "承包账单行显示正确包下后剩余")
 	_check(pond_price_value.autowrap_mode == TextServer.AUTOWRAP_OFF and pond_price_value.custom_minimum_size.x >= 240.0 and pond_price_value.size.y <= 60.0, "承包账单右侧金额横排显示且不会逐字换行")
 	_check(bill_rows.get_child(0).size.y <= 60.0 and bill_rows.get_child(1).size.y <= 60.0 and bill_rows.get_child(2).size.y <= 60.0, "承包账单行高度不会被金额撑大")
-	_check(status_title.text == "资金状态：够开工", "承包账单显示系统资金状态")
+	_check(dialog_body_scroll == null, "承包账单内容未超出时不创建内部滚动条")
+	var expected_status := "资金状态：够开工"
+	if remaining_after_contract < int(preview.get("recommended_working_capital", contract_state.min_working_capital)):
+		expected_status = "资金状态：余额偏紧"
+	_check(status_title.text == expected_status, "承包账单显示系统资金状态")
 	var contract_card := contract_modal.get_node("DialogCard") as PanelContainer
-	var contract_button_row := contract_modal.get_node("DialogCard/DialogContent/ButtonRow") as HBoxContainer
+	var contract_button_row := contract_modal.get_node("DialogCard/DialogContent/ContentStack/ButtonRow") as HBoxContainer
 	_check(contract_button_row.position.y + contract_button_row.size.y <= contract_card.size.y, "承包账单底部按钮保持在弹窗卡片内")
+	_check(contract_card.size.y <= 1920.0 * 0.8 and contract_card.size.y < 760.0, "承包账单高度按内容收紧且不超过屏幕 80%")
 	for viewport_size in [Vector2i(540, 960), Vector2i(720, 1280), Vector2i(1080, 1920)]:
 		pond_detail.size = Vector2(1080, 1920)
 		pond_detail.call("_on_viewport_size_changed")
@@ -165,15 +178,35 @@ func _run() -> void:
 		await process_frame
 		_check(not contract_modal.visible, "承包弹窗取消按钮可关闭弹窗")
 
+	pond["contract_extra_cost"] = 400
+	contract_button.pressed.emit()
+	await _settle_frames()
+	preview = contract_state.get_contract_preview(pond)
+	contract_total_cost = int(preview.get("contract_total_cost", 0))
+	remaining_after_contract = int(preview.get("remaining_after_contract", 0))
+	_check(extra_cost_row.visible, "承包账单有杂费时显示包塘杂费行")
+	_check(pond_price_value.text == "-%d 元" % pond_price, "承包账单有杂费时塘主要价仍与顶部鱼塘价格一致")
+	_check(total_contract_cost_value.text == "-%d 元" % contract_total_cost and remaining_value.text == "%d 元" % remaining_after_contract, "承包账单有杂费时合计扣款和剩余金额一致")
+	cancel_button = _find_button_by_text(contract_modal, "再想想")
+	if cancel_button != null:
+		cancel_button.pressed.emit()
+		await process_frame
+	pond.erase("contract_extra_cost")
+	contract_button.pressed.emit()
+	await _settle_frames()
+	preview = contract_state.get_contract_preview(pond)
+	contract_total_cost = int(preview.get("contract_total_cost", pond_price))
+	remaining_after_contract = int(preview.get("remaining_after_contract", contract_state.cash - contract_total_cost))
+
 	var cash_before_shortage_check := contract_state.cash
-	contract_state.cash = pond_price + contract_state.min_working_capital - 1
+	contract_state.cash = contract_total_cost + contract_state.min_working_capital - 1
 	pond_detail.call("_render_page")
 	await _settle_frames()
 	contract_button.pressed.emit()
 	await _settle_frames()
-	var shortage_status_title := contract_modal.get_node("DialogCard/DialogContent/DialogBodyScroll/DialogBody/StatusBox/StatusContent/StatusTitleLabel") as Label
+	var shortage_status_title := contract_modal.get_node("DialogCard/DialogContent/ContentStack/DialogBody/StatusBox/StatusContent/StatusTitleLabel") as Label
 	var shortage_confirm := _find_button_by_text(contract_modal, "钱不够")
-	_check(shortage_status_title.text == "资金状态：余额不足", "承包账单在最低开工资金不足时显示余额不足")
+	_check(shortage_status_title.text == "资金状态：资金不足", "承包账单在最低开工资金不足时显示资金不足")
 	_check(shortage_confirm != null and shortage_confirm.disabled, "承包账单在资金不足时禁用确认按钮")
 	cancel_button = _find_button_by_text(contract_modal, "再想想")
 	if cancel_button != null:
@@ -186,13 +219,18 @@ func _run() -> void:
 	contract_button.pressed.emit()
 	await _settle_frames()
 	var confirm_button := _find_button_by_text(contract_modal, "就包这塘")
+	if confirm_button == null:
+		confirm_button = _find_button_by_text(contract_modal, "就包这塘（-%d）" % contract_total_cost)
 	_check(confirm_button != null and not confirm_button.disabled, "承包弹窗确认按钮可用")
+	_check(confirm_button != null and confirm_button.text == "就包这塘（-%d）" % contract_total_cost, "承包弹窗确认按钮显示实际扣款金额")
 	if confirm_button == null or confirm_button.disabled:
 		_finish()
 		return
+	var cash_before_contract := contract_state.cash
 	confirm_button.pressed.emit()
 	await _settle_frames()
 	_check_screen(screen_container, "AfterContractChoice", "确认承包进入承包后选择页")
+	_check(contract_state.cash == cash_before_contract - contract_total_cost, "确认承包只扣除合计扣款一次")
 
 	var choice_screen := _current_screen(screen_container)
 	var transfer_button := choice_screen.get_node("PageLayout/Panel/Margin/Content/ChoiceButtons/TransferButton") as Button
@@ -303,7 +341,10 @@ func _run() -> void:
 	restart_contract.pressed.emit()
 	await _settle_frames()
 	var restart_contract_modal := restart_detail.get_node("ConfirmContractDialog") as Control
-	var restart_confirm := _find_button_by_text(restart_contract_modal, "就包这塘")
+	var restart_state := restart_detail.get("game_state") as GameState
+	var restart_pond := restart_detail.get("pond") as Dictionary
+	var restart_preview := restart_state.get_contract_preview(restart_pond)
+	var restart_confirm := _find_button_by_text(restart_contract_modal, "就包这塘（-%d）" % int(restart_preview.get("contract_total_cost", 0)))
 	restart_confirm.pressed.emit()
 	await _settle_frames()
 	var restart_choice := _current_screen(restart_container)
