@@ -25,7 +25,11 @@ var is_submitting := false
 
 
 func _ready() -> void:
-	layer = 1
+	# Keep global confirmation popups above MainUI.
+	# Main.tscn's CanvasLayer uses Godot's default layer, and autoloads enter the
+	# tree before the main scene, so using the same layer can leave dialogs hidden
+	# behind the page and make bottom buttons look unresponsive.
+	layer = 20
 	visible = false
 	_build_popup_tree()
 	get_viewport().size_changed.connect(_resize_modal)
