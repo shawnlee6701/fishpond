@@ -117,7 +117,7 @@ vertical_alignment = 1
 custom_minimum_size = Vector2(220, 62)
 layout_mode = 2
 theme_type_variation = &"InspectPriceBadge"
-text = "6000 元"
+text = "报价"
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -169,7 +169,7 @@ text = "承包前算一笔"
 [node name="SummaryNumbersLabel" type="Label" parent="SafeArea/PageLayout/ContentScroll/Content/DecisionSummaryCard/Summary"]
 layout_mode = 2
 theme_type_variation = &"InspectSummaryNumbersLabel"
-text = "已花验塘费：0 元\n承包价：6000 元\n承包后剩余：24000 元"
+text = "承包账单会按当前鱼塘刷新"
 autowrap_mode = 2
 
 [node name="ReserveHintLabel" type="Label" parent="SafeArea/PageLayout/ContentScroll/Content/DecisionSummaryCard/Summary"]
@@ -205,5 +205,5 @@ custom_minimum_size = Vector2(0, 88)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"PondActionButton"
-text = "承包 6000 元"
+text = "承包"
 metadata/_future_texture_button = "button_commit_pond"

@@ -194,8 +194,9 @@ HOME=/private/tmp/fish_pool_history_test_home godot --headless --log-file /priva
 - Each inspection result appears only inside its matching clue card; the full content column scrolls so expanded results cannot cover the fixed bottom decisions.
 - Backtracking from pond detail preserves the same day's ponds.
 - Each inspection tool deducts the expected cash and cannot be reused.
-- Contract confirmation blocks insufficient remaining working capital.
-- Contract confirmation uses a centered native themed panel, blocks underlying input, and resizes with the game window.
+- Contract confirmation is a native themed bill dialog: current cash, non-refundable inspection spend, negative pond price, remaining cash, and minimum working capital are all rendered from `GameState.get_contract_preview()` plus `inspection_cost_total`.
+- Contract confirmation blocks insufficient remaining working capital, disables the primary confirm button as `钱不够`, and rechecks funds on accept before mutating state.
+- Contract confirmation uses a centered native themed panel, blocks underlying input with `DimOverlay`, and resizes with the game window.
 - All confirmation popups use an opaque-input modal overlay with a dark mask; popup cards remain inside a 24 px viewport safe area and oversized body content scrolls instead of expanding the card.
 - Contract and transfer popups both visibly retain title, highlighted decision value, scroll-safe content, and accept/cancel actions at 1080 × 1920; the harvest-result popup lists the catch by fish type with weight, unit price, subtotal, and total fish income, then highlights per-net profit/loss above its dismiss action.
 - Pond detail, post-contract choice/work-plan, and settlement use the same native framed page card with no large paper-sticker texture.
