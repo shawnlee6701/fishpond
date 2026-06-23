@@ -32,6 +32,41 @@ class OwnedPondVisualPlaceholder:
 			points.append(center + Vector2(cos(angle) * radius.x, sin(angle) * radius.y))
 		draw_colored_polygon(points, color)
 
+class TransferBuyerPlaceholder:
+	extends Control
+
+	func _draw() -> void:
+		var rect := Rect2(Vector2.ZERO, size)
+		var center := rect.get_center()
+		var avatar_center := Vector2(rect.size.x * 0.34, rect.size.y * 0.42)
+		var avatar_radius := minf(rect.size.x, rect.size.y) * 0.18
+		_draw_circle_shape(avatar_center, avatar_radius, Color(0.94, 0.72, 0.48, 1.0))
+		_draw_circle_shape(avatar_center + Vector2(0.0, avatar_radius * 1.75), avatar_radius * 1.35, Color(0.18, 0.36, 0.25, 1.0))
+		_draw_circle_shape(avatar_center + Vector2(-avatar_radius * 0.33, -avatar_radius * 0.10), avatar_radius * 0.08, Color(0.12, 0.10, 0.06, 1.0))
+		_draw_circle_shape(avatar_center + Vector2(avatar_radius * 0.33, -avatar_radius * 0.10), avatar_radius * 0.08, Color(0.12, 0.10, 0.06, 1.0))
+		draw_arc(avatar_center + Vector2(0.0, avatar_radius * 0.12), avatar_radius * 0.36, 0.18, PI - 0.18, 18, Color(0.12, 0.10, 0.06, 1.0), 3.0, true)
+
+		var paper_rect := Rect2(Vector2(rect.size.x * 0.50, rect.size.y * 0.22), Vector2(rect.size.x * 0.34, rect.size.y * 0.52))
+		draw_rect(paper_rect, Color(1.0, 0.95, 0.78, 1.0), true)
+		draw_rect(paper_rect, Color(0.43, 0.31, 0.16, 1.0), false, 4.0)
+		for index in range(3):
+			var line_y := paper_rect.position.y + paper_rect.size.y * (0.26 + float(index) * 0.18)
+			draw_line(
+				Vector2(paper_rect.position.x + paper_rect.size.x * 0.18, line_y),
+				Vector2(paper_rect.position.x + paper_rect.size.x * 0.82, line_y),
+				Color(0.61, 0.45, 0.25, 0.80),
+				3.0,
+				true
+			)
+		draw_circle(paper_rect.position + paper_rect.size * Vector2(0.72, 0.78), paper_rect.size.x * 0.10, Color(0.66, 0.16, 0.11, 0.88))
+
+	func _draw_circle_shape(center: Vector2, radius: float, color: Color) -> void:
+		var points := PackedVector2Array()
+		for index in range(48):
+			var angle := float(index) / 48.0 * TAU
+			points.append(center + Vector2(cos(angle) * radius, sin(angle) * radius))
+		draw_colored_polygon(points, color)
+
 @onready var safe_area: MarginContainer = $SafeArea
 @onready var top_status_bar: PanelContainer = $SafeArea/PageLayout/TopStatusBar
 @onready var day_label: Label = $SafeArea/PageLayout/TopStatusBar/StatusRow/DayLabel
@@ -77,8 +112,13 @@ var current_transfer_offer: Dictionary = {}
 var current_one_net_offer: Dictionary = {}
 var transfer_overlay: Control
 var transfer_dialog: PanelContainer
-var transfer_offer_summary_label: Label
-var transfer_offer_label: Label
+var transfer_offer_highlight_label: Label
+var transfer_total_invested_value: Label
+var transfer_offer_price_value: Label
+var transfer_profit_loss_value: Label
+var transfer_profit_loss_status_label: Label
+var transfer_money_after_accept_value: Label
+var transfer_risk_note_label: Label
 var accept_transfer_button: Button
 var reject_transfer_button: Button
 var harvest_result_overlay: Control
@@ -182,20 +222,33 @@ func _create_transfer_dialog() -> void:
 	var modal := UIKit.create_modal_layer(self, "TransferModal")
 	transfer_overlay = modal["overlay"] as Control
 	transfer_dialog = modal["card"] as PanelContainer
+	var dim_overlay := modal["mask"] as Control
+	dim_overlay.name = "DimOverlay"
+	transfer_overlay.set_meta("_structure_name", "TransferOfferDialog")
+	transfer_dialog.name = "DialogCard"
+	# Future art pass: replace this native card with transfer_dialog_bg.png.
+	transfer_dialog.set_meta("_future_texture_slot", "transfer_dialog_bg.png")
+	transfer_dialog.add_theme_stylebox_override("panel", UIKit.make_style(Color(0.98, 0.90, 0.72, 0.99), UIKit.RED, 16, 4, true))
 
 	var content := VBoxContainer.new()
+	content.name = "Content"
 	content.add_theme_constant_override("separation", 16)
 	transfer_dialog.add_child(content)
 
 	var title := Label.new()
+	title.name = "TitleLabel"
 	title.text = "有人愿意接手"
 	UIKit.style_modal_title(title)
 	content.add_child(title)
 
-	transfer_offer_summary_label = Label.new()
-	transfer_offer_summary_label.custom_minimum_size = Vector2(0, 64)
-	UIKit.style_highlight_label(transfer_offer_summary_label, "price")
-	content.add_child(transfer_offer_summary_label)
+	transfer_offer_highlight_label = Label.new()
+	transfer_offer_highlight_label.name = "OfferHighlight"
+	transfer_offer_highlight_label.custom_minimum_size = Vector2(0, 70)
+	transfer_offer_highlight_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	# Future art pass: replace this native badge with offer_price_badge.png.
+	transfer_offer_highlight_label.set_meta("_future_texture_slot", "offer_price_badge.png")
+	UIKit.style_highlight_label(transfer_offer_highlight_label, "price")
+	content.add_child(transfer_offer_highlight_label)
 
 	var body_scroll := ScrollContainer.new()
 	body_scroll.name = "BodyScroll"
@@ -208,57 +261,141 @@ func _create_transfer_dialog() -> void:
 	body.add_theme_constant_override("separation", 14)
 	body_scroll.add_child(body)
 
-	transfer_offer_label = Label.new()
-	transfer_offer_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	transfer_offer_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	transfer_offer_label.add_theme_font_size_override("font_size", UIKit.FONT_BODY)
-	transfer_offer_label.add_theme_color_override("font_color", UIKit.INK)
-	body.add_child(transfer_offer_label)
+	var buyer_area := HBoxContainer.new()
+	buyer_area.name = "BuyerArea"
+	buyer_area.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	buyer_area.add_theme_constant_override("separation", 14)
+	body.add_child(buyer_area)
 
-	body.add_child(UIKit.make_image_placeholder(Vector2(280, 300)))
+	# Future art pass: replace this drawn placeholder with buyer_transfer_placeholder.png.
+	var buyer_placeholder := TransferBuyerPlaceholder.new()
+	buyer_placeholder.name = "BuyerPlaceholder"
+	buyer_placeholder.custom_minimum_size = Vector2(190, 190)
+	buyer_placeholder.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	buyer_placeholder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	buyer_placeholder.set_meta("_future_texture_slot", "buyer_transfer_placeholder.png")
+	buyer_area.add_child(buyer_placeholder)
 
 	var bubble := PanelContainer.new()
-	bubble.custom_minimum_size = Vector2(250, 0)
+	bubble.name = "BuyerSpeechBubble"
+	bubble.custom_minimum_size = Vector2(210, 0)
 	bubble.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	bubble.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	bubble.add_theme_stylebox_override("panel", UIKit.make_style(Color("fff8df"), Color("6d241f"), 24, 3, true))
-	body.add_child(bubble)
+	# Future art pass: replace this native bubble with speech_bubble.png.
+	bubble.set_meta("_future_texture_slot", "speech_bubble.png")
+	buyer_area.add_child(bubble)
 
 	var bubble_margin := MarginContainer.new()
-	bubble_margin.add_theme_constant_override("margin_left", 24)
-	bubble_margin.add_theme_constant_override("margin_top", 20)
-	bubble_margin.add_theme_constant_override("margin_right", 24)
-	bubble_margin.add_theme_constant_override("margin_bottom", 20)
+	bubble_margin.add_theme_constant_override("margin_left", 18)
+	bubble_margin.add_theme_constant_override("margin_top", 16)
+	bubble_margin.add_theme_constant_override("margin_right", 18)
+	bubble_margin.add_theme_constant_override("margin_bottom", 16)
 	bubble.add_child(bubble_margin)
 
 	var bubble_text := Label.new()
+	bubble_text.name = "BuyerSpeechText"
 	bubble_text.text = "兄弟一场，把这塘包给我"
 	bubble_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	bubble_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	bubble_text.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	bubble_text.add_theme_font_size_override("font_size", 28)
+	bubble_text.add_theme_font_size_override("font_size", UIKit.FONT_BODY)
 	bubble_text.add_theme_color_override("font_color", UIKit.INK)
 	bubble_margin.add_child(bubble_text)
 
+	var summary_card := PanelContainer.new()
+	summary_card.name = "OfferSummaryCard"
+	summary_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	summary_card.add_theme_stylebox_override("panel", UIKit.make_style(Color(1.0, 0.96, 0.84, 0.96), Color(0.61, 0.45, 0.25, 0.85), 10, 3, false))
+	body.add_child(summary_card)
+
+	var summary_margin := MarginContainer.new()
+	summary_margin.add_theme_constant_override("margin_left", 14)
+	summary_margin.add_theme_constant_override("margin_top", 12)
+	summary_margin.add_theme_constant_override("margin_right", 14)
+	summary_margin.add_theme_constant_override("margin_bottom", 12)
+	summary_card.add_child(summary_margin)
+
+	var summary_rows := VBoxContainer.new()
+	summary_rows.name = "SummaryRows"
+	summary_rows.add_theme_constant_override("separation", 6)
+	summary_margin.add_child(summary_rows)
+
+	transfer_total_invested_value = _add_transfer_summary_row(summary_rows, "TotalInvestedRow", "当前总投入")
+	transfer_offer_price_value = _add_transfer_summary_row(summary_rows, "OfferPriceRow", "对方接手价")
+	transfer_profit_loss_value = _add_transfer_summary_row(summary_rows, "TransferProfitLossRow", "转包盈亏")
+	transfer_profit_loss_status_label = Label.new()
+	transfer_profit_loss_status_label.name = "TransferProfitLossStatus"
+	transfer_profit_loss_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	transfer_profit_loss_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	UIKit.style_label(transfer_profit_loss_status_label, "muted")
+	summary_rows.add_child(transfer_profit_loss_status_label)
+	transfer_money_after_accept_value = _add_transfer_summary_row(summary_rows, "MoneyAfterAcceptRow", "接受后本钱")
+
+	transfer_risk_note_label = Label.new()
+	transfer_risk_note_label.name = "RiskNoteLabel"
+	transfer_risk_note_label.text = "对方报价只是外面人根据鱼情估出来的价，不等于塘里的真实剩货。"
+	transfer_risk_note_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	transfer_risk_note_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	UIKit.style_label(transfer_risk_note_label, "muted")
+	body.add_child(transfer_risk_note_label)
+
 	var buttons := HBoxContainer.new()
+	buttons.name = "ButtonRow"
 	buttons.add_theme_constant_override("separation", 14)
 	content.add_child(buttons)
 
 	accept_transfer_button = Button.new()
+	accept_transfer_button.name = "AcceptTransferButton"
 	accept_transfer_button.text = "接受转包"
-	accept_transfer_button.custom_minimum_size = Vector2(0, UIKit.MODAL_ACTION_HEIGHT)
+	accept_transfer_button.custom_minimum_size = Vector2(0, 96)
 	accept_transfer_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	# Future art pass: replace this native button with button_accept.png.
+	accept_transfer_button.set_meta("_future_texture_button", "button_accept.png")
 	UIKit.style_button(accept_transfer_button, "primary")
 	accept_transfer_button.pressed.connect(_on_accept_transfer_pressed)
 	buttons.add_child(accept_transfer_button)
 
 	reject_transfer_button = Button.new()
+	reject_transfer_button.name = "ContinueButton"
 	reject_transfer_button.text = "继续自己扛"
-	reject_transfer_button.custom_minimum_size = Vector2(0, UIKit.MODAL_ACTION_HEIGHT)
+	reject_transfer_button.custom_minimum_size = Vector2(0, 96)
 	reject_transfer_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	UIKit.style_button(reject_transfer_button, "ghost")
+	# Future art pass: replace this native button with button_secondary.png.
+	reject_transfer_button.set_meta("_future_texture_button", "button_secondary.png")
+	UIKit.style_button(reject_transfer_button, "secondary")
 	reject_transfer_button.pressed.connect(_on_reject_transfer_pressed)
 	buttons.add_child(reject_transfer_button)
+
+func _add_transfer_summary_row(parent: VBoxContainer, row_name: String, label_text: String) -> Label:
+	var row := PanelContainer.new()
+	row.name = row_name
+	row.custom_minimum_size = Vector2(0, 46)
+	row.add_theme_stylebox_override("panel", UIKit.make_style(Color(0.94, 0.86, 0.68, 0.55), Color(0.61, 0.45, 0.25, 0.32), 8, 1, false))
+	parent.add_child(row)
+
+	var row_content := HBoxContainer.new()
+	row_content.name = "RowContent"
+	row_content.add_theme_constant_override("separation", 12)
+	row.add_child(row_content)
+
+	var name_label := Label.new()
+	name_label.name = "Label"
+	name_label.text = "%s：" % label_text
+	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	name_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	UIKit.style_label(name_label, "body_dark")
+	row_content.add_child(name_label)
+
+	var value_label := Label.new()
+	value_label.name = "Value"
+	value_label.custom_minimum_size = Vector2(190, 0)
+	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	value_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	value_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	UIKit.style_label(value_label, "body_dark")
+	row_content.add_child(value_label)
+	return value_label
 
 func _create_harvest_result_dialog() -> void:
 	var modal := UIKit.create_modal_layer(self, "HarvestResultModal")
@@ -379,6 +516,75 @@ func _get_current_ledger() -> Dictionary:
 		"current_profit_loss": current_profit_loss
 	}
 
+func _get_transfer_decision_ledger() -> Dictionary:
+	var ledger := _get_current_ledger()
+	var current_money := int(ledger.get("current_money", 0))
+	var pond_price := int(ledger.get("pond_price", 0))
+	var inspection_spent := int(ledger.get("inspection_spent", 0))
+	var fishing_cost := int(ledger.get("fishing_cost", 0))
+	var transport_cost := int(ledger.get("transport_cost", 0))
+	var revenue := int(ledger.get("revenue", 0))
+	var offer_price := int(current_transfer_offer.get("income", 0))
+	var total_invested := pond_price + inspection_spent + fishing_cost + transport_cost
+	var transfer_profit_loss := offer_price - total_invested
+	var money_after_accept := current_money + offer_price
+	return {
+		"current_money": current_money,
+		"pond_price": pond_price,
+		"inspection_spent": inspection_spent,
+		"fishing_cost": fishing_cost,
+		"transport_cost": transport_cost,
+		"revenue": revenue,
+		"offer_price": offer_price,
+		"total_invested": total_invested,
+		"transfer_profit_loss": transfer_profit_loss,
+		"money_after_accept": money_after_accept
+	}
+
+func _render_transfer_decision_dialog() -> Dictionary:
+	var ledger := _get_transfer_decision_ledger()
+	var offer_price := int(ledger.get("offer_price", 0))
+	var total_invested := int(ledger.get("total_invested", 0))
+	var transfer_profit_loss := int(ledger.get("transfer_profit_loss", 0))
+	var money_after_accept := int(ledger.get("money_after_accept", 0))
+
+	transfer_offer_highlight_label.text = "对方报价：%d 元" % offer_price
+	transfer_total_invested_value.text = "%d 元" % total_invested
+	transfer_offer_price_value.text = "%d 元" % offer_price
+	transfer_profit_loss_value.text = "%+d 元" % transfer_profit_loss if transfer_profit_loss != 0 else "0 元"
+	transfer_money_after_accept_value.text = "%d 元" % money_after_accept
+
+	var outcome_text := "不赚不亏"
+	var outcome_tone := "gold"
+	if transfer_profit_loss < 0:
+		outcome_text = "亏钱止损"
+		outcome_tone = "negative"
+	elif transfer_profit_loss > 0:
+		outcome_text = "转手赚了"
+		outcome_tone = "positive"
+
+	transfer_profit_loss_status_label.text = outcome_text
+	UIKit.style_label(transfer_profit_loss_value, "body_dark")
+	transfer_profit_loss_value.add_theme_color_override("font_color", UIKit.RED if transfer_profit_loss < 0 else UIKit.GREEN if transfer_profit_loss > 0 else UIKit.INK)
+	UIKit.style_label(transfer_profit_loss_status_label, "muted")
+	transfer_profit_loss_status_label.add_theme_color_override("font_color", UIKit.RED if transfer_profit_loss < 0 else UIKit.GREEN if transfer_profit_loss > 0 else UIKit.MUTED)
+
+	if transfer_profit_loss < 0:
+		accept_transfer_button.text = "接受转包（亏%d元）" % abs(transfer_profit_loss)
+		UIKit.style_button(accept_transfer_button, "gold")
+	elif transfer_profit_loss > 0:
+		accept_transfer_button.text = "接受转包（赚%d元）" % transfer_profit_loss
+		UIKit.style_button(accept_transfer_button, "primary")
+	else:
+		accept_transfer_button.text = "接受转包（不赚不亏）"
+		UIKit.style_button(accept_transfer_button, "gold")
+	accept_transfer_button.add_theme_font_size_override("font_size", 26)
+	reject_transfer_button.add_theme_font_size_override("font_size", 26)
+	accept_transfer_button.disabled = false
+	accept_transfer_button.set_meta("_future_texture_button", "button_accept.png")
+	UIKit.style_highlight_label(transfer_offer_highlight_label, outcome_tone)
+	return ledger
+
 func _hide_detail_panels() -> void:
 	_close_transfer_dialog()
 	_show_choice_page()
@@ -423,15 +629,39 @@ func _on_transfer_pressed() -> void:
 
 func _open_transfer_offer_dialog() -> void:
 	_hide_detail_panels()
-	transfer_offer_summary_label.text = "接手价：%d 元" % int(current_transfer_offer.get("income", 0))
-	transfer_offer_label.text = str(current_transfer_offer.get("text", ""))
-	UIKit.show_modal(self, transfer_overlay, transfer_dialog, 0.86, 980, Vector2i(340, 560), Vector2i(860, 1040))
+	_render_transfer_decision_dialog()
+	UIKit.show_modal(self, transfer_overlay, transfer_dialog, 0.90, 1100, Vector2i(340, 640), Vector2i(920, 1180))
 	message_label.text = ""
 
 func _on_accept_transfer_pressed() -> void:
+	if accept_transfer_button.disabled:
+		return
+	var ledger := _get_transfer_decision_ledger()
+	var transfer_profit_loss := int(ledger.get("transfer_profit_loss", 0))
+	if transfer_profit_loss < 0:
+		accept_transfer_button.disabled = true
+		_show_global_confirm({
+			"title": "确定亏钱转包？",
+			"body": "接受后本塘亏损 %d 元，但可以提前止损。" % abs(transfer_profit_loss),
+			"cancel_text": "再想想",
+			"confirm_text": "确定转包",
+			"on_confirm": Callable(self, "_confirm_accept_transfer"),
+			"on_cancel": Callable(self, "_on_cancel_loss_transfer_confirm")
+		})
+		return
+	_confirm_accept_transfer()
+
+func _confirm_accept_transfer() -> void:
+	if accept_transfer_button != null:
+		accept_transfer_button.disabled = true
 	_close_transfer_dialog()
-	game_state.apply_transfer(int(current_transfer_offer.get("income", 0)))
+	var ledger := _get_transfer_decision_ledger()
+	game_state.apply_transfer(int(ledger.get("offer_price", 0)), int(ledger.get("transfer_profit_loss", 0)))
 	UIController.show_settlement(screen_container, game_state)
+
+func _on_cancel_loss_transfer_confirm() -> void:
+	if accept_transfer_button != null and transfer_overlay != null and transfer_overlay.visible:
+		accept_transfer_button.disabled = false
 
 func _on_reject_transfer_pressed() -> void:
 	_close_transfer_dialog()
@@ -440,7 +670,7 @@ func _on_reject_transfer_pressed() -> void:
 
 func _on_viewport_size_changed() -> void:
 	if transfer_overlay != null and transfer_overlay.visible:
-		UIKit.layout_modal(self, transfer_dialog, 0.86, 980, Vector2i(340, 560), Vector2i(860, 1040))
+		UIKit.layout_modal(self, transfer_dialog, 0.90, 1100, Vector2i(340, 640), Vector2i(920, 1180))
 	if harvest_result_overlay != null and harvest_result_overlay.visible:
 		UIKit.layout_modal(self, harvest_result_dialog, 0.86, 1060, Vector2i(340, 700), Vector2i(860, 1160))
 

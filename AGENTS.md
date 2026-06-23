@@ -11,7 +11,7 @@ This file is the live handoff guide for agents working on **这塘我包了**. K
 - Gameplay UI now follows one 1080 × 1920 hierarchy: global day/cash status at the top, page title below it, bounded or scrollable content in the middle, and visible actions that stay inside the authored canvas.
 - Current README is minimal; treat this file as the primary working guide until README is expanded.
 - The current UI-layout pass intentionally uses no texture or image references in active scenes/scripts. `Main.tscn` provides one shared solid pond-green `#2F6B4F` background behind the homepage and all routed screens; existing artwork files remain unused for a later visual pass.
-- Intended future image slots are represented by native `PanelContainer` placeholders with a centered `×`; current slots cover pond cards, transfer character, harvest result, and settlement result.
+- Intended future image slots are represented by native placeholders; pond cards, harvest result, and settlement result still use centered `×` slots, while the transfer offer popup now uses a self-drawn buyer/contract placeholder instead of an `×`.
 - Other asset folders remain placeholders: `assets/ponds`, `assets/effects`, `assets/fish`.
 
 ## Current Implemented Flow
@@ -23,7 +23,7 @@ This file is the live handoff guide for agents working on **这塘我包了**. K
 - `UIRoot` runs `scripts/UI_Manager.gd` on ready to apply the shared theme recursively, remove selected per-control overrides, and add a 2 px black outline to every `Label`.
 - `scripts/pond_list.gd` generates or reuses 3 ponds for the current day.
 - `scripts/pond_detail.gd` presents inspection as three data-driven clue cards, updates cash and cumulative inspection spend, separates each unlocked result into a conclusion and detail, and owns explicit give-up / contract confirmations.
-- `scripts/after_contract_choice.gd` preserves transfer, one-net sale, and self-fishing/work-plan logic.
+- `scripts/after_contract_choice.gd` preserves transfer, one-net sale, and self-fishing/work-plan logic; its transfer offer modal is a decision popup with offer price, total invested, transfer profit/loss, money after accept, buyer speech bubble, and a self-drawn buyer/contract placeholder.
 - `scripts/settlement.gd` preserves settlement, fish-king presentation, and next-place progression.
 - `scripts/settlement_history.gd` renders the persistent ledger newest-first with day/cash status, total pond/profit/cash summary, player-facing profit/loss badges, and independently expandable result, income, expense, and final-ledger sections.
 
@@ -77,6 +77,7 @@ This file is the live handoff guide for agents working on **这塘我包了**. K
 - The post-contract choice page is now the “已承包鱼塘管理页”: top status shows day/cash, the header reads “塘已经包下”, the owned-pond card shows pond name, drawn pond placeholder, and clear ledger rows for contract price, inspection spend, total invested, revenue, and current profit/loss.
 - On the post-contract management page, use calculated ledger variables from `GameState` rather than vague copy such as “塘口账面”; current total invested is contract total cost + inspection spend + work cost + transport cost, and current profit/loss is revenue - total invested.
 - On the post-contract management page, “转包脱手”, “卖一网”, and “自己下网” are ActionCards with title, consequence copy, status, and button; “自己下网” is the primary action, “转包脱手” is secondary stop-loss, and “卖一网” stays disabled with “暂无买家” until fish-result data creates an offer.
+- The transfer offer popup must compute its bill from state variables: current cash, contract total cost, inspection spend, work cost, transport cost, revenue, and offer price. It shows current total invested, offer price, transfer profit/loss with status text, and cash after accepting; the accept button states the gain/loss and loss-making transfers require a second confirmation.
 - Choosing "自己下网" opens a dedicated work-plan page: the original transfer/sell/self-fishing buttons are hidden, the three work plans appear as scrollable list cards with `×` image placeholders, and the return control stays fixed below the list.
 - Final settlement net profit includes every income and cost for the pond: fish sales, one-net sale, transfer income, contract fee, inspection costs, and work costs. The contract fee is shown once and deducted once.
 - Entering a final settlement records it once with a record ID, local settlement time, pond/day/method, catch details, canonical income/cost line items, calculated totals/net profit, and ending cash.

@@ -274,7 +274,38 @@ func _run() -> void:
 		await _settle_frames()
 	var transfer_modal := choice_screen.get_node("TransferModal") as Control
 	_check(transfer_modal.visible, "转包脱手按钮显示报价弹窗")
-	_check(transfer_modal.find_child("ImagePlaceholder", true, false) != null, "转包人物图片位显示叉号占位")
+	_check(transfer_modal.find_child("BuyerPlaceholder", true, false) != null, "转包弹窗显示自绘买家合同占位")
+	_check(transfer_modal.find_child("BuyerSpeechBubble", true, false) != null, "转包弹窗显示买家台词气泡")
+	var offer_highlight := transfer_modal.find_child("OfferHighlight", true, false) as Label
+	var transfer_ledger := choice_screen.call("_get_transfer_decision_ledger") as Dictionary
+	_check(offer_highlight != null and offer_highlight.text == "对方报价：%d 元" % int(transfer_ledger.get("offer_price", 0)), "转包弹窗突出显示对方报价")
+	var modal_total_value := transfer_modal.find_child("TotalInvestedRow", true, false).get_node("RowContent/Value") as Label
+	var modal_offer_value := transfer_modal.find_child("OfferPriceRow", true, false).get_node("RowContent/Value") as Label
+	var modal_profit_value := transfer_modal.find_child("TransferProfitLossRow", true, false).get_node("RowContent/Value") as Label
+	var modal_money_value := transfer_modal.find_child("MoneyAfterAcceptRow", true, false).get_node("RowContent/Value") as Label
+	var transfer_profit_loss := int(transfer_ledger.get("transfer_profit_loss", 0))
+	_check(modal_total_value.text == "%d 元" % int(transfer_ledger.get("total_invested", 0)), "转包弹窗显示当前总投入")
+	_check(modal_offer_value.text == "%d 元" % int(transfer_ledger.get("offer_price", 0)), "转包弹窗账单显示对方接手价")
+	_check(modal_profit_value.text == ("%+d 元" % transfer_profit_loss if transfer_profit_loss != 0 else "0 元"), "转包弹窗账单显示转包盈亏")
+	_check(modal_money_value.text == "%d 元" % int(transfer_ledger.get("money_after_accept", 0)), "转包弹窗账单显示接受后本钱")
+	var modal_accept_button := transfer_modal.find_child("AcceptTransferButton", true, false) as Button
+	_check(modal_accept_button != null and modal_accept_button.text.begins_with("接受转包（"), "转包弹窗接受按钮显示赚亏结果")
+	var transfer_card_dialog := transfer_modal.get_node("DialogCard") as PanelContainer
+	var transfer_button_row := transfer_modal.find_child("ButtonRow", true, false) as HBoxContainer
+	var modal_continue_button := transfer_modal.find_child("ContinueButton", true, false) as Button
+	for viewport_size in [Vector2i(540, 960), Vector2i(720, 1280), Vector2i(1080, 1920)]:
+		choice_screen.call("_on_viewport_size_changed")
+		await _settle_frames()
+		var scale := minf(float(viewport_size.x) / 1080.0, float(viewport_size.y) / 1920.0)
+		var scaled_card_width := transfer_card_dialog.size.x * scale
+		var scaled_card_height := transfer_card_dialog.size.y * scale
+		var width_ratio := scaled_card_width / float(viewport_size.x)
+		var transfer_card_in_bounds := scaled_card_width <= float(viewport_size.x - 48) and scaled_card_height <= float(viewport_size.y - 48)
+		var transfer_buttons_visible: bool = transfer_button_row.position.y + transfer_button_row.size.y <= transfer_card_dialog.size.y and modal_accept_button.size.y * scale >= 44.0 and modal_continue_button != null and modal_continue_button.size.y * scale >= 44.0
+		_check(width_ratio >= 0.85 and width_ratio <= 0.92 and transfer_card_in_bounds and transfer_buttons_visible, "%dx%d 下转包报价弹窗宽高、边界和按钮高度稳定" % [viewport_size.x, viewport_size.y])
+	choice_screen.size = Vector2(1080, 1920)
+	choice_screen.call("_on_viewport_size_changed")
+	await _settle_frames()
 	var reject_transfer := _find_button_by_text(transfer_modal, "继续自己扛")
 	_check(reject_transfer != null, "转包弹窗存在拒绝按钮")
 	if reject_transfer != null:
@@ -411,12 +442,24 @@ func _run() -> void:
 		restart_transfer_confirm.pressed.emit()
 		await _settle_frames()
 	var restart_transfer_modal := restart_choice.get_node("TransferModal") as Control
-	var accept_transfer := _find_button_by_text(restart_transfer_modal, "接受转包")
+	var restart_choice_state := restart_choice.get("game_state") as GameState
+	var restart_transfer_ledger := restart_choice.call("_get_transfer_decision_ledger") as Dictionary
+	var cash_before_transfer := restart_choice_state.cash
+	var accept_transfer := restart_transfer_modal.find_child("AcceptTransferButton", true, false) as Button
 	_check(accept_transfer != null, "转包弹窗存在接受按钮")
 	if accept_transfer != null:
 		accept_transfer.pressed.emit()
 		await _settle_frames()
+		if int(restart_transfer_ledger.get("transfer_profit_loss", 0)) < 0:
+			var loss_confirm := _find_button_by_text(root.get_node("PopupManager"), "确定转包")
+			_check(loss_confirm != null, "亏损转包先显示二次确认")
+			if loss_confirm != null:
+				loss_confirm.pressed.emit()
+				await _settle_frames()
 		_check_screen(restart_container, "Settlement", "接受转包进入结算页")
+		_check(restart_choice_state.cash == cash_before_transfer + int(restart_transfer_ledger.get("offer_price", 0)), "接受转包后本钱增加对方接手价")
+		_check(str(restart_choice_state.current_pond.get("status", "")) == "transferred", "接受转包后鱼塘状态记录为 transferred")
+		_check(int(restart_choice_state.current_pond.get("transfer_profit_loss", 0)) == int(restart_transfer_ledger.get("transfer_profit_loss", 0)), "接受转包后记录本次转包盈亏")
 
 	_finish()
 

@@ -163,13 +163,17 @@ func get_full_work_cost() -> int:
 	var quote_price := int(current_pond.get("quote_price", 0))
 	return maxi(min_cost, int(round(float(quote_price) * quote_ratio)))
 
-func apply_transfer(income: int) -> void:
+func apply_transfer(income: int, transfer_profit_loss: int = 0) -> void:
 	transfer_income = income
 	cash += income
+	current_pond["status"] = "transferred"
+	current_pond["settlement_status"] = "已转包"
+	current_pond["transfer_profit_loss"] = transfer_profit_loss
 	last_result = {
 		"type": "transfer",
 		"title": "转包结算",
-		"message": "你以 %d 元把这口塘转了出去，后面的鱼情和风险都不归你了。" % income
+		"message": "你以 %d 元把这口塘转了出去，后面的鱼情和风险都不归你了。" % income,
+		"transfer_profit_loss": transfer_profit_loss
 	}
 
 func apply_one_net(income: int, result_text: String) -> bool:
