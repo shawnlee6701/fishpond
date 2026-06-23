@@ -133,7 +133,9 @@ func _run() -> void:
 	var contract_extra_cost := int(preview.get("contract_extra_cost", 0))
 	var contract_total_cost := int(preview.get("contract_total_cost", pond_price + contract_extra_cost))
 	var remaining_after_contract := int(preview.get("remaining_after_contract", contract_state.cash - contract_total_cost))
-	var popup_content_path := "DimOverlay/CenterContainer/ModalPanel/MarginContainer/ContentStack"
+	var popup_content_path := "DimOverlay/ModalCenter/ConfirmContractDialog/MarginContainer/ContentStack"
+	var dim_overlay := contract_modal.get_node("DimOverlay") as Panel
+	var modal_center := contract_modal.get_node("DimOverlay/ModalCenter") as CenterContainer
 	var balance_highlight := contract_modal.get_node("%s/BalanceHighlight" % popup_content_path) as Label
 	var inspection_spent_value := contract_modal.get_node("%s/DialogBody/BillRows/InspectionSpentRow/RowContent/Value" % popup_content_path) as Label
 	var pond_price_value := contract_modal.get_node("%s/DialogBody/BillRows/PondPriceRow/RowContent/Value" % popup_content_path) as Label
@@ -152,11 +154,14 @@ func _run() -> void:
 	_check(pond_price_value.autowrap_mode == TextServer.AUTOWRAP_OFF and pond_price_value.custom_minimum_size.x >= 240.0 and pond_price_value.size.y <= 60.0, "承包账单右侧金额横排显示且不会逐字换行")
 	_check(bill_rows.get_child(0).size.y <= 60.0 and bill_rows.get_child(1).size.y <= 60.0 and bill_rows.get_child(2).size.y <= 60.0, "承包账单行高度不会被金额撑大")
 	_check(dialog_body_scroll == null, "承包账单内容未超出时不创建内部滚动条")
+	_check(contract_modal.layer >= 100 and dim_overlay.mouse_filter == Control.MOUSE_FILTER_STOP, "承包弹窗位于高层 CanvasLayer 且遮罩阻止底层点击")
+	_check(dim_overlay.anchor_left == 0.0 and dim_overlay.anchor_top == 0.0 and dim_overlay.anchor_right == 1.0 and dim_overlay.anchor_bottom == 1.0, "承包弹窗遮罩覆盖全屏")
+	_check(modal_center.anchor_left == 0.0 and modal_center.anchor_top == 0.0 and modal_center.anchor_right == 1.0 and modal_center.anchor_bottom == 1.0, "承包弹窗居中容器覆盖全屏")
 	var expected_status := "资金状态：够开工"
 	if remaining_after_contract < int(preview.get("recommended_working_capital", contract_state.min_working_capital)):
 		expected_status = "资金状态：余额偏紧"
 	_check(status_title.text == expected_status, "承包账单显示系统资金状态")
-	var contract_card := contract_modal.get_node("DimOverlay/CenterContainer/ModalPanel") as PanelContainer
+	var contract_card := contract_modal.get_node("DimOverlay/ModalCenter/ConfirmContractDialog") as PanelContainer
 	var contract_button_row := contract_modal.get_node("%s/ButtonRow" % popup_content_path) as HBoxContainer
 	_check(contract_button_row.position.y + contract_button_row.size.y <= contract_card.size.y, "承包账单底部按钮保持在弹窗卡片内")
 	_check(contract_card.size.y <= 1920.0 * 0.8 and contract_card.size.y < 760.0, "承包账单高度按内容收紧且不超过屏幕 80%")
@@ -164,10 +169,15 @@ func _run() -> void:
 		pond_detail.size = Vector2(1080, 1920)
 		pond_detail.call("_on_viewport_size_changed")
 		await _settle_frames()
-		var width_ratio: float = contract_card.size.x / 1080.0
-		var card_in_bounds: bool = contract_card.position.x >= 0.0 and contract_card.position.y >= 0.0 and contract_card.position.x + contract_card.size.x <= 1080.0 and contract_card.position.y + contract_card.size.y <= 1920.0
+		var center_size := modal_center.size
+		var safe_width := maxf(1.0, center_size.x - 48.0)
+		var expected_dialog_width := clampf(center_size.x * 0.9, minf(360.0, safe_width), minf(980.0, safe_width))
+		var width_matches: bool = absf(contract_card.size.x - expected_dialog_width) <= 2.0
+		var card_in_bounds: bool = contract_card.position.x >= 0.0 and contract_card.position.y >= 0.0 and contract_card.position.x + contract_card.size.x <= center_size.x and contract_card.position.y + contract_card.size.y <= center_size.y
+		var horizontally_centered: bool = absf(contract_card.position.x + contract_card.size.x * 0.5 - center_size.x * 0.5) <= 2.0
+		var vertically_centered: bool = absf(contract_card.position.y + contract_card.size.y * 0.5 - center_size.y * 0.5) <= 2.0
 		var scaled_button_height: float = contract_button_row.size.y * float(viewport_size.y) / 1920.0
-		_check(width_ratio >= 0.85 and width_ratio <= 0.92 and card_in_bounds and scaled_button_height >= 44.0, "%dx%d 下承包账单宽度、边界和按钮高度稳定" % [viewport_size.x, viewport_size.y])
+		_check(width_matches and card_in_bounds and horizontally_centered and vertically_centered and scaled_button_height >= 44.0, "%dx%d 下承包账单宽度、居中、边界和按钮高度稳定" % [viewport_size.x, viewport_size.y])
 	pond_detail.size = Vector2(1080, 1920)
 	pond_detail.call("_on_viewport_size_changed")
 	await _settle_frames()

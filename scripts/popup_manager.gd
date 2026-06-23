@@ -25,11 +25,8 @@ var is_submitting := false
 
 
 func _ready() -> void:
-	# Keep global confirmation popups above MainUI.
-	# Main.tscn's CanvasLayer uses Godot's default layer, and autoloads enter the
-	# tree before the main scene, so using the same layer can leave dialogs hidden
-	# behind the page and make bottom buttons look unresponsive.
-	layer = 20
+	# Keep global confirmation popups above every routed gameplay page.
+	layer = 100
 	visible = false
 	_build_popup_tree()
 	get_viewport().size_changed.connect(_resize_modal)
@@ -79,6 +76,14 @@ func hide_popup(call_cancel := false) -> void:
 		on_cancel_callback.call()
 
 
+func _unhandled_input(event: InputEvent) -> void:
+	if not visible:
+		return
+	if event.is_action_pressed("ui_cancel"):
+		hide_popup(true)
+		get_viewport().set_input_as_handled()
+
+
 func _build_popup_tree() -> void:
 	dim_overlay = Panel.new()
 	dim_overlay.name = "DimOverlay"
@@ -92,12 +97,13 @@ func _build_popup_tree() -> void:
 	add_child(dim_overlay)
 
 	center_container = CenterContainer.new()
-	center_container.name = "CenterContainer"
+	center_container.name = "ModalCenter"
+	center_container.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	center_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	dim_overlay.add_child(center_container)
 
 	modal_panel = PanelContainer.new()
-	modal_panel.name = "ModalPanel"
+	modal_panel.name = "ConfirmContractDialog"
 	modal_panel.theme = UI_THEME
 	modal_panel.theme_type_variation = &"ContractDialogCard"
 	modal_panel.mouse_filter = Control.MOUSE_FILTER_STOP
@@ -281,19 +287,17 @@ func _resize_modal() -> void:
 	if modal_panel == null or center_container == null:
 		return
 	var viewport_size := get_viewport().get_visible_rect().size
-	var design_size := Vector2(minf(viewport_size.x, 1080.0), minf(viewport_size.y, 1920.0))
-	center_container.position = (viewport_size - design_size) * 0.5
-	center_container.size = design_size
-
-	var safe_width := maxf(1.0, design_size.x - 48.0)
-	var dialog_width := clampf(design_size.x * 0.9, minf(360.0, safe_width), minf(980.0, safe_width))
+	var safe_width := maxf(1.0, viewport_size.x - 48.0)
+	var dialog_width := clampf(viewport_size.x * 0.9, minf(360.0, safe_width), minf(980.0, safe_width))
 	modal_panel.custom_minimum_size = Vector2(dialog_width, 0)
 
 
 func _on_dim_overlay_input(event: InputEvent) -> void:
 	if not close_on_overlay:
 		return
-	if event is InputEventMouseButton and event.pressed:
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		hide_popup(true)
+	elif event is InputEventScreenTouch and event.pressed:
 		hide_popup(true)
 
 

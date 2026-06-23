@@ -42,7 +42,7 @@ This file is the live handoff guide for agents working on **这塘我包了**. K
 - `scripts/fishing_simulator.gd` resolves fishing results and fish income.
 - `scripts/action_resolver.gd` resolves market opportunities after fishing.
 - `scripts/balance_simulator.gd` runs headless multi-run strategy simulations for ROI, bankrupt rate, cash percentiles, and fish-king exposure.
-- `scripts/popup_manager.gd` is registered as the `PopupManager` autoload. It owns the global `CanvasLayer` popup base, full-screen `DimOverlay`, centered `ModalPanel`, compact bill rows, status box, cancel/confirm buttons, and confirm-button debounce for global confirmation dialogs.
+- `scripts/popup_manager.gd` is registered as the `PopupManager` autoload. It owns the global layer-100 `CanvasLayer` popup base, full-screen `DimOverlay`, full-screen `ModalCenter`, centered `ConfirmContractDialog`, compact bill rows, status box, cancel/confirm buttons, and confirm-button debounce for global confirmation dialogs.
 - `scripts/ui_kit.gd` owns the shared mobile-first UI frame: phone-safe panel margins, compact card/button/message styles, chips, and screen label roles.
 - `scripts/ui_kit.gd` also owns the authored 1080 × 1920 design constants plus shared top-status, page-title, and modal-title styling.
 - `scripts/ui_kit.gd` defines the shared information hierarchy: 24 px minimum readable text, 27 px body text, 31 px section text, 32 px highlighted values, and 44 px page titles on the 1080 × 1920 canvas.
@@ -200,7 +200,7 @@ HOME=/private/tmp/fish_pool_history_test_home godot --headless --log-file /priva
 - Contract confirmation is a compact native themed bill dialog: current cash, non-refundable inspection spend, negative pond price, optional contract extra cost, total contract deduction, remaining cash, and minimum working capital are all rendered from `GameState.get_contract_preview()` plus `inspection_cost_total`.
 - `GameState.get_contract_preview()` is the source of truth for `contract_extra_cost`, `contract_total_cost`, `remaining_after_contract`, `min_working_capital`, `recommended_working_capital`, and the confirm button deduction text; final contract mutation deducts `contract_total_cost`.
 - Contract confirmation blocks insufficient remaining working capital, disables the primary confirm button as `钱不够`, and rechecks funds on accept before mutating state.
-- Contract confirmation uses the global `PopupManager` CanvasLayer at layer 1, a full-screen input-blocking `DimOverlay`, and a centered native themed `ModalPanel` that resizes inside the authored 1080 × 1920 canvas.
+- Contract confirmation uses the global `PopupManager` CanvasLayer at layer 100, a full-screen input-blocking `DimOverlay`, and a full-screen `ModalCenter` that centers the native themed `ConfirmContractDialog` independently of page content.
 - All confirmation popups use an opaque-input modal overlay with a dark mask; popup cards remain inside a 24 px viewport safe area and oversized body content scrolls instead of expanding the card.
 - Contract and transfer popups both visibly retain title, highlighted decision value, scroll-safe content, and accept/cancel actions at 1080 × 1920; the harvest-result popup lists the catch by fish type with weight, unit price, subtotal, and total fish income, then highlights per-net profit/loss above its dismiss action.
 - Pond detail, post-contract choice/work-plan, and settlement use the same native framed page card with no large paper-sticker texture.
