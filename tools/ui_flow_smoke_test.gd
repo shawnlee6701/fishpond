@@ -238,10 +238,30 @@ func _run() -> void:
 	_check(contract_state.cash == cash_before_contract - contract_total_cost, "确认承包只扣除合计扣款一次")
 
 	var choice_screen := _current_screen(screen_container)
-	var transfer_button := choice_screen.get_node("PageLayout/Panel/Margin/Content/ChoiceButtons/TransferButton") as Button
+	var choice_money_label := choice_screen.get_node("SafeArea/PageLayout/TopStatusBar/StatusRow/MoneyLabel") as Label
+	var choice_contract_value := choice_screen.get_node("SafeArea/PageLayout/ContentScroll/Content/OwnedPondCard/Margin/CardContent/LedgerSummary/ContractPriceRow/RowContent/Value") as Label
+	var choice_inspection_value := choice_screen.get_node("SafeArea/PageLayout/ContentScroll/Content/OwnedPondCard/Margin/CardContent/LedgerSummary/InspectionSpentRow/RowContent/Value") as Label
+	var choice_total_value := choice_screen.get_node("SafeArea/PageLayout/ContentScroll/Content/OwnedPondCard/Margin/CardContent/LedgerSummary/TotalInvestedRow/RowContent/Value") as Label
+	var choice_revenue_value := choice_screen.get_node("SafeArea/PageLayout/ContentScroll/Content/OwnedPondCard/Margin/CardContent/LedgerSummary/RevenueRow/RowContent/Value") as Label
+	var choice_profit_value := choice_screen.get_node("SafeArea/PageLayout/ContentScroll/Content/OwnedPondCard/Margin/CardContent/LedgerSummary/ProfitLossRow/RowContent/Value") as Label
+	var expected_invested := contract_total_cost + contract_state.inspection_cost_total
+	_check(choice_money_label.text.contains(str(contract_state.cash)), "已承包页顶部本钱来自承包扣费后的真实现金")
+	_check(choice_contract_value.text == "%d 元" % contract_total_cost, "已承包页账本显示真实承包投入")
+	_check(choice_inspection_value.text == "%d 元" % contract_state.inspection_cost_total, "已承包页账本显示真实验塘费")
+	_check(choice_total_value.text == "%d 元" % expected_invested, "已承包页当前总投入等于承包价加验塘费")
+	_check(choice_revenue_value.text == "0 元", "刚承包后当前收入为 0")
+	_check(choice_profit_value.text == "%+d 元" % -expected_invested, "刚承包后当前盈亏为负总投入")
+	_check(choice_screen.find_child("PondVisualPlaceholder", true, false) != null, "已承包页显示自绘鱼塘占位")
+	var transfer_button := choice_screen.find_child("TransferButton", true, false) as Button
 	_check(not transfer_button.disabled, "转包脱手按钮可用")
 	transfer_button.pressed.emit()
 	await _settle_frames()
+	var transfer_confirm := root.get_node("PopupManager") as CanvasLayer
+	_check(transfer_confirm.visible and _find_button_by_text(transfer_confirm, "去转包") != null, "转包脱手先显示风险确认弹窗")
+	var confirm_transfer := _find_button_by_text(transfer_confirm, "去转包")
+	if confirm_transfer != null:
+		confirm_transfer.pressed.emit()
+		await _settle_frames()
 	var transfer_modal := choice_screen.get_node("TransferModal") as Control
 	_check(transfer_modal.visible, "转包脱手按钮显示报价弹窗")
 	_check(transfer_modal.find_child("ImagePlaceholder", true, false) != null, "转包人物图片位显示叉号占位")
@@ -252,26 +272,38 @@ func _run() -> void:
 		await process_frame
 		_check(not transfer_modal.visible, "拒绝转包关闭弹窗并留在当前页")
 
-	var sell_button := choice_screen.get_node("PageLayout/Panel/Margin/Content/ChoiceButtons/SellOneNetButton") as Button
+	var sell_button := choice_screen.find_child("SellOneNetButton", true, false) as Button
 	_check(sell_button.disabled, "未打出鱼情时卖一网按钮正确禁用")
+	var sell_status := choice_screen.find_child("ActionCard_SellOneNet", true, false).find_child("ActionStatusLabel", true, false) as Label
+	_check(sell_status.text == "暂无买家", "未打出鱼情时卖一网说明暂无买家")
 
-	var self_button := choice_screen.get_node("PageLayout/Panel/Margin/Content/ChoiceButtons/HarvestSelfButton") as Button
+	var self_button := choice_screen.find_child("HarvestSelfButton", true, false) as Button
 	self_button.pressed.emit()
-	await process_frame
-	var work_scroll := choice_screen.get_node("PageLayout/Panel/Margin/Content/WorkPlanScroll") as ScrollContainer
-	var work_panel := choice_screen.get_node("PageLayout/Panel/Margin/Content/WorkPlanScroll/WorkPlanPanel") as VBoxContainer
+	await _settle_frames()
+	var self_confirm := root.get_node("PopupManager") as CanvasLayer
+	_check(self_confirm.visible and _find_button_by_text(self_confirm, "开始下网") != null, "自己下网先显示成本确认弹窗")
+	var confirm_self := _find_button_by_text(self_confirm, "开始下网")
+	if confirm_self != null:
+		confirm_self.pressed.emit()
+		await process_frame
+	var work_scroll := choice_screen.find_child("WorkPlanScroll", true, false) as ScrollContainer
+	var work_panel := choice_screen.find_child("WorkPlanPanel", true, false) as VBoxContainer
 	_check(work_scroll.visible, "自己下网按钮打开作业方案列表")
 	_check(work_panel.find_children("ImagePlaceholder", "PanelContainer", true, false).size() == 3, "三个作业方案均显示叉号图片位")
 
-	var work_back := choice_screen.get_node("PageLayout/Panel/Margin/Content/WorkPlanBackButton") as Button
+	var work_back := choice_screen.find_child("WorkPlanBackButton", true, false) as Button
 	_check(work_back.get_index() > work_scroll.get_index(), "返回处置选择固定在方案列表底端")
 	work_back.pressed.emit()
 	await process_frame
 	_check(not work_scroll.visible, "作业方案返回按钮回到处置选择")
 
 	self_button.pressed.emit()
-	await process_frame
-	var low_button := choice_screen.get_node("PageLayout/Panel/Margin/Content/WorkPlanScroll/WorkPlanPanel/LowWorkCard/CardContent/LowWorkButton") as Button
+	await _settle_frames()
+	confirm_self = _find_button_by_text(root.get_node("PopupManager"), "开始下网")
+	if confirm_self != null:
+		confirm_self.pressed.emit()
+		await process_frame
+	var low_button := choice_screen.find_child("LowWorkButton", true, false) as Button
 	_check(not low_button.disabled, "小捞一网按钮可用")
 	if not low_button.disabled:
 		low_button.pressed.emit()
@@ -296,8 +328,12 @@ func _run() -> void:
 	_check(choice_state.sold_one_net, "卖一网按钮执行交易并更新状态")
 
 	self_button.pressed.emit()
-	await process_frame
-	var standard_button := choice_screen.get_node("PageLayout/Panel/Margin/Content/WorkPlanScroll/WorkPlanPanel/StandardWorkCard/CardContent/StandardWorkButton") as Button
+	await _settle_frames()
+	confirm_self = _find_button_by_text(root.get_node("PopupManager"), "开始下网")
+	if confirm_self != null:
+		confirm_self.pressed.emit()
+		await process_frame
+	var standard_button := choice_screen.find_child("StandardWorkButton", true, false) as Button
 	_check(not standard_button.disabled, "稳捞一网按钮可用")
 	if not standard_button.disabled:
 		standard_button.pressed.emit()
@@ -310,8 +346,12 @@ func _run() -> void:
 			await process_frame
 
 	self_button.pressed.emit()
-	await process_frame
-	var full_button := choice_screen.get_node("PageLayout/Panel/Margin/Content/WorkPlanScroll/WorkPlanPanel/FullWorkCard/CardContent/FullWorkButton") as Button
+	await _settle_frames()
+	confirm_self = _find_button_by_text(root.get_node("PopupManager"), "开始下网")
+	if confirm_self != null:
+		confirm_self.pressed.emit()
+		await process_frame
+	var full_button := choice_screen.find_child("FullWorkButton", true, false) as Button
 	_check(not full_button.disabled, "抽干收尾按钮可用")
 	if full_button.disabled:
 		_finish()
@@ -353,9 +393,13 @@ func _run() -> void:
 	restart_confirm.pressed.emit()
 	await _settle_frames()
 	var restart_choice := _current_screen(restart_container)
-	var restart_transfer := restart_choice.get_node("PageLayout/Panel/Margin/Content/ChoiceButtons/TransferButton") as Button
+	var restart_transfer := restart_choice.find_child("TransferButton", true, false) as Button
 	restart_transfer.pressed.emit()
 	await _settle_frames()
+	var restart_transfer_confirm := _find_button_by_text(root.get_node("PopupManager"), "去转包")
+	if restart_transfer_confirm != null:
+		restart_transfer_confirm.pressed.emit()
+		await _settle_frames()
 	var restart_transfer_modal := restart_choice.get_node("TransferModal") as Control
 	var accept_transfer := _find_button_by_text(restart_transfer_modal, "接受转包")
 	_check(accept_transfer != null, "转包弹窗存在接受按钮")

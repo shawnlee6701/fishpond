@@ -1,7 +1,6 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=2 format=3]
 
 [ext_resource type="Script" path="res://scripts/after_contract_choice.gd" id="1_after_contract_choice"]
-[ext_resource type="Texture2D" path="res://assets/ui/parchment_background.png" id="3_background"]
 
 [node name="AfterContractChoice" type="Control"]
 custom_minimum_size = Vector2(1080, 1920)
@@ -13,7 +12,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_after_contract_choice")
 
-[node name="Background" type="TextureRect" parent="."]
+[node name="Background" type="ColorRect" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -21,137 +20,430 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-texture = ExtResource("3_background")
-expand_mode = 1
-stretch_mode = 0
+color = Color(0.184314, 0.419608, 0.309804, 1)
 
-[node name="CashLabel" type="Label" parent="."]
-layout_mode = 1
-anchors_preset = 10
-anchor_right = 1.0
-offset_left = 42.0
-offset_top = 32.0
-offset_right = -42.0
-offset_bottom = 96.0
-grow_horizontal = 2
-text = "第 1 天  |  本钱 30000 元"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="TitleLabel" type="Label" parent="."]
-layout_mode = 1
-anchors_preset = 10
-anchor_right = 1.0
-offset_left = 72.0
-offset_top = 112.0
-offset_right = -72.0
-offset_bottom = 194.0
-grow_horizontal = 2
-text = "塘已经包下"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="Panel" type="PanelContainer" parent="."]
+[node name="SafeArea" type="MarginContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 72.0
-offset_top = 210.0
-offset_right = -72.0
-offset_bottom = -110.0
+offset_left = 52.0
+offset_top = 32.0
+offset_right = -52.0
+offset_bottom = -48.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Margin" type="MarginContainer" parent="Panel"]
+[node name="PageLayout" type="VBoxContainer" parent="SafeArea"]
 layout_mode = 2
-theme_override_constants/margin_left = 54
-theme_override_constants/margin_top = 52
-theme_override_constants/margin_right = 54
-theme_override_constants/margin_bottom = 52
+theme_override_constants/separation = 18
 
-[node name="Content" type="VBoxContainer" parent="Panel/Margin"]
+[node name="TopStatusBar" type="PanelContainer" parent="SafeArea/PageLayout"]
+custom_minimum_size = Vector2(0, 64)
+layout_mode = 2
+
+[node name="StatusRow" type="HBoxContainer" parent="SafeArea/PageLayout/TopStatusBar"]
 layout_mode = 2
 theme_override_constants/separation = 16
+alignment = 1
 
-[node name="PondNameLabel" type="Label" parent="Panel/Margin/Content"]
+[node name="DayLabel" type="Label" parent="SafeArea/PageLayout/TopStatusBar/StatusRow"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 28
-text = "已包下：-"
+size_flags_horizontal = 3
+text = "第 1 天"
 horizontal_alignment = 1
+vertical_alignment = 1
 
-[node name="EstimateLabel" type="Label" parent="Panel/Margin/Content"]
+[node name="MoneyLabel" type="Label" parent="SafeArea/PageLayout/TopStatusBar/StatusRow"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 27
-text = "当前塘口估值：0 元"
+size_flags_horizontal = 3
+text = "本钱：0 元"
 horizontal_alignment = 1
+vertical_alignment = 1
 
-[node name="ProfitLabel" type="Label" parent="Panel/Margin/Content"]
+[node name="PageHeader" type="VBoxContainer" parent="SafeArea/PageLayout"]
+custom_minimum_size = Vector2(0, 108)
 layout_mode = 2
-theme_override_font_sizes/font_size = 27
-text = "塘口账面：+0 元"
-horizontal_alignment = 1
+theme_override_constants/separation = 6
 
-[node name="MessageLabel" type="Label" parent="Panel/Margin/Content"]
+[node name="TitleLabel" type="Label" parent="SafeArea/PageLayout/PageHeader"]
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_font_sizes/font_size = 25
-text = ""
+text = "塘已经包下"
 horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="SubtitleLabel" type="Label" parent="SafeArea/PageLayout/PageHeader"]
+layout_mode = 2
+text = "本钱已经下去了，接下来要决定怎么处理这口塘"
+horizontal_alignment = 1
+vertical_alignment = 1
 autowrap_mode = 3
 
-[node name="ChoiceButtons" type="VBoxContainer" parent="Panel/Margin/Content"]
+[node name="ContentScroll" type="ScrollContainer" parent="SafeArea/PageLayout"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+follow_focus = true
+
+[node name="Content" type="VBoxContainer" parent="SafeArea/PageLayout/ContentScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 18
+
+[node name="OwnedPondCard" type="PanelContainer" parent="SafeArea/PageLayout/ContentScroll/Content"]
+custom_minimum_size = Vector2(0, 690)
+layout_mode = 2
+
+[node name="Margin" type="MarginContainer" parent="SafeArea/PageLayout/ContentScroll/Content/OwnedPondCard"]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 22
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 22
+
+[node name="CardContent" type="VBoxContainer" parent="SafeArea/PageLayout/ContentScroll/Content/OwnedPondCard/Margin"]
 layout_mode = 2
 theme_override_constants/separation = 14
 
-[node name="TransferButton" type="Button" parent="Panel/Margin/Content/ChoiceButtons"]
-custom_minimum_size = Vector2(0, 96)
+[node name="PondHeader" type="HBoxContainer" parent="SafeArea/PageLayout/ContentScroll/Content/OwnedPondCard/Margin/CardContent"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 30
+theme_override_constants/separation = 14
+
+[node name="PondStatusBadge" type="Label" parent="SafeArea/PageLayout/ContentScroll/Content/OwnedPondCard/Margin/CardContent/PondHeader"]
+custom_minimum_size = Vector2(128, 48)
+layout_mode = 2
+text = "已包下"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="PondNameLabel" type="Label" parent="SafeArea/PageLayout/ContentScroll/Content/OwnedPondCard/Margin/CardContent/PondHeader"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "未承包鱼塘"
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="PondVisualHost" type="Control" parent="SafeArea/PageLayout/ContentScroll/Content/OwnedPondCard/Margin/CardContent"]
+custom_minimum_size = Vector2(0, 210)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="LedgerSummary" type="VBoxContainer" parent="SafeArea/PageLayout/ContentScroll/Content/OwnedPondCard/Margin/CardContent"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ContractPriceRow" type="PanelContainer" parent="SafeArea/PageLayout/ContentScroll/Content/OwnedPondCard/Margin/CardContent/LedgerSummary"]
+layout_mode = 2
+
+[node name="RowContent" type="HBoxContainer" parent="SafeArea/PageLayout/ContentScroll/Content/OwnedPondCard/Margin/CardContent/LedgerSummary/ContractPriceRow"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="SafeArea/PageLayout/ContentScroll/Content/OwnedPondCard/Margin/CardContent/LedgerSummary/ContractPriceRow/RowContent"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "承包价"
+
+[node name="Value" type="Label" parent="SafeArea/PageLayout/ContentScroll/Content/OwnedPondCard/Margin/CardContent/LedgerSummary/ContractPriceRow/RowContent"]
+custom_minimum_size = Vector2(260, 0)
+layout_mode = 2
+text = "0 元"
+horizontal_alignment = 2
+
+[node name="InspectionSpentRow" type="PanelContainer" parent="SafeArea/PageLayout/ContentScroll/Content/OwnedPondCard/Margin/CardContent/LedgerSummary"]
+layout_mode = 2
+
+[node name="RowContent" type="HBoxContainer" parent="SafeArea/PageLayout/ContentScroll/Content/OwnedPondCard/Margin/CardContent/LedgerSummary/InspectionSpentRow"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="SafeArea/PageLayout/ContentScroll/Content/OwnedPondCard/Margin/CardContent/LedgerSummary/InspectionSpentRow/RowContent"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "已花验塘费"
+
+[node name="Value" type="Label" parent="SafeArea/PageLayout/ContentScroll/Content/OwnedPondCard/Margin/CardContent/LedgerSummary/InspectionSpentRow/RowContent"]
+custom_minimum_size = Vector2(260, 0)
+layout_mode = 2
+text = "0 元"
+horizontal_alignment = 2
+
+[node name="TotalInvestedRow" type="PanelContainer" parent="SafeArea/PageLayout/ContentScroll/Content/OwnedPondCard/Margin/CardContent/LedgerSummary"]
+layout_mode = 2
+
+[node name="RowContent" type="HBoxContainer" parent="SafeArea/PageLayout/ContentScroll/Content/OwnedPondCard/Margin/CardContent/LedgerSummary/TotalInvestedRow"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="SafeArea/PageLayout/ContentScroll/Content/OwnedPondCard/Margin/CardContent/LedgerSummary/TotalInvestedRow/RowContent"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "当前总投入"
+
+[node name="Value" type="Label" parent="SafeArea/PageLayout/ContentScroll/Content/OwnedPondCard/Margin/CardContent/LedgerSummary/TotalInvestedRow/RowContent"]
+custom_minimum_size = Vector2(260, 0)
+layout_mode = 2
+text = "0 元"
+horizontal_alignment = 2
+
+[node name="RevenueRow" type="PanelContainer" parent="SafeArea/PageLayout/ContentScroll/Content/OwnedPondCard/Margin/CardContent/LedgerSummary"]
+layout_mode = 2
+
+[node name="RowContent" type="HBoxContainer" parent="SafeArea/PageLayout/ContentScroll/Content/OwnedPondCard/Margin/CardContent/LedgerSummary/RevenueRow"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="SafeArea/PageLayout/ContentScroll/Content/OwnedPondCard/Margin/CardContent/LedgerSummary/RevenueRow/RowContent"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "当前收入"
+
+[node name="Value" type="Label" parent="SafeArea/PageLayout/ContentScroll/Content/OwnedPondCard/Margin/CardContent/LedgerSummary/RevenueRow/RowContent"]
+custom_minimum_size = Vector2(260, 0)
+layout_mode = 2
+text = "0 元"
+horizontal_alignment = 2
+
+[node name="ProfitLossRow" type="PanelContainer" parent="SafeArea/PageLayout/ContentScroll/Content/OwnedPondCard/Margin/CardContent/LedgerSummary"]
+layout_mode = 2
+
+[node name="RowContent" type="HBoxContainer" parent="SafeArea/PageLayout/ContentScroll/Content/OwnedPondCard/Margin/CardContent/LedgerSummary/ProfitLossRow"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="SafeArea/PageLayout/ContentScroll/Content/OwnedPondCard/Margin/CardContent/LedgerSummary/ProfitLossRow/RowContent"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "当前盈亏"
+
+[node name="Value" type="Label" parent="SafeArea/PageLayout/ContentScroll/Content/OwnedPondCard/Margin/CardContent/LedgerSummary/ProfitLossRow/RowContent"]
+custom_minimum_size = Vector2(260, 0)
+layout_mode = 2
+text = "0 元"
+horizontal_alignment = 2
+
+[node name="SituationHintCard" type="PanelContainer" parent="SafeArea/PageLayout/ContentScroll/Content"]
+custom_minimum_size = Vector2(0, 102)
+layout_mode = 2
+
+[node name="HintMargin" type="MarginContainer" parent="SafeArea/PageLayout/ContentScroll/Content/SituationHintCard"]
+layout_mode = 2
+theme_override_constants/margin_left = 22
+theme_override_constants/margin_top = 14
+theme_override_constants/margin_right = 22
+theme_override_constants/margin_bottom = 14
+
+[node name="MessageLabel" type="Label" parent="SafeArea/PageLayout/ContentScroll/Content/SituationHintCard/HintMargin"]
+layout_mode = 2
+text = "先自己下一网，见到鱼，外面才有人信。"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="ActionSection" type="VBoxContainer" parent="SafeArea/PageLayout/ContentScroll/Content"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="SectionTitleLabel" type="Label" parent="SafeArea/PageLayout/ContentScroll/Content/ActionSection"]
+layout_mode = 2
+text = "接下来怎么处理？"
+
+[node name="ActionCard_TransferOut" type="PanelContainer" parent="SafeArea/PageLayout/ContentScroll/Content/ActionSection"]
+custom_minimum_size = Vector2(0, 178)
+layout_mode = 2
+
+[node name="CardMargin" type="MarginContainer" parent="SafeArea/PageLayout/ContentScroll/Content/ActionSection/ActionCard_TransferOut"]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 16
+
+[node name="CardContent" type="VBoxContainer" parent="SafeArea/PageLayout/ContentScroll/Content/ActionSection/ActionCard_TransferOut/CardMargin"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ActionTitleLabel" type="Label" parent="SafeArea/PageLayout/ContentScroll/Content/ActionSection/ActionCard_TransferOut/CardMargin/CardContent"]
+layout_mode = 2
 text = "转包脱手"
 
-[node name="SellOneNetButton" type="Button" parent="Panel/Margin/Content/ChoiceButtons"]
-custom_minimum_size = Vector2(0, 96)
+[node name="ActionDescLabel" type="Label" parent="SafeArea/PageLayout/ContentScroll/Content/ActionSection/ActionCard_TransferOut/CardMargin/CardContent"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 30
-text = "卖一网给别人"
+text = "尝试把塘转给别人，可能亏钱，但能早点止损。"
+autowrap_mode = 3
 
-[node name="HarvestSelfButton" type="Button" parent="Panel/Margin/Content/ChoiceButtons"]
-custom_minimum_size = Vector2(0, 96)
+[node name="ActionStatusLabel" type="Label" parent="SafeArea/PageLayout/ContentScroll/Content/ActionSection/ActionCard_TransferOut/CardMargin/CardContent"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 30
+text = "止损行动"
+
+[node name="TransferButton" type="Button" parent="SafeArea/PageLayout/ContentScroll/Content/ActionSection/ActionCard_TransferOut/CardMargin/CardContent"]
+custom_minimum_size = Vector2(0, 76)
+layout_mode = 2
+text = "去转包"
+
+[node name="ActionCard_SellOneNet" type="PanelContainer" parent="SafeArea/PageLayout/ContentScroll/Content/ActionSection"]
+custom_minimum_size = Vector2(0, 178)
+layout_mode = 2
+
+[node name="CardMargin" type="MarginContainer" parent="SafeArea/PageLayout/ContentScroll/Content/ActionSection/ActionCard_SellOneNet"]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 16
+
+[node name="CardContent" type="VBoxContainer" parent="SafeArea/PageLayout/ContentScroll/Content/ActionSection/ActionCard_SellOneNet/CardMargin"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ActionTitleLabel" type="Label" parent="SafeArea/PageLayout/ContentScroll/Content/ActionSection/ActionCard_SellOneNet/CardMargin/CardContent"]
+layout_mode = 2
+text = "卖一网"
+
+[node name="ActionDescLabel" type="Label" parent="SafeArea/PageLayout/ContentScroll/Content/ActionSection/ActionCard_SellOneNet/CardMargin/CardContent"]
+layout_mode = 2
+text = "先下一网见到鱼，才有人愿意出价。"
+autowrap_mode = 3
+
+[node name="ActionStatusLabel" type="Label" parent="SafeArea/PageLayout/ContentScroll/Content/ActionSection/ActionCard_SellOneNet/CardMargin/CardContent"]
+layout_mode = 2
+text = "暂无买家"
+
+[node name="SellOneNetButton" type="Button" parent="SafeArea/PageLayout/ContentScroll/Content/ActionSection/ActionCard_SellOneNet/CardMargin/CardContent"]
+custom_minimum_size = Vector2(0, 76)
+layout_mode = 2
+disabled = true
+text = "暂不可用"
+
+[node name="ActionCard_SelfNet" type="PanelContainer" parent="SafeArea/PageLayout/ContentScroll/Content/ActionSection"]
+custom_minimum_size = Vector2(0, 188)
+layout_mode = 2
+
+[node name="CardMargin" type="MarginContainer" parent="SafeArea/PageLayout/ContentScroll/Content/ActionSection/ActionCard_SelfNet"]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 16
+
+[node name="CardContent" type="VBoxContainer" parent="SafeArea/PageLayout/ContentScroll/Content/ActionSection/ActionCard_SelfNet/CardMargin"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ActionTitleLabel" type="Label" parent="SafeArea/PageLayout/ContentScroll/Content/ActionSection/ActionCard_SelfNet/CardMargin/CardContent"]
+layout_mode = 2
 text = "自己下网"
 
-[node name="WorkPlanBackButton" type="Button" parent="Panel/Margin/Content"]
+[node name="ActionDescLabel" type="Label" parent="SafeArea/PageLayout/ContentScroll/Content/ActionSection/ActionCard_SelfNet/CardMargin/CardContent"]
+layout_mode = 2
+text = "继续投入开工成本，看看这口塘到底有没有货。"
+autowrap_mode = 3
+
+[node name="ActionStatusLabel" type="Label" parent="SafeArea/PageLayout/ContentScroll/Content/ActionSection/ActionCard_SelfNet/CardMargin/CardContent"]
+layout_mode = 2
+text = "主行动"
+
+[node name="HarvestSelfButton" type="Button" parent="SafeArea/PageLayout/ContentScroll/Content/ActionSection/ActionCard_SelfNet/CardMargin/CardContent"]
+custom_minimum_size = Vector2(0, 84)
+layout_mode = 2
+text = "开始下网"
+
+[node name="WorkPlanScroll" type="ScrollContainer" parent="SafeArea/PageLayout/ContentScroll/Content"]
 visible = false
-custom_minimum_size = Vector2(0, 64)
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="WorkPlanPanel" type="VBoxContainer" parent="SafeArea/PageLayout/ContentScroll/Content/WorkPlanScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 20
+
+[node name="LowWorkCard" type="PanelContainer" parent="SafeArea/PageLayout/ContentScroll/Content/WorkPlanScroll/WorkPlanPanel"]
+custom_minimum_size = Vector2(0, 210)
+layout_mode = 2
+
+[node name="CardContent" type="HBoxContainer" parent="SafeArea/PageLayout/ContentScroll/Content/WorkPlanScroll/WorkPlanPanel/LowWorkCard"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="ImagePlaceholder" type="PanelContainer" parent="SafeArea/PageLayout/ContentScroll/Content/WorkPlanScroll/WorkPlanPanel/LowWorkCard/CardContent"]
+custom_minimum_size = Vector2(120, 120)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="PlaceholderMarker" type="Label" parent="SafeArea/PageLayout/ContentScroll/Content/WorkPlanScroll/WorkPlanPanel/LowWorkCard/CardContent/ImagePlaceholder"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 64
+text = "×"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="LowWorkButton" type="Button" parent="SafeArea/PageLayout/ContentScroll/Content/WorkPlanScroll/WorkPlanPanel/LowWorkCard/CardContent"]
+custom_minimum_size = Vector2(200, 70)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 30
+text = "省着下网：小捞一网（500 元）"
+
+[node name="StandardWorkCard" type="PanelContainer" parent="SafeArea/PageLayout/ContentScroll/Content/WorkPlanScroll/WorkPlanPanel"]
+custom_minimum_size = Vector2(0, 210)
+layout_mode = 2
+
+[node name="CardContent" type="HBoxContainer" parent="SafeArea/PageLayout/ContentScroll/Content/WorkPlanScroll/WorkPlanPanel/StandardWorkCard"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="ImagePlaceholder" type="PanelContainer" parent="SafeArea/PageLayout/ContentScroll/Content/WorkPlanScroll/WorkPlanPanel/StandardWorkCard/CardContent"]
+custom_minimum_size = Vector2(120, 120)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="PlaceholderMarker" type="Label" parent="SafeArea/PageLayout/ContentScroll/Content/WorkPlanScroll/WorkPlanPanel/StandardWorkCard/CardContent/ImagePlaceholder"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 64
+text = "×"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="StandardWorkButton" type="Button" parent="SafeArea/PageLayout/ContentScroll/Content/WorkPlanScroll/WorkPlanPanel/StandardWorkCard/CardContent"]
+custom_minimum_size = Vector2(200, 70)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 30
+text = "正常作业：稳捞一网（1200 元）"
+
+[node name="FullWorkCard" type="PanelContainer" parent="SafeArea/PageLayout/ContentScroll/Content/WorkPlanScroll/WorkPlanPanel"]
+custom_minimum_size = Vector2(0, 210)
+layout_mode = 2
+
+[node name="CardContent" type="HBoxContainer" parent="SafeArea/PageLayout/ContentScroll/Content/WorkPlanScroll/WorkPlanPanel/FullWorkCard"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="ImagePlaceholder" type="PanelContainer" parent="SafeArea/PageLayout/ContentScroll/Content/WorkPlanScroll/WorkPlanPanel/FullWorkCard/CardContent"]
+custom_minimum_size = Vector2(120, 120)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="PlaceholderMarker" type="Label" parent="SafeArea/PageLayout/ContentScroll/Content/WorkPlanScroll/WorkPlanPanel/FullWorkCard/CardContent/ImagePlaceholder"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 64
+text = "×"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FullWorkButton" type="Button" parent="SafeArea/PageLayout/ContentScroll/Content/WorkPlanScroll/WorkPlanPanel/FullWorkCard/CardContent"]
+custom_minimum_size = Vector2(200, 70)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 30
+text = "抽干收尾：一次结算"
+
+[node name="WorkPlanBackButton" type="Button" parent="SafeArea/PageLayout/ContentScroll/Content"]
+visible = false
+custom_minimum_size = Vector2(200, 80)
 layout_mode = 2
 theme_override_font_sizes/font_size = 26
 text = "‹ 返回处置选择"
 
-[node name="WorkPlanPanel" type="VBoxContainer" parent="Panel/Margin/Content"]
+[node name="LegacyPageLayoutAnchor" type="VBoxContainer" parent="."]
 visible = false
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_constants/separation = 18
-
-[node name="LowWorkButton" type="Button" parent="Panel/Margin/Content/WorkPlanPanel"]
-custom_minimum_size = Vector2(0, 220)
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_font_sizes/font_size = 30
-text = "省着下网：小捞一网（500 元）"
-
-[node name="StandardWorkButton" type="Button" parent="Panel/Margin/Content/WorkPlanPanel"]
-custom_minimum_size = Vector2(0, 220)
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_font_sizes/font_size = 30
-text = "正常作业：稳捞一网（1200 元）"
-
-[node name="FullWorkButton" type="Button" parent="Panel/Margin/Content/WorkPlanPanel"]
-custom_minimum_size = Vector2(0, 220)
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_font_sizes/font_size = 30
-text = "抽干收尾：一次结算"
+layout_mode = 1
+anchors_preset = 0
