@@ -330,7 +330,9 @@ func _run() -> void:
 	var work_scroll := choice_screen.find_child("WorkPlanScroll", true, false) as ScrollContainer
 	var work_panel := choice_screen.find_child("WorkPlanPanel", true, false) as VBoxContainer
 	_check(work_scroll.visible, "自己下网按钮打开作业方案列表")
+	_check(work_scroll.custom_minimum_size.y >= 760.0, "自己下网方案列表有稳定高度，不会折叠为空白")
 	_check(work_panel.find_children("NetMethodPlaceholder", "Control", true, false).size() == 3, "三个作业方案均显示自绘下网方式占位")
+	_check(work_panel.find_children("NetOptionCard_*", "PanelContainer", true, false).size() == 3, "自己下网默认渲染三张下网方式卡片")
 	_check(work_panel.find_child("FinalBadge", true, false) != null, "抽干收尾方案显示收尾标记")
 
 	var work_back := choice_screen.find_child("WorkPlanBackButton", true, false) as Button

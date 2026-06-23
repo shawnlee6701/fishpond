@@ -207,6 +207,7 @@ var harvest_result_label: Label
 var harvest_continue_button: Button
 var pending_harvest_result: Dictionary = {}
 var harvest_collect_locked := false
+var net_option_empty_state: Label
 
 func setup(next_game_state: GameState, next_screen_container: Control) -> void:
 	game_state = next_game_state
@@ -564,9 +565,11 @@ func _create_harvest_result_dialog() -> void:
 func _rebuild_work_plan_cards() -> void:
 	for child in work_plan_panel.get_children():
 		child.queue_free()
+	net_option_empty_state = null
 	low_work_button = _create_net_option_card("low", "小捞一网", "低成本试一网，鱼获不稳定。", "捞完还能继续。", false)
 	standard_work_button = _create_net_option_card("standard", "稳捞一网", "多下点功夫，鱼获更稳定。", "捞完还能继续。", false)
 	full_work_button = _create_net_option_card("full", "抽干收尾", "直接抽干收尾，看清这口塘最后有多少货。", "本塘直接结算。", true)
+	_ensure_net_option_list_layout()
 
 func _create_net_option_card(plan_id: String, title_text: String, desc_text: String, consequence_text: String, is_final: bool) -> Button:
 	var card := PanelContainer.new()
@@ -842,6 +845,7 @@ func _show_work_plan_page() -> void:
 	action_section.visible = false
 	work_plan_back_button.visible = true
 	work_plan_scroll.visible = true
+	_ensure_net_option_list_layout()
 
 func _set_ledger_row_visibility(show_full: bool) -> void:
 	$SafeArea/PageLayout/ContentScroll/Content/OwnedPondCard/Margin/CardContent/LedgerSummary/ContractPriceRow.visible = show_full
@@ -1127,6 +1131,7 @@ func _update_work_buttons() -> void:
 	low_work_button.disabled = not game_state.can_pay(low_cost)
 	standard_work_button.disabled = not game_state.can_pay(standard_cost)
 	full_work_button.disabled = game_state.drained or not game_state.can_pay(full_cost)
+	_ensure_net_option_list_layout()
 
 func _update_net_option_card(button: Button, cost: int, title_text: String) -> void:
 	var card := button.get_parent().get_parent().get_parent().get_parent() as PanelContainer
@@ -1134,3 +1139,34 @@ func _update_net_option_card(button: Button, cost: int, title_text: String) -> v
 	if cost_badge != null:
 		cost_badge.text = "费用：%d 元" % cost
 	button.text = title_text if game_state.can_pay(cost) else "钱不够"
+
+func _ensure_net_option_list_layout() -> void:
+	# Keep the net-option list visible inside the outer page scroll. Without a
+	# stable height, the nested ScrollContainer can collapse to 0 and only leave
+	# the back button visible.
+	work_plan_scroll.set_meta("_structure_name", "NetOptionList")
+	work_plan_scroll.modulate.a = 1.0
+	work_plan_scroll.custom_minimum_size = Vector2(0, 800)
+	work_plan_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	work_plan_scroll.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	work_plan_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	work_plan_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	work_plan_panel.set_meta("_structure_name", "NetOptionPanel")
+	work_plan_panel.custom_minimum_size = Vector2(0, 760)
+	work_plan_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	work_plan_panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	if work_plan_panel.get_child_count() <= 0:
+		_show_net_option_empty_state()
+
+func _show_net_option_empty_state() -> void:
+	if net_option_empty_state != null and is_instance_valid(net_option_empty_state):
+		return
+	net_option_empty_state = Label.new()
+	net_option_empty_state.name = "NetOptionEmptyState"
+	net_option_empty_state.text = "暂无可用下网方式，请返回处理选择。"
+	net_option_empty_state.custom_minimum_size = Vector2(0, 140)
+	net_option_empty_state.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	net_option_empty_state.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	net_option_empty_state.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	UIKit.style_label(net_option_empty_state, "body_dark")
+	work_plan_panel.add_child(net_option_empty_state)
