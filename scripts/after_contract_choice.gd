@@ -160,6 +160,7 @@ class CatchVisualPlaceholder:
 @onready var profit_loss_value: Label = $SafeArea/PageLayout/ContentScroll/Content/OwnedPondCard/Margin/CardContent/LedgerSummary/ProfitLossRow/RowContent/Value
 @onready var profit_loss_row: PanelContainer = $SafeArea/PageLayout/ContentScroll/Content/OwnedPondCard/Margin/CardContent/LedgerSummary/ProfitLossRow
 @onready var latest_net_result_card: PanelContainer = $SafeArea/PageLayout/ContentScroll/Content/LatestNetResultCard
+@onready var content_container: VBoxContainer = $SafeArea/PageLayout/ContentScroll/Content
 @onready var latest_title_label: Label = $SafeArea/PageLayout/ContentScroll/Content/LatestNetResultCard/HintMargin/LatestContent/LatestTitleLabel
 @onready var latest_method_label: Label = $SafeArea/PageLayout/ContentScroll/Content/LatestNetResultCard/HintMargin/LatestContent/LatestMethodLabel
 @onready var latest_revenue_label: Label = $SafeArea/PageLayout/ContentScroll/Content/LatestNetResultCard/HintMargin/LatestContent/LatestRevenueLabel
@@ -221,6 +222,28 @@ var net_option_empty_state: Label
 var latest_net_result: Dictionary = {}
 var ledger_expanded := false
 
+# ---- 卖一网状态机 ----
+enum SellOneNetState {
+	LOCKED_NO_CATCH,  # 还没下过网，无鱼获
+	AVAILABLE,        # 有鱼获且有报价，可卖
+	NO_BUYER,         # 有鱼获但暂无买家
+	SOLD              # 已经卖过了
+}
+
+var _sell_one_net_overlay: Control
+var _sell_one_net_dialog: PanelContainer
+var _sell_one_net_offer_price_label: Label
+var _sell_one_net_current_money_label: Label
+var _sell_one_net_after_money_label: Label
+var _sell_one_net_highlight_label: Label
+var _sell_one_net_accept_button: Button
+var _sell_one_net_reject_button: Button
+var _sell_one_net_result_banner: PanelContainer
+var _sell_one_net_banner_title: Label
+var _sell_one_net_banner_detail: Label
+var _revenue_breakdown_label: Label
+var _last_sell_one_net_income: int = 0
+
 func setup(next_game_state: GameState, next_screen_container: Control) -> void:
 	game_state = next_game_state
 	screen_container = next_screen_container
@@ -230,9 +253,11 @@ func _ready() -> void:
 		game_state = GameState.new()
 
 	_create_owned_pond_visual()
+	_create_revenue_breakdown_label()
 	_rebuild_work_plan_cards()
 	_create_transfer_dialog()
 	_create_harvest_result_dialog()
+	_create_sell_one_net_dialog()
 	transfer_button.pressed.connect(_on_transfer_pressed)
 	sell_one_net_button.pressed.connect(_on_sell_one_net_pressed)
 	harvest_self_button.pressed.connect(_on_harvest_self_pressed)
@@ -260,6 +285,7 @@ func _apply_ui_frame() -> void:
 	UIKit.style_label(latest_revenue_label, "body_dark")
 	UIKit.style_label(latest_cost_label, "body_dark")
 	UIKit.style_label(latest_profit_label, "body_dark")
+	UIKit.style_label(_revenue_breakdown_label, "muted")
 	UIKit.style_label(action_section_title, "section")
 	_style_ledger_rows()
 	_style_action_card(transfer_card, transfer_button, "secondary")
@@ -281,6 +307,19 @@ func _create_owned_pond_visual() -> void:
 	visual.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	visual.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	pond_visual_host.add_child(visual)
+
+func _create_revenue_breakdown_label() -> void:
+	if is_instance_valid(_revenue_breakdown_label):
+		return
+	var ledger_summary := $SafeArea/PageLayout/ContentScroll/Content/OwnedPondCard/Margin/CardContent/LedgerSummary as VBoxContainer
+	var revenue_row := $SafeArea/PageLayout/ContentScroll/Content/OwnedPondCard/Margin/CardContent/LedgerSummary/RevenueRow as PanelContainer
+	_revenue_breakdown_label = Label.new()
+	_revenue_breakdown_label.name = "RevenueBreakdownLabel"
+	_revenue_breakdown_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_revenue_breakdown_label.text = ""
+	_revenue_breakdown_label.visible = false
+	ledger_summary.add_child(_revenue_breakdown_label)
+	ledger_summary.move_child(_revenue_breakdown_label, revenue_row.get_index() + 1)
 
 func _style_ledger_rows() -> void:
 	var ledger_rows := [
@@ -709,26 +748,46 @@ func _render() -> void:
 	harvest_self_desc_label.text = "再下一网，看看塘里还有多少货。" if has_net_result else "继续投入开工成本，看看这口塘到底有没有货。"
 	harvest_self_button.text = "继续下网" if has_net_result else "开始下网"
 	transfer_button.text = "去转包"
-	sell_one_net_button.text = "去卖一网"
 	transfer_button.disabled = current_transfer_offer.is_empty() or game_state.drained
-	sell_one_net_button.disabled = current_one_net_offer.is_empty() or game_state.sold_one_net
 	harvest_self_button.disabled = not game_state.can_pay(game_state.get_work_cost("low"))
 	transfer_status_label.text = "有接手价" if not transfer_button.disabled else "暂无报价"
 	harvest_self_status_label.text = "主操作" if not harvest_self_button.disabled else "本钱不够"
 	if current_transfer_offer.is_empty():
 		transfer_button.text = "暂无报价"
-	if game_state.sold_one_net:
-		sell_one_net_status_label.text = "已卖出"
-		sell_one_net_desc_label.text = "这一局已经卖过一网，不能再拆着卖。"
-		sell_one_net_button.text = "已卖出"
-	elif current_one_net_offer.is_empty():
-		sell_one_net_status_label.text = "暂无买家"
-		sell_one_net_desc_label.text = "暂时没人出价，可以继续下网积累鱼情。"
-		sell_one_net_button.text = "暂无买家"
-	else:
-		sell_one_net_status_label.text = "可用"
-		sell_one_net_desc_label.text = "拿已有鱼获去找买家报价。"
-		sell_one_net_button.text = "去卖一网"
+
+	# ---- 卖一网状态机渲染 ----
+	var current_state := _get_sell_one_net_state()
+	match current_state:
+		SellOneNetState.LOCKED_NO_CATCH:
+			sell_one_net_card.visible = true
+			sell_one_net_status_label.text = "未解锁"
+			sell_one_net_desc_label.text = "先下一网，有鱼情才有人报价。"
+			sell_one_net_button.text = "暂无买家"
+			sell_one_net_button.disabled = true
+			_set_banner_visible(false)
+		SellOneNetState.AVAILABLE:
+			sell_one_net_card.visible = true
+			sell_one_net_status_label.text = "有报价"
+			sell_one_net_desc_label.text = "有人愿意出钱买这一网，接受后立刻入账。"
+			sell_one_net_button.text = "查看报价"
+			sell_one_net_button.disabled = false
+			_set_banner_visible(false)
+		SellOneNetState.NO_BUYER:
+			sell_one_net_card.visible = true
+			sell_one_net_status_label.text = "暂无买家"
+			sell_one_net_desc_label.text = "现在没人出价，可以继续下网看看。"
+			sell_one_net_button.text = "暂无买家"
+			sell_one_net_button.disabled = true
+			_set_banner_visible(false)
+		SellOneNetState.SOLD:
+			sell_one_net_card.visible = false
+			sell_one_net_button.disabled = true
+			_set_banner_visible(true)
+			var sold_income := _last_sell_one_net_income if _last_sell_one_net_income > 0 else game_state.one_net_income
+			if sold_income > 0:
+				_set_banner_text("卖一网成功：+%d 元已入账" % sold_income, "这一网已卖出，不能重复卖")
+			else:
+				_set_banner_text("这一网已经卖过", "不能重复卖")
 
 	_update_work_buttons()
 
@@ -738,11 +797,28 @@ func _render_ledger() -> void:
 	inspection_spent_value.text = "%d 元" % int(ledger.get("inspection_spent", 0))
 	total_invested_value.text = "%d 元" % int(ledger.get("total_invested", 0))
 	revenue_value.text = "%d 元" % int(ledger.get("revenue", 0))
+	_render_revenue_breakdown()
 	var current_profit_loss := int(ledger.get("current_profit_loss", 0))
 	profit_loss_value.text = "%+d 元" % current_profit_loss if current_profit_loss != 0 else "0 元"
 	UIKit.style_label(profit_loss_value, "body_dark")
 	profit_loss_value.add_theme_color_override("font_color", UIKit.GREEN if current_profit_loss > 0 else UIKit.RED if current_profit_loss < 0 else UIKit.INK)
 	profit_loss_row.add_theme_stylebox_override("panel", UIKit.make_style(Color(1.0, 0.92, 0.70, 0.95), UIKit.GREEN_LIGHT if current_profit_loss > 0 else UIKit.RED if current_profit_loss < 0 else UIKit.GOLD, 8, 3, false))
+
+func _render_revenue_breakdown() -> void:
+	if not is_instance_valid(_revenue_breakdown_label):
+		return
+	var fish_revenue := game_state.fish_income
+	var one_net_revenue := game_state.one_net_income
+	var transfer_revenue := game_state.transfer_income
+	var parts := PackedStringArray()
+	if fish_revenue > 0:
+		parts.append("鱼获收入 %d 元" % fish_revenue)
+	if one_net_revenue > 0:
+		parts.append("卖一网入账 +%d 元" % one_net_revenue)
+	if transfer_revenue > 0:
+		parts.append("转包入账 %d 元" % transfer_revenue)
+	_revenue_breakdown_label.visible = parts.size() > 1 or one_net_revenue > 0
+	_revenue_breakdown_label.text = " + ".join(parts) if _revenue_breakdown_label.visible else ""
 
 func _render_latest_net_result() -> void:
 	latest_net_result_card.visible = not latest_net_result.is_empty()
@@ -881,6 +957,7 @@ func _render_transfer_decision_dialog() -> Dictionary:
 
 func _hide_detail_panels() -> void:
 	_close_transfer_dialog()
+	_close_sell_one_net_dialog()
 	_show_choice_page()
 
 func _show_choice_page() -> void:
@@ -918,6 +995,204 @@ func _set_ledger_row_visibility(show_full: bool) -> void:
 
 func _close_transfer_dialog() -> void:
 	UIKit.hide_modal(transfer_overlay)
+
+func _get_sell_one_net_state() -> int:
+	if game_state.sold_one_net:
+		return SellOneNetState.SOLD
+
+	# LOCKED_NO_CATCH: no net result and no fish income yet
+	var has_any_catch := not latest_net_result.is_empty() or game_state.self_net_count > 0 or game_state.fish_income > 0
+	if not has_any_catch:
+		return SellOneNetState.LOCKED_NO_CATCH
+
+	# NO_BUYER: has catch but no one_net_offer
+	if current_one_net_offer.is_empty():
+		return SellOneNetState.NO_BUYER
+
+	# AVAILABLE: has catch and has offer
+	return SellOneNetState.AVAILABLE
+
+func _create_sell_one_net_dialog() -> void:
+	var modal := UIKit.create_modal_layer(self, "SellOneNetModal")
+	_sell_one_net_overlay = modal["overlay"] as Control
+	_sell_one_net_dialog = modal["card"] as PanelContainer
+	var dim_overlay := modal["mask"] as Control
+	dim_overlay.name = "SellOneNetDimOverlay"
+	_sell_one_net_overlay.set_meta("_structure_name", "SellOneNetDialog")
+	_sell_one_net_dialog.name = "SellOneNetDialogCard"
+	_sell_one_net_dialog.add_theme_stylebox_override("panel", UIKit.make_style(Color(0.98, 0.90, 0.72, 0.99), UIKit.GREEN, 16, 4, true))
+
+	var content := VBoxContainer.new()
+	content.name = "Content"
+	content.add_theme_constant_override("separation", 14)
+	_sell_one_net_dialog.add_child(content)
+
+	# -- Title --
+	var title := Label.new()
+	title.name = "TitleLabel"
+	title.text = "有人要买这一网"
+	UIKit.style_modal_title(title)
+	content.add_child(title)
+
+	# -- Offer price highlight --
+	_sell_one_net_highlight_label = Label.new()
+	_sell_one_net_highlight_label.name = "SellOneNetOfferHighlight"
+	_sell_one_net_highlight_label.custom_minimum_size = Vector2(0, 64)
+	_sell_one_net_highlight_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	UIKit.style_highlight_label(_sell_one_net_highlight_label, "price")
+	content.add_child(_sell_one_net_highlight_label)
+
+	# -- Deal summary rows --
+	var summary := VBoxContainer.new()
+	summary.name = "DealSummaryRows"
+	summary.add_theme_constant_override("separation", 6)
+	summary.custom_minimum_size = Vector2(0, 8)
+	content.add_child(summary)
+
+	_sell_one_net_offer_price_label = Label.new()
+	_sell_one_net_offer_price_label.name = "ImmediateIncomeRow"
+	_sell_one_net_offer_price_label.text = "接受后入账：+0 元"
+	_sell_one_net_offer_price_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	UIKit.style_label(_sell_one_net_offer_price_label, "body_dark")
+	summary.add_child(_sell_one_net_offer_price_label)
+
+	_sell_one_net_current_money_label = Label.new()
+	_sell_one_net_current_money_label.name = "CurrentMoneyRow"
+	_sell_one_net_current_money_label.text = "当前本钱：0 元"
+	_sell_one_net_current_money_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	UIKit.style_label(_sell_one_net_current_money_label, "body_dark")
+	summary.add_child(_sell_one_net_current_money_label)
+
+	_sell_one_net_after_money_label = Label.new()
+	_sell_one_net_after_money_label.name = "MoneyAfterSellOneNetRow"
+	_sell_one_net_after_money_label.text = "接受后本钱：0 元"
+	_sell_one_net_after_money_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	UIKit.style_label(_sell_one_net_after_money_label, "body_dark")
+	summary.add_child(_sell_one_net_after_money_label)
+
+	var sold_state_row := Label.new()
+	sold_state_row.name = "SoldStateRow"
+	sold_state_row.text = "卖出后：这一网不能重复卖"
+	sold_state_row.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	UIKit.style_label(sold_state_row, "body_dark")
+	summary.add_child(sold_state_row)
+
+	# -- Explain text --
+	var explain := Label.new()
+	explain.name = "ExplainText"
+	explain.text = "买家只买这一网，不买整口塘。接受后，这一网会标记为已卖出。"
+	explain.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	UIKit.style_label(explain, "muted")
+	content.add_child(explain)
+
+	# -- Buttons --
+	var buttons := HBoxContainer.new()
+	buttons.name = "ButtonRow"
+	buttons.add_theme_constant_override("separation", 14)
+	content.add_child(buttons)
+
+	_sell_one_net_reject_button = Button.new()
+	_sell_one_net_reject_button.name = "RejectSellOneNetButton"
+	_sell_one_net_reject_button.text = "再等等"
+	_sell_one_net_reject_button.custom_minimum_size = Vector2(0, 78)
+	_sell_one_net_reject_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	UIKit.style_button(_sell_one_net_reject_button, "ghost")
+	_sell_one_net_reject_button.pressed.connect(_on_sell_one_net_reject_pressed)
+	buttons.add_child(_sell_one_net_reject_button)
+
+	_sell_one_net_accept_button = Button.new()
+	_sell_one_net_accept_button.name = "AcceptSellOneNetButton"
+	_sell_one_net_accept_button.text = "接受卖出"
+	_sell_one_net_accept_button.custom_minimum_size = Vector2(0, 78)
+	_sell_one_net_accept_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	UIKit.style_button(_sell_one_net_accept_button, "primary")
+	_sell_one_net_accept_button.pressed.connect(_on_sell_one_net_accept_pressed)
+	buttons.add_child(_sell_one_net_accept_button)
+
+	# -- Create result banner (placed in page content, shown after sold) --
+	_sell_one_net_result_banner = PanelContainer.new()
+	_sell_one_net_result_banner.name = "SellOneNetResultBanner"
+	_sell_one_net_result_banner.custom_minimum_size = Vector2(0, 112)
+	_sell_one_net_result_banner.add_theme_stylebox_override("panel", UIKit.make_style(Color(0.88, 0.96, 0.82, 0.96), UIKit.GREEN, 10, 3, false))
+	_sell_one_net_result_banner.visible = false
+
+	var banner_margin := MarginContainer.new()
+	banner_margin.add_theme_constant_override("margin_left", 20)
+	banner_margin.add_theme_constant_override("margin_top", 14)
+	banner_margin.add_theme_constant_override("margin_right", 20)
+	banner_margin.add_theme_constant_override("margin_bottom", 14)
+	_sell_one_net_result_banner.add_child(banner_margin)
+
+	var banner_content := VBoxContainer.new()
+	banner_content.name = "BannerContent"
+	banner_content.add_theme_constant_override("separation", 6)
+	banner_margin.add_child(banner_content)
+
+	_sell_one_net_banner_title = Label.new()
+	_sell_one_net_banner_title.name = "BannerTitle"
+	_sell_one_net_banner_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_sell_one_net_banner_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	UIKit.style_label(_sell_one_net_banner_title, "section")
+	_sell_one_net_banner_title.add_theme_color_override("font_color", UIKit.GREEN)
+	banner_content.add_child(_sell_one_net_banner_title)
+
+	_sell_one_net_banner_detail = Label.new()
+	_sell_one_net_banner_detail.name = "BannerDetail"
+	_sell_one_net_banner_detail.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_sell_one_net_banner_detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	UIKit.style_label(_sell_one_net_banner_detail, "body_dark")
+	banner_content.add_child(_sell_one_net_banner_detail)
+	# Insert after LatestNetResultCard in the page content
+	if is_instance_valid(content_container) and is_instance_valid(latest_net_result_card):
+		var latest_index: int = latest_net_result_card.get_index()
+		content_container.add_child(_sell_one_net_result_banner)
+		content_container.move_child(_sell_one_net_result_banner, maxi(0, latest_index + 1))
+	else:
+		push_warning("SellOneNetDialog: content_container or latest_net_result_card not available; banner not placed.")
+
+func _close_sell_one_net_dialog() -> void:
+	UIKit.hide_modal(_sell_one_net_overlay)
+
+func _set_banner_visible(flag: bool) -> void:
+	if is_instance_valid(_sell_one_net_result_banner):
+		_sell_one_net_result_banner.visible = flag
+
+func _set_banner_text(title: String, detail := "这一网已卖出，不能重复卖") -> void:
+	if is_instance_valid(_sell_one_net_banner_title):
+		_sell_one_net_banner_title.text = title
+	if is_instance_valid(_sell_one_net_banner_detail):
+		_sell_one_net_banner_detail.text = detail
+
+func _show_sell_one_net_dialog() -> void:
+	var income := int(current_one_net_offer.get("income", 0))
+	var current_money := game_state.cash
+	var money_after_sell_one_net := current_money + income
+	_sell_one_net_highlight_label.text = "买家出价：%d 元" % income
+	_sell_one_net_offer_price_label.text = "接受后入账：+%d 元" % income
+	_sell_one_net_current_money_label.text = "当前本钱：%d 元" % current_money
+	_sell_one_net_after_money_label.text = "接受后本钱：%d 元" % money_after_sell_one_net
+	_sell_one_net_accept_button.text = "接受卖出（+%d）" % income
+	_sell_one_net_accept_button.disabled = false
+	_show_auto_sell_one_net_modal()
+
+func _show_auto_sell_one_net_modal() -> void:
+	_layout_sell_one_net_modal()
+	_sell_one_net_overlay.visible = true
+	move_child(_sell_one_net_overlay, get_child_count() - 1)
+
+func _layout_sell_one_net_modal() -> void:
+	var viewport_size := Vector2i(size)
+	if viewport_size.x <= 0 or viewport_size.y <= 0:
+		viewport_size = Vector2i(get_viewport_rect().size)
+	var safe_width := maxi(1, viewport_size.x - 48)
+	var safe_height := maxi(1, viewport_size.y - 48)
+	var target_width := clampi(int(viewport_size.x * 0.90), mini(340, safe_width), mini(920, safe_width))
+	var max_height := mini(int(viewport_size.y * 0.80), safe_height)
+	_sell_one_net_dialog.size = Vector2(target_width, 0)
+	var content_height := ceili(_sell_one_net_dialog.get_combined_minimum_size().y)
+	var target_height := mini(maxi(content_height, 1), max_height)
+	_sell_one_net_dialog.size = Vector2(target_width, target_height)
+	_sell_one_net_dialog.position = Vector2((viewport_size.x - target_width) * 0.5, (viewport_size.y - target_height) * 0.5)
 
 func _refresh_transfer_offer() -> void:
 	game_state.current_pond["estimated_transfer_value"] = game_state.get_current_pond_estimated_value()
@@ -982,22 +1257,50 @@ func _on_viewport_size_changed() -> void:
 		UIKit.layout_modal(self, transfer_dialog, 0.90, 1100, Vector2i(340, 640), Vector2i(920, 1180))
 	if harvest_result_overlay != null and harvest_result_overlay.visible:
 		UIKit.layout_modal(self, harvest_result_dialog, 0.86, 1060, Vector2i(340, 700), Vector2i(860, 1160))
+	if _sell_one_net_overlay != null and _sell_one_net_overlay.visible:
+		_layout_sell_one_net_modal()
 
 func _on_sell_one_net_pressed() -> void:
-	_hide_detail_panels()
-	if game_state.sold_one_net:
-		message_label.text = "这一局已经卖过一网了，不能再把机会拆着卖。"
-		_render()
-		return
-	if current_one_net_offer.is_empty():
-		message_label.text = "暂时没人愿意买一网。先自己下一网，把鱼情打出来。"
+	var current_state := _get_sell_one_net_state()
+
+	if current_state != SellOneNetState.AVAILABLE:
+		message_label.text = "当前不能卖一网。"
 		_render()
 		return
 
-	if game_state.apply_one_net(int(current_one_net_offer.get("income", 0)), str(current_one_net_offer.get("text", ""))):
-		message_label.text = str(game_state.last_result.get("message", "买家这一网已经开出来，塘口估值已更新。"))
+	_hide_detail_panels()
+	_show_sell_one_net_dialog()
+
+func _on_sell_one_net_accept_pressed() -> void:
+	if _sell_one_net_accept_button.disabled:
+		return
+
+	_sell_one_net_accept_button.disabled = true
+	if current_one_net_offer.is_empty():
+		message_label.text = "卖一网报价已过期，无法完成交易。"
+		_close_sell_one_net_dialog()
+		_render()
+		return
+	if game_state.sold_one_net:
+		message_label.text = "这一网已经卖过，不能重复交易。"
+		_close_sell_one_net_dialog()
+		_render()
+		return
+
+	var income := int(current_one_net_offer.get("income", 0))
+	if game_state.apply_one_net(income, str(current_one_net_offer.get("text", ""))):
+		_last_sell_one_net_income = income
+		_set_banner_text("卖一网成功：+%d 元已入账" % income, "这一网已卖出，不能重复卖")
+		_set_banner_visible(true)
+		message_label.text = "卖一网成功，+%d 元已入账。" % income
 		current_one_net_offer = {}
 		_refresh_transfer_offer()
+	_close_sell_one_net_dialog()
+	_render()
+
+func _on_sell_one_net_reject_pressed() -> void:
+	_close_sell_one_net_dialog()
+	message_label.text = "你决定先不出售这一网，继续看看行情。"
 	_render()
 
 func _on_harvest_self_pressed() -> void:

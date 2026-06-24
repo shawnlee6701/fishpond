@@ -24,6 +24,7 @@ This file is the live handoff guide for agents working on **这塘我包了**. K
 - `scripts/pond_list.gd` generates or reuses 3 ponds for the current day.
 - `scripts/pond_detail.gd` presents inspection as three data-driven clue cards, updates cash and cumulative inspection spend, separates each unlocked result into a conclusion and detail, and owns explicit give-up / contract confirmations.
 - `scripts/after_contract_choice.gd` preserves transfer, one-net sale, and self-fishing/work-plan logic; its transfer offer modal is a decision popup with offer price, total invested, transfer profit/loss, money after accept, buyer speech bubble, and a self-drawn buyer/contract placeholder.
+- `scripts/after_contract_choice.gd` also renders the one-net sale quote as a compact modal with current cash, offer income, cash after accept, a weaker “再等等” action, and a primary “接受卖出（+报价）” action; accepting shows a success banner between the latest net result and action section.
 - `scripts/after_contract_choice.gd` also owns the dedicated self-net decision page and one-net result modal. The three net options use self-drawn method placeholders, cost badges, consequence copy, and a separate confirmation for final drain settlement; the result modal shows catch rows plus fish revenue, net cost, and per-net profit before applying the harvest.
 - `scripts/settlement.gd` renders the final pond scorecard dynamically from `GameState`: self-drawn settlement placeholder, prominent final profit/loss, pond summary, income section, expense section, and final ledger formula.
 - `scripts/settlement_history.gd` renders the persistent ledger newest-first with day/cash status, total pond/profit/cash summary, player-facing profit/loss badges, and independently expandable result, income, expense, and final-ledger sections.
@@ -209,6 +210,7 @@ HOME=/private/tmp/fish_pool_history_test_home godot --headless --log-file /priva
 - “自己下网” switches to a dedicated page state with a mini owned-pond ledger and three scrollable net-option cards; “返回处置选择” remains fixed at the bottom and the original choice buttons must not remain visible.
 - The default post-contract management page shows the compact OwnedPondCard first, then LatestNetResultCard when at least one non-final net has been collected, then ActionSection, then LedgerAccordion.
 - After the first self-fishing result, the post-contract page prioritizes latest-net summary before operations: method, fish income, work cost, and this-net profit/loss. The cumulative “塘口累计账” stays in LedgerAccordion below ActionSection, defaults collapsed, and remains expanded only after the player manually opens it.
+- After a successful “卖一网”, the post-contract page hides the sell-one-net action card, shows `SellOneNetResultBanner` below `LatestNetResultCard`, and explains current revenue as fish income plus one-net income when both are present.
 - “转包脱手” first opens a global confirmation dialog, then the centered responsive native offer popup; “自己下网” first opens a global cost confirmation dialog, then the work-plan page.
 - After contracting, low/standard/full work buttons reflect available cash.
 - Non-final harvest can create market opportunities and continue the round.
@@ -219,6 +221,7 @@ HOME=/private/tmp/fish_pool_history_test_home godot --headless --log-file /priva
 - Settlement shows the correct bankrupt / fish-king / profit / loss state without illustration textures, and the scorecard separates summary, income, expense, and final ledger sections.
 - Every settlement route, including transfer, shows one final pond scorecard with fish income by type, other income, all costs, total income, total cost, net result, and ending cash.
 - Final settlement writes one persistent history record; “包塘记录” keeps it across restart, recomputes every displayed total from ledger line items, and remains scroll-safe at 540 × 960, 720 × 1280, and 1080 × 1920.
+- The automated full-flow smoke test checks the one-net sale quote modal, self-adaptive modal height, cash-after-accept copy, success banner, revenue-source breakdown, and hidden sold-state action card.
 
 ## Known Gaps / Next Likely Work
 

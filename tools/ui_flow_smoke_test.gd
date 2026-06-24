@@ -316,7 +316,8 @@ func _run() -> void:
 	var sell_button := choice_screen.find_child("SellOneNetButton", true, false) as Button
 	_check(sell_button.disabled, "未打出鱼情时卖一网按钮正确禁用")
 	var sell_status := choice_screen.find_child("ActionCard_SellOneNet", true, false).find_child("ActionStatusLabel", true, false) as Label
-	_check(sell_status.text == "暂无买家", "未打出鱼情时卖一网说明暂无买家")
+	var sell_desc := choice_screen.find_child("ActionCard_SellOneNet", true, false).find_child("ActionDescLabel", true, false) as Label
+	_check(sell_status.text == "未解锁" and sell_desc.text.contains("先下一网"), "未打出鱼情时卖一网说明未解锁")
 
 	var self_button := choice_screen.find_child("HarvestSelfButton", true, false) as Button
 	self_button.pressed.emit()
@@ -396,7 +397,47 @@ func _run() -> void:
 	_check(not sell_button.disabled, "打出鱼情后卖一网按钮可用")
 	sell_button.pressed.emit()
 	await _settle_frames()
-	_check(choice_state.sold_one_net, "卖一网按钮执行交易并更新状态")
+	var sell_modal := choice_screen.get_node("SellOneNetModal") as Control
+	var sell_dialog := sell_modal.find_child("SellOneNetDialogCard", true, false) as PanelContainer
+	var sell_highlight := sell_modal.find_child("SellOneNetOfferHighlight", true, false) as Label
+	var current_money_row := sell_modal.find_child("CurrentMoneyRow", true, false) as Label
+	var after_money_row := sell_modal.find_child("MoneyAfterSellOneNetRow", true, false) as Label
+	var accept_sell_button := _find_button_with_prefix(sell_modal, "接受卖出（+")
+	var reject_sell_button := _find_button_by_text(sell_modal, "再等等")
+	var offered_income := int(Dictionary(choice_screen.get("current_one_net_offer")).get("income", 0))
+	var money_before_sell := choice_state.cash
+	_check(sell_modal.visible and sell_dialog != null, "卖一网按钮打开报价弹窗")
+	_check(sell_highlight.text == "买家出价：%d 元" % offered_income, "卖一网弹窗突出显示买家出价")
+	_check(current_money_row.text == "当前本钱：%d 元" % money_before_sell and after_money_row.text == "接受后本钱：%d 元" % (money_before_sell + offered_income), "卖一网弹窗显示当前本钱和接受后本钱")
+	_check(accept_sell_button != null and reject_sell_button != null and accept_sell_button.text == "接受卖出（+%d）" % offered_income, "卖一网弹窗按钮主次和报价文案完整")
+	for viewport_size in [Vector2i(540, 960), Vector2i(720, 1280), Vector2i(1080, 1920)]:
+		choice_screen.size = Vector2(viewport_size)
+		choice_screen.call("_on_viewport_size_changed")
+		await _settle_frames()
+		var scale := minf(float(viewport_size.x) / 1080.0, float(viewport_size.y) / 1920.0)
+		var scaled_dialog_width := sell_dialog.size.x * scale
+		var scaled_dialog_height := sell_dialog.size.y * scale
+		var sell_width_ratio := scaled_dialog_width / float(viewport_size.x)
+		var sell_card_in_bounds := scaled_dialog_width <= float(viewport_size.x - 48) and scaled_dialog_height <= float(viewport_size.y * 0.80)
+		var sell_buttons := sell_modal.find_child("ButtonRow", true, false) as HBoxContainer
+		var sell_buttons_visible := sell_buttons != null and sell_buttons.position.y + sell_buttons.size.y <= sell_dialog.size.y
+		_check(sell_width_ratio >= 0.85 and sell_width_ratio <= 0.92 and sell_card_in_bounds and sell_buttons_visible, "%dx%d 下卖一网弹窗自适应高度且按钮可见" % [viewport_size.x, viewport_size.y])
+	choice_screen.size = Vector2(1080, 1920)
+	choice_screen.call("_on_viewport_size_changed")
+	await _settle_frames()
+	if accept_sell_button != null:
+		accept_sell_button.pressed.emit()
+		await _settle_frames()
+	var success_banner := choice_screen.find_child("SellOneNetResultBanner", true, false) as PanelContainer
+	var success_banner_title: Label = null
+	if success_banner != null:
+		success_banner_title = success_banner.find_child("BannerTitle", true, false) as Label
+	var revenue_breakdown := choice_screen.find_child("RevenueBreakdownLabel", true, false) as Label
+	var sell_action_card := choice_screen.find_child("ActionCard_SellOneNet", true, false) as PanelContainer
+	_check(choice_state.sold_one_net, "卖一网接受按钮执行交易并更新状态")
+	_check(success_banner != null and success_banner.visible and success_banner_title != null and success_banner_title.text.contains("+%d 元已入账" % offered_income), "卖一网成功后显示明显入账反馈条")
+	_check(revenue_breakdown != null and revenue_breakdown.visible and revenue_breakdown.text.contains("鱼获收入") and revenue_breakdown.text.contains("卖一网入账 +%d 元" % offered_income), "当前收入拆分鱼获收入和卖一网入账")
+	_check(not sell_action_card.visible, "已卖出后操作区不显示大号卖一网按钮")
 
 	self_button.pressed.emit()
 	await _settle_frames()
@@ -536,6 +577,14 @@ func _find_button_by_text(node: Node, target_text: String) -> Button:
 	for child in node.find_children("*", "Button", true, false):
 		var button := child as Button
 		if button.text == target_text:
+			return button
+	return null
+
+
+func _find_button_with_prefix(node: Node, prefix: String) -> Button:
+	for child in node.find_children("*", "Button", true, false):
+		var button := child as Button
+		if button.text.begins_with(prefix):
 			return button
 	return null
 
