@@ -273,6 +273,21 @@ static func hide_modal(overlay: Control) -> void:
 	if overlay != null:
 		overlay.visible = false
 
+static func make_image_placeholder(minimum_size: Vector2) -> PanelContainer:
+	var placeholder := PanelContainer.new()
+	placeholder.name = "ImagePlaceholder"
+	placeholder.custom_minimum_size = minimum_size
+	placeholder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	var marker := Label.new()
+	marker.name = "PlaceholderMarker"
+	marker.text = "×"
+	marker.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	marker.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	marker.add_theme_font_size_override("font_size", 64)
+	placeholder.add_child(marker)
+	return placeholder
+
 static func format_run_status(day: int, cash: int, suffix := "") -> String:
 	var text := "第 %d 天  |  本钱 %d 元" % [day, cash]
 	if not suffix.is_empty():

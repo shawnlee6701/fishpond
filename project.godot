@@ -24,7 +24,7 @@ PopupManager="*res://scripts/popup_manager.gd"
 window/size/viewport_width=1080
 window/size/viewport_height=1920
 window/stretch/mode="canvas_items"
-window/stretch/aspect="keep"
+window/stretch/aspect="expand"
 
 [physics]
 
@@ -33,3 +33,4 @@ window/stretch/aspect="keep"
 [rendering]
 
 rendering_device/driver.windows="d3d12"
+viewport/hdr_2d=true

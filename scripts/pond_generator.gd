@@ -275,7 +275,7 @@ func _create_stock_item(fish_id: String, value: int) -> Dictionary:
 	var weight_unit := _get_weight_unit(fish_id)
 	var unit_value := maxi(1, unit_price * weight_unit)
 	var snapped_value := _snap_value_to_fish_unit(value, fish_id)
-	var weight := int(snapped_value / unit_price) if unit_price > 0 else 0
+	var weight := int(float(snapped_value) / unit_price) if unit_price > 0 else 0
 	return {
 		"id": fish_id,
 		"name": _get_fish_name(fish_id),
