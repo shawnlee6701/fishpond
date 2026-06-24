@@ -162,11 +162,11 @@ func _render() -> void:
 	day_label.text = "第 %d 天" % game_state.day
 	cash_label.text = "本钱：%d 元" % game_state.cash
 	if net_profit > 0:
-		result_title_label.text = "本塘最终盈利"
+		result_title_label.text = "本塘净盈利"
 		profit_highlight_label.text = "+%d 元" % net_profit
 		UIKit.style_highlight_label(profit_highlight_label, "positive")
 	elif net_profit < 0:
-		result_title_label.text = "本塘最终亏损"
+		result_title_label.text = "本塘净亏损"
 		profit_highlight_label.text = "%d 元" % net_profit
 		UIKit.style_highlight_label(profit_highlight_label, "negative")
 	else:
@@ -244,12 +244,20 @@ func _create_income_section(ledger: Dictionary) -> PanelContainer:
 	else:
 		for item_variant in catches:
 			var item := Dictionary(item_variant)
-			box.add_child(_make_money_row(str(item.get("name", "未知鱼获")), "%d 斤 × %d 元/斤 = %d 元" % [int(item.get("weight_jin", 0)), int(item.get("unit_price", 0)), int(item.get("income", 0))]))
+			box.add_child(_make_money_row(str(item.get("name", "未知鱼获")), "%d 斤 × %d 元/斤 = %d 元" % [int(item.get("weight_jin", 0)), int(item.get("unit_price", 0)), int(item.get("income", 0))], false, int(item.get("income", 0))))
+	box.add_child(_make_money_row("鱼获收入合计", "+%d 元" % int(ledger.get("fish_revenue_total", 0)), true, int(ledger.get("fish_revenue_total", 0))))
 	box.add_child(_section_title("其他收入"))
-	_add_nonzero_or_zero_row(box, "卖一网回款", int(ledger.get("one_net_revenue", 0)))
-	_add_nonzero_or_zero_row(box, "转包回款", int(ledger.get("transfer_revenue", 0)))
-	_add_nonzero_or_zero_row(box, "其他收入", int(ledger.get("other_income", 0)))
-	box.add_child(_make_money_row("总收入", "+%d 元" % int(ledger.get("total_income", 0)), true, int(ledger.get("total_income", 0))))
+	var one_net_revenue := int(ledger.get("one_net_revenue", 0))
+	var transfer_revenue := int(ledger.get("transfer_revenue", 0))
+	var other_income := int(ledger.get("other_income", 0))
+	var has_other_income := one_net_revenue > 0 or transfer_revenue > 0 or other_income > 0
+	if has_other_income:
+		_add_positive_income_row(box, "卖一网回款", one_net_revenue)
+		_add_positive_income_row(box, "转包回款", transfer_revenue)
+		_add_positive_income_row(box, "其他收入", other_income)
+		box.add_child(_make_money_row("收入合计", "+%d 元" % int(ledger.get("total_income", 0)), true, int(ledger.get("total_income", 0))))
+	else:
+		box.add_child(_make_money_row("其他收入", "无"))
 	return card
 
 func _create_expense_section(ledger: Dictionary) -> PanelContainer:
@@ -304,6 +312,10 @@ func _add_nonzero_or_zero_row(box: VBoxContainer, name_text: String, amount: int
 		box.add_child(_make_money_row(name_text, "0 元"))
 	else:
 		box.add_child(_make_money_row(name_text, ("-%d 元" if expense else "+%d 元") % amount, false, -amount if expense else amount))
+
+func _add_positive_income_row(box: VBoxContainer, name_text: String, amount: int) -> void:
+	if amount > 0:
+		box.add_child(_make_money_row(name_text, "+%d 元" % amount, false, amount))
 
 func _make_money_row(name_text: String, value_text: String, important := false, signed_amount := 0) -> PanelContainer:
 	var row := PanelContainer.new()
