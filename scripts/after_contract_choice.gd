@@ -1379,13 +1379,7 @@ func _on_transfer_pressed() -> void:
 		message_label.text = "现在没人肯接手。先自己下一网，让外面的人看到这塘到底有没有货。"
 		return
 
-	_show_global_confirm({
-		"title": "确定要转包？",
-		"body": "转包可能亏钱，但可以提前止损。",
-		"cancel_text": "再想想",
-		"confirm_text": "去转包",
-		"on_confirm": Callable(self, "_open_transfer_offer_dialog")
-	})
+	_open_transfer_offer_dialog()
 
 func _open_transfer_offer_dialog() -> void:
 	_hide_detail_panels()
@@ -1481,13 +1475,7 @@ func _on_sell_one_net_reject_pressed() -> void:
 
 func _on_harvest_self_pressed() -> void:
 	_close_transfer_dialog()
-	_show_global_confirm({
-		"title": "准备自己下网？",
-		"body": "下网会产生人工、网具、抽水或鱼车等成本，确定继续吗？",
-		"cancel_text": "再想想",
-		"confirm_text": "开始下网",
-		"on_confirm": Callable(self, "_open_work_plan_page")
-	})
+	_open_work_plan_page()
 
 func _open_work_plan_page() -> void:
 	_show_work_plan_page()

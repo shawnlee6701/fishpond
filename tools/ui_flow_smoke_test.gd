@@ -266,14 +266,8 @@ func _run() -> void:
 	_check(not transfer_button.disabled, "转包脱手按钮可用")
 	transfer_button.pressed.emit()
 	await _settle_frames()
-	var transfer_confirm := root.get_node("PopupManager") as CanvasLayer
-	_check(transfer_confirm.visible and _find_button_by_text(transfer_confirm, "去转包") != null, "转包脱手先显示风险确认弹窗")
-	var confirm_transfer := _find_button_by_text(transfer_confirm, "去转包")
-	if confirm_transfer != null:
-		confirm_transfer.pressed.emit()
-		await _settle_frames()
 	var transfer_modal := choice_screen.get_node("TransferModal") as Control
-	_check(transfer_modal.visible, "转包脱手按钮显示报价弹窗")
+	_check(transfer_modal.visible, "转包脱手按钮直接显示报价弹窗")
 	_check(transfer_modal.find_child("BuyerPlaceholder", true, false) != null, "转包弹窗显示自绘买家合同占位")
 	_check(transfer_modal.find_child("BuyerSpeechBubble", true, false) != null, "转包弹窗显示买家台词气泡")
 	var offer_highlight := transfer_modal.find_child("OfferHighlight", true, false) as Label
@@ -322,15 +316,9 @@ func _run() -> void:
 	var self_button := choice_screen.find_child("HarvestSelfButton", true, false) as Button
 	self_button.pressed.emit()
 	await _settle_frames()
-	var self_confirm := root.get_node("PopupManager") as CanvasLayer
-	_check(self_confirm.visible and _find_button_by_text(self_confirm, "开始下网") != null, "自己下网先显示成本确认弹窗")
-	var confirm_self := _find_button_by_text(self_confirm, "开始下网")
-	if confirm_self != null:
-		confirm_self.pressed.emit()
-		await process_frame
 	var work_scroll := choice_screen.find_child("WorkPlanScroll", true, false) as ScrollContainer
 	var work_panel := choice_screen.find_child("WorkPlanPanel", true, false) as VBoxContainer
-	_check(work_scroll.visible, "自己下网按钮打开作业方案列表")
+	_check(work_scroll.visible, "自己下网按钮直接打开作业方案列表")
 	_check(work_scroll.custom_minimum_size.y >= 760.0, "自己下网方案列表有稳定高度，不会折叠为空白")
 	_check(work_panel.find_children("NetMethodPlaceholder", "Control", true, false).size() == 3, "三个作业方案均显示自绘下网方式占位")
 	_check(work_panel.find_children("NetOptionCard_*", "PanelContainer", true, false).size() == 3, "自己下网默认渲染三张下网方式卡片")
@@ -344,10 +332,6 @@ func _run() -> void:
 
 	self_button.pressed.emit()
 	await _settle_frames()
-	confirm_self = _find_button_by_text(root.get_node("PopupManager"), "开始下网")
-	if confirm_self != null:
-		confirm_self.pressed.emit()
-		await process_frame
 	var low_button := choice_screen.find_child("LowWorkButton", true, false) as Button
 	_check(not low_button.disabled, "小捞一网按钮可用")
 	if not low_button.disabled:
@@ -446,10 +430,6 @@ func _run() -> void:
 
 	self_button.pressed.emit()
 	await _settle_frames()
-	confirm_self = _find_button_by_text(root.get_node("PopupManager"), "开始下网")
-	if confirm_self != null:
-		confirm_self.pressed.emit()
-		await process_frame
 	var standard_button := choice_screen.find_child("StandardWorkButton", true, false) as Button
 	_check(not standard_button.disabled, "稳捞一网按钮可用")
 	if not standard_button.disabled:
@@ -464,10 +444,6 @@ func _run() -> void:
 
 	self_button.pressed.emit()
 	await _settle_frames()
-	confirm_self = _find_button_by_text(root.get_node("PopupManager"), "开始下网")
-	if confirm_self != null:
-		confirm_self.pressed.emit()
-		await process_frame
 	var full_button := choice_screen.find_child("FullWorkButton", true, false) as Button
 	_check(not full_button.disabled, "抽干收尾按钮可用")
 	if full_button.disabled:
@@ -526,10 +502,6 @@ func _run() -> void:
 	var restart_transfer := restart_choice.find_child("TransferButton", true, false) as Button
 	restart_transfer.pressed.emit()
 	await _settle_frames()
-	var restart_transfer_confirm := _find_button_by_text(root.get_node("PopupManager"), "去转包")
-	if restart_transfer_confirm != null:
-		restart_transfer_confirm.pressed.emit()
-		await _settle_frames()
 	var restart_transfer_modal := restart_choice.get_node("TransferModal") as Control
 	var restart_choice_state := restart_choice.get("game_state") as GameState
 	var restart_transfer_ledger := restart_choice.call("_get_transfer_decision_ledger") as Dictionary
