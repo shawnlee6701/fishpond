@@ -411,7 +411,6 @@ func _run() -> void:
 	_check(current_money_row.text == "当前本钱：%d 元" % money_before_sell and after_money_row.text == "接受后本钱：%d 元" % (money_before_sell + offered_income), "卖一网弹窗显示当前本钱和接受后本钱")
 	_check(accept_sell_button != null and reject_sell_button != null and accept_sell_button.text == "接受卖出（+%d）" % offered_income, "卖一网弹窗按钮主次和报价文案完整")
 	for viewport_size in [Vector2i(540, 960), Vector2i(720, 1280), Vector2i(1080, 1920)]:
-		choice_screen.size = Vector2(viewport_size)
 		choice_screen.call("_on_viewport_size_changed")
 		await _settle_frames()
 		var scale := minf(float(viewport_size.x) / 1080.0, float(viewport_size.y) / 1920.0)
@@ -420,8 +419,10 @@ func _run() -> void:
 		var sell_width_ratio := scaled_dialog_width / float(viewport_size.x)
 		var sell_card_in_bounds := scaled_dialog_width <= float(viewport_size.x - 48) and scaled_dialog_height <= float(viewport_size.y * 0.80)
 		var sell_buttons := sell_modal.find_child("ButtonRow", true, false) as HBoxContainer
+		var bottom_gap := sell_dialog.size.y - (sell_buttons.position.y + sell_buttons.size.y) if sell_buttons != null else 9999.0
 		var sell_buttons_visible := sell_buttons != null and sell_buttons.position.y + sell_buttons.size.y <= sell_dialog.size.y
-		_check(sell_width_ratio >= 0.85 and sell_width_ratio <= 0.92 and sell_card_in_bounds and sell_buttons_visible, "%dx%d 下卖一网弹窗自适应高度且按钮可见" % [viewport_size.x, viewport_size.y])
+		var sell_dialog_compact := scaled_dialog_height <= float(viewport_size.y * 0.55) and bottom_gap <= 90.0
+		_check(sell_width_ratio >= 0.85 and sell_width_ratio <= 0.92 and sell_card_in_bounds and sell_buttons_visible and sell_dialog_compact, "%dx%d 下卖一网弹窗自适应高度且按钮下方无大空白" % [viewport_size.x, viewport_size.y])
 	choice_screen.size = Vector2(1080, 1920)
 	choice_screen.call("_on_viewport_size_changed")
 	await _settle_frames()

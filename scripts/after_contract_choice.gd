@@ -1188,11 +1188,14 @@ func _layout_sell_one_net_modal() -> void:
 	var safe_height := maxi(1, viewport_size.y - 48)
 	var target_width := clampi(int(viewport_size.x * 0.90), mini(340, safe_width), mini(920, safe_width))
 	var max_height := mini(int(viewport_size.y * 0.80), safe_height)
-	_sell_one_net_dialog.size = Vector2(target_width, 0)
-	var content_height := ceili(_sell_one_net_dialog.get_combined_minimum_size().y)
+	var content_height := _get_sell_one_net_dialog_content_height()
 	var target_height := mini(maxi(content_height, 1), max_height)
 	_sell_one_net_dialog.size = Vector2(target_width, target_height)
 	_sell_one_net_dialog.position = Vector2((viewport_size.x - target_width) * 0.5, (viewport_size.y - target_height) * 0.5)
+
+func _get_sell_one_net_dialog_content_height() -> int:
+	# Avoid Godot autowrap minimum-size overestimation, which can stretch this compact dialog to the 80% cap.
+	return 430
 
 func _refresh_transfer_offer() -> void:
 	game_state.current_pond["estimated_transfer_value"] = game_state.get_current_pond_estimated_value()
