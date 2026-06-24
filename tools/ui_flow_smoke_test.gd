@@ -378,17 +378,21 @@ func _run() -> void:
 		var action_section := choice_screen.find_child("ActionSection", true, false) as VBoxContainer
 		var ledger_accordion := choice_screen.find_child("LedgerAccordion", true, false) as PanelContainer
 		var ledger_detail := choice_screen.find_child("LedgerDetailLabel", true, false) as Label
+		var ledger_detail_card := choice_screen.find_child("LedgerDetailCard", true, false) as PanelContainer
 		var ledger_toggle := choice_screen.find_child("LedgerToggleButton", true, false) as Button
 		var choice_content_scroll := choice_screen.find_child("ContentScroll", true, false) as ScrollContainer
 		_check(action_section.get_index() < ledger_accordion.get_index(), "接下来操作区排在账本明细之前")
-		_check(not ledger_detail.visible and ledger_toggle.text.begins_with("查看账本明细：当前"), "账本明细默认收起且只显示当前盈亏摘要")
+		_check(not ledger_detail.visible and not ledger_detail_card.visible and ledger_toggle.text.begins_with("账本明细：已实现 ") and ledger_toggle.text.contains("｜含估值 "), "账本明细默认收起且区分已实现和含估值")
 		_check(action_section.position.y < choice_content_scroll.size.y, "完成一网后不滚动即可看到接下来怎么处理区域")
 		ledger_toggle.pressed.emit()
 		await process_frame
-		_check(ledger_detail.visible and ledger_detail.text.contains("塘口累计账") and ledger_detail.text.contains("鱼获收入"), "点击后展开完整塘口累计账")
+		var ledger_text := _collect_label_text(ledger_detail_card)
+		_check(ledger_detail_card.visible and ledger_text.contains("收入") and ledger_text.contains("支出") and ledger_text.contains("塘口估值") and ledger_text.contains("账本结果"), "点击后展开分区账本明细")
+		_check(ledger_text.contains("已实现盈亏") and ledger_text.contains("含估值盈亏") and ledger_text.contains("估值不是已入账现金"), "账本明细解释已实现与含估值口径")
+		_check(not ledger_text.contains("其他收入\n0 元") and not ledger_text.contains("人工费\n0 元") and not ledger_text.contains("抽水费\n0 元"), "账本明细默认隐藏 0 元项目")
 		choice_screen.call("_render")
 		await process_frame
-		_check(ledger_detail.visible, "手动展开账本后刷新页面不会强制收起")
+		_check(ledger_detail_card.visible, "手动展开账本后刷新页面不会强制收起")
 
 	var choice_state := choice_screen.get("game_state") as GameState
 	choice_screen.set("current_one_net_offer", ActionResolver.new(42).generate_one_net_offer(choice_state.current_pond))
@@ -588,6 +592,17 @@ func _find_button_with_prefix(node: Node, prefix: String) -> Button:
 		if button.text.begins_with(prefix):
 			return button
 	return null
+
+
+func _collect_label_text(node: Node) -> String:
+	var lines: Array[String] = []
+	if node == null:
+		return ""
+	for child in node.find_children("*", "Label", true, false):
+		var label := child as Label
+		if label.visible:
+			lines.append(label.text)
+	return "\n".join(lines)
 
 
 func _check(condition: bool, description: String) -> void:

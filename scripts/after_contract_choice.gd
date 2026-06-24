@@ -184,6 +184,7 @@ class CatchVisualPlaceholder:
 @onready var ledger_accordion: PanelContainer = $SafeArea/PageLayout/ContentScroll/Content/LedgerAccordion
 @onready var ledger_toggle_button: Button = $SafeArea/PageLayout/ContentScroll/Content/LedgerAccordion/AccordionMargin/AccordionContent/LedgerToggleButton
 @onready var ledger_detail_label: Label = $SafeArea/PageLayout/ContentScroll/Content/LedgerAccordion/AccordionMargin/AccordionContent/LedgerDetailLabel
+@onready var ledger_accordion_content: VBoxContainer = $SafeArea/PageLayout/ContentScroll/Content/LedgerAccordion/AccordionMargin/AccordionContent
 @onready var work_plan_back_button: Button = $SafeArea/PageLayout/ContentScroll/Content/WorkPlanBackButton
 @onready var work_plan_scroll: ScrollContainer = $SafeArea/PageLayout/ContentScroll/Content/WorkPlanScroll
 @onready var work_plan_panel: VBoxContainer = $SafeArea/PageLayout/ContentScroll/Content/WorkPlanScroll/WorkPlanPanel
@@ -221,6 +222,8 @@ var harvest_collect_locked := false
 var net_option_empty_state: Label
 var latest_net_result: Dictionary = {}
 var ledger_expanded := false
+var ledger_detail_card: PanelContainer
+var ledger_detail_content: VBoxContainer
 
 # ---- 卖一网状态机 ----
 enum SellOneNetState {
@@ -294,6 +297,7 @@ func _apply_ui_frame() -> void:
 	UIKit.style_card(ledger_accordion, UIKit.GOLD)
 	UIKit.style_button(ledger_toggle_button, "ghost")
 	UIKit.style_label(ledger_detail_label, "body_dark")
+	_create_ledger_detail_card()
 	work_plan_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	work_plan_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_show_choice_page()
@@ -355,6 +359,31 @@ func _style_action_card(card: PanelContainer, button: Button, role: String) -> v
 			UIKit.style_label(typed_label, "body_dark")
 	UIKit.style_button(button, role)
 	button.set_meta("_future_texture_button", "button_primary.png" if role == "primary" else "button_secondary.png")
+
+func _create_ledger_detail_card() -> void:
+	if ledger_detail_card != null and is_instance_valid(ledger_detail_card):
+		return
+	ledger_detail_label.visible = false
+	ledger_detail_card = PanelContainer.new()
+	ledger_detail_card.name = "LedgerDetailCard"
+	ledger_detail_card.visible = false
+	ledger_detail_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	ledger_detail_card.add_theme_stylebox_override("panel", UIKit.make_style(Color(1.0, 0.96, 0.84, 0.96), Color(0.61, 0.45, 0.25, 0.65), 8, 2, false))
+	ledger_accordion_content.add_child(ledger_detail_card)
+
+	var margin := MarginContainer.new()
+	margin.name = "LedgerDetailMargin"
+	margin.add_theme_constant_override("margin_left", 12)
+	margin.add_theme_constant_override("margin_top", 10)
+	margin.add_theme_constant_override("margin_right", 12)
+	margin.add_theme_constant_override("margin_bottom", 10)
+	ledger_detail_card.add_child(margin)
+
+	ledger_detail_content = VBoxContainer.new()
+	ledger_detail_content.name = "LedgerDetailContent"
+	ledger_detail_content.add_theme_constant_override("separation", 10)
+	ledger_detail_content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	margin.add_child(ledger_detail_content)
 
 func _create_transfer_dialog() -> void:
 	var modal := UIKit.create_modal_layer(self, "TransferModal")
@@ -840,16 +869,160 @@ func _render_latest_net_result() -> void:
 	latest_profit_label.add_theme_color_override("font_color", UIKit.GREEN if latest_net_profit > 0 else UIKit.RED if latest_net_profit < 0 else UIKit.INK)
 
 func _render_ledger_accordion() -> void:
+	var ledger := _get_ledger_display_totals()
+	var realized_profit_loss := int(ledger.get("realized_profit_loss", 0))
+	var estimated_profit_loss := int(ledger.get("estimated_profit_loss", 0))
+	ledger_toggle_button.text = "收起账本明细" if ledger_expanded else "账本明细：已实现 %s｜含估值 %s" % [
+		_format_signed_amount(realized_profit_loss),
+		_format_signed_amount(estimated_profit_loss)
+	]
+	ledger_detail_label.visible = false
+	if ledger_detail_card == null or not is_instance_valid(ledger_detail_card):
+		_create_ledger_detail_card()
+	ledger_detail_card.visible = ledger_expanded
+	if ledger_expanded:
+		_render_ledger_detail_card(ledger)
+
+func _get_ledger_display_totals() -> Dictionary:
 	var ledger := _get_current_ledger()
-	var current_profit_loss := int(ledger.get("current_profit_loss", 0))
-	var status_text := "当前打平 0 元"
-	if current_profit_loss < 0:
-		status_text = "当前亏损 %d 元" % current_profit_loss
-	elif current_profit_loss > 0:
-		status_text = "当前盈利 +%d 元" % current_profit_loss
-	ledger_toggle_button.text = "收起账本明细：%s" % status_text if ledger_expanded else "查看账本明细：%s" % status_text
-	ledger_detail_label.visible = ledger_expanded
-	ledger_detail_label.text = _build_pond_ledger() if ledger_expanded else ""
+	var fish_revenue := game_state.fish_income
+	var sell_one_net_revenue := game_state.one_net_income
+	var transfer_revenue := game_state.transfer_income
+	var other_income := 0
+	var income_total := fish_revenue + sell_one_net_revenue + transfer_revenue + other_income
+
+	var contract_cost := int(ledger.get("pond_price", 0))
+	var inspection_cost := int(ledger.get("inspection_spent", 0))
+	var net_cost_total := int(ledger.get("fishing_cost", 0))
+	var labor_cost := 0
+	var pump_cost := 0
+	var transport_cost := int(ledger.get("transport_cost", 0))
+	var other_cost := 0
+	var expense_total := contract_cost + inspection_cost + net_cost_total + labor_cost + pump_cost + transport_cost + other_cost
+
+	var realized_profit_loss := income_total - expense_total
+	var pond_remaining_estimated_value := game_state.get_current_pond_estimated_value()
+	var estimated_profit_loss := realized_profit_loss + pond_remaining_estimated_value
+	return {
+		"fish_revenue": fish_revenue,
+		"sell_one_net_revenue": sell_one_net_revenue,
+		"transfer_revenue": transfer_revenue,
+		"other_income": other_income,
+		"income_total": income_total,
+		"contract_cost": contract_cost,
+		"inspection_cost": inspection_cost,
+		"net_cost_total": net_cost_total,
+		"labor_cost": labor_cost,
+		"pump_cost": pump_cost,
+		"transport_cost": transport_cost,
+		"other_cost": other_cost,
+		"expense_total": expense_total,
+		"realized_profit_loss": realized_profit_loss,
+		"pond_remaining_estimated_value": pond_remaining_estimated_value,
+		"estimated_profit_loss": estimated_profit_loss
+	}
+
+func _render_ledger_detail_card(ledger: Dictionary) -> void:
+	for child in ledger_detail_content.get_children():
+		child.queue_free()
+
+	ledger_detail_content.add_child(_make_ledger_section("收入", [
+		{"label": "鱼获收入", "value": int(ledger.get("fish_revenue", 0))},
+		{"label": "卖一网收入", "value": int(ledger.get("sell_one_net_revenue", 0))},
+		{"label": "转包收入", "value": int(ledger.get("transfer_revenue", 0))},
+		{"label": "其他收入", "value": int(ledger.get("other_income", 0))},
+		{"label": "收入合计", "value": int(ledger.get("income_total", 0)), "always": true, "total": true}
+	]))
+	ledger_detail_content.add_child(_make_ledger_section("支出", [
+		{"label": "承包费", "value": int(ledger.get("contract_cost", 0))},
+		{"label": "验塘费", "value": int(ledger.get("inspection_cost", 0))},
+		{"label": "下网作业费", "value": int(ledger.get("net_cost_total", 0))},
+		{"label": "人工费", "value": int(ledger.get("labor_cost", 0))},
+		{"label": "抽水费", "value": int(ledger.get("pump_cost", 0))},
+		{"label": "鱼车 / 运输费", "value": int(ledger.get("transport_cost", 0))},
+		{"label": "其他支出", "value": int(ledger.get("other_cost", 0))},
+		{"label": "支出合计", "value": int(ledger.get("expense_total", 0)), "always": true, "total": true}
+	]))
+	ledger_detail_content.add_child(_make_ledger_section("塘口估值", [
+		{"label": "塘内剩余估值", "value": int(ledger.get("pond_remaining_estimated_value", 0)), "always": true}
+	], "估值不是已入账现金，只是当前判断。"))
+	ledger_detail_content.add_child(_make_ledger_section("账本结果", [
+		{"label": "已实现盈亏", "value": int(ledger.get("realized_profit_loss", 0)), "always": true, "signed": true, "total": true},
+		{"label": "含估值盈亏", "value": int(ledger.get("estimated_profit_loss", 0)), "always": true, "signed": true, "total": true}
+	]))
+
+func _make_ledger_section(title_text: String, rows: Array, note := "") -> PanelContainer:
+	var section := PanelContainer.new()
+	section.name = "%sSection" % title_text
+	section.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	section.add_theme_stylebox_override("panel", UIKit.make_style(Color(0.98, 0.91, 0.74, 0.80), Color(0.61, 0.45, 0.25, 0.42), 8, 1, false))
+
+	var margin := MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 12)
+	margin.add_theme_constant_override("margin_top", 8)
+	margin.add_theme_constant_override("margin_right", 12)
+	margin.add_theme_constant_override("margin_bottom", 8)
+	section.add_child(margin)
+
+	var stack := VBoxContainer.new()
+	stack.add_theme_constant_override("separation", 5)
+	stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	margin.add_child(stack)
+
+	var title := UIKit.make_label(title_text, UIKit.FONT_SECTION, UIKit.GREEN, HORIZONTAL_ALIGNMENT_LEFT)
+	title.name = "SectionTitleLabel"
+	stack.add_child(title)
+
+	for row_variant in rows:
+		var row := row_variant as Dictionary
+		var value := int(row.get("value", 0))
+		if value == 0 and not bool(row.get("always", false)):
+			continue
+		stack.add_child(_make_ledger_row(
+			str(row.get("label", "")),
+			value,
+			bool(row.get("signed", false)),
+			bool(row.get("total", false))
+		))
+
+	if not note.is_empty():
+		var note_label := UIKit.make_label(note, UIKit.FONT_SECONDARY, UIKit.MUTED, HORIZONTAL_ALIGNMENT_LEFT)
+		note_label.name = "SectionNoteLabel"
+		stack.add_child(note_label)
+	return section
+
+func _make_ledger_row(label_text: String, amount: int, signed := false, total := false) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.name = "LedgerRow"
+	row.add_theme_constant_override("separation", 12)
+	row.custom_minimum_size = Vector2(0, 34 if not total else 42)
+
+	var name_label := UIKit.make_label(label_text, UIKit.FONT_BODY if not total else UIKit.FONT_SECTION, UIKit.INK, HORIZONTAL_ALIGNMENT_LEFT)
+	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	name_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	row.add_child(name_label)
+
+	var value_label := UIKit.make_label(_format_signed_amount(amount) if signed else "%d 元" % amount, UIKit.FONT_BODY if not total else UIKit.FONT_SECTION, _amount_color(amount) if signed else UIKit.INK, HORIZONTAL_ALIGNMENT_RIGHT)
+	value_label.name = "Value"
+	value_label.custom_minimum_size = Vector2(220, 0)
+	value_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	value_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	row.add_child(value_label)
+	return row
+
+func _format_signed_amount(amount: int) -> String:
+	if amount > 0:
+		return "+%d 元" % amount
+	if amount < 0:
+		return "%d 元" % amount
+	return "0 元"
+
+func _amount_color(amount: int) -> Color:
+	if amount > 0:
+		return UIKit.GREEN
+	if amount < 0:
+		return UIKit.RED
+	return UIKit.INK
 
 func _plan_display_name(plan_id: String) -> String:
 	match plan_id:
