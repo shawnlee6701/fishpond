@@ -244,7 +244,7 @@ func _create_income_section(ledger: Dictionary) -> PanelContainer:
 	else:
 		for item_variant in catches:
 			var item := Dictionary(item_variant)
-			box.add_child(_make_money_row(str(item.get("name", "未知鱼获")), "%d 斤 × %d 元/斤 = %d 元" % [int(item.get("weight_jin", 0)), int(item.get("unit_price", 0)), int(item.get("income", 0))], false, int(item.get("income", 0))))
+			box.add_child(_make_money_row(str(item.get("name", "未知鱼获")), "%d 斤 × %d 元/斤 = %d 元" % [int(item.get("weight_jin", 0)), int(item.get("unit_price", 0)), int(item.get("income", 0))], false, int(item.get("income", 0)), 560, true))
 	box.add_child(_make_money_row("鱼获收入合计", "+%d 元" % int(ledger.get("fish_revenue_total", 0)), true, int(ledger.get("fish_revenue_total", 0))))
 	box.add_child(_section_title("其他收入"))
 	var one_net_revenue := int(ledger.get("one_net_revenue", 0))
@@ -317,7 +317,7 @@ func _add_positive_income_row(box: VBoxContainer, name_text: String, amount: int
 	if amount > 0:
 		box.add_child(_make_money_row(name_text, "+%d 元" % amount, false, amount))
 
-func _make_money_row(name_text: String, value_text: String, important := false, signed_amount := 0) -> PanelContainer:
+func _make_money_row(name_text: String, value_text: String, important := false, signed_amount := 0, value_min_width := 300, single_line_value := false) -> PanelContainer:
 	var row := PanelContainer.new()
 	row.name = name_text.replace(" ", "") + "Row"
 	row.custom_minimum_size = Vector2(0, 52 if not important else 62)
@@ -333,7 +333,9 @@ func _make_money_row(name_text: String, value_text: String, important := false, 
 	var value_label := UIKit.make_label(value_text, UIKit.FONT_BODY if not important else UIKit.FONT_IMPORTANT, _money_color(signed_amount), HORIZONTAL_ALIGNMENT_RIGHT)
 	value_label.name = "Value"
 	value_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	value_label.custom_minimum_size = Vector2(300, 0)
+	value_label.custom_minimum_size = Vector2(value_min_width, 0)
+	if single_line_value:
+		value_label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	content.add_child(value_label)
 	return row
 
