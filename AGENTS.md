@@ -17,6 +17,7 @@ This file is the live handoff guide for agents working on **这塘我包了**. K
 - All routed gameplay pages now have their P0/P1/P2 texture slots filled and the P2 nine-patch margins have been verified in 1080×1920, 720×1280, and 540×960.
 - `tools/ui_flow_smoke_test.gd` has been updated to match the texture pass: old "self-drawn placeholder" assertions are replaced with texture-existence checks, the `find_child("NetOptionCard_*")` wildcard bug is fixed, and null guards are added around buttons/cards to prevent a single failure from crashing the whole run.
 - Headless smoke test result: `UI_FLOW_TEST_OK`. All UI flow assertions pass. The only runtime warnings are sandbox-blocked writes to `user://save_game.json` and `user://settlement_history.json`, which do not affect UI validation.
+- Asset compression pass completed: removed 3 unused images (`assets/ui/button_board.png`, `homepage.png`, `parchment_background.png`) and losslessly compressed all referenced PNGs. Total `assets/` reduction: ~5.3 MB (19.7 MB → 14.4 MB). All preload paths unchanged. Verified with `godot --headless --path . --quit`, `ui_flow_smoke_test.gd`, and `settlement_history_smoke_test.gd`.
 
 ## Current Implemented Flow
 
