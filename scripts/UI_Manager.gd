@@ -1,5 +1,7 @@
 extends Control
 
+const UIKit := preload("res://scripts/ui_kit.gd")
+
 @onready var theme_resource = load("res://themes/UI_Theme.tres")
 
 
@@ -38,6 +40,9 @@ func apply_theme_recursive(node: Node):
 		node.remove_theme_constant_override("corner_radius")
 		node.remove_theme_constant_override("h_separation")
 		node.remove_theme_constant_override("v_separation")
+
+	if node is Button:
+		UIKit.apply_button_click_feedback(node)
 
 	for child in node.get_children():
 		apply_theme_recursive(child)

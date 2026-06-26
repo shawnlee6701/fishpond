@@ -241,6 +241,11 @@ func _render() -> void:
 	_render_sections(ledger)
 	next_day_button.text = "走，第 %d 天" % (game_state.day + 1)
 
+	if UIKit.animations_enabled:
+		var tone := "positive" if net_profit > 0 else "negative" if net_profit < 0 else "gold"
+		UIKit.animate_emphasis(profit_highlight_label, tone)
+		_spawn_settlement_sparkles.call_deferred(tone)
+
 func _get_pond_run_state() -> Dictionary:
 	var contract_cost := int(game_state.current_pond.get("contract_total_cost", game_state.current_pond.get("quote_price", 0)))
 	var fish_revenue := game_state.fish_income
@@ -553,6 +558,13 @@ func _get_fish_king_catch_detail() -> Dictionary:
 		if str(item.get("id", "")) == FISH_KING_ID:
 			return item
 	return {}
+
+func _spawn_settlement_sparkles(tone: String) -> void:
+	if fish_king_panel.visible:
+		UIKit.spawn_sparkles(sections_box, fish_king_panel.get_rect(), "gold")
+	else:
+		UIKit.spawn_sparkles(sections_box, profit_highlight_label.get_parent().get_rect(), tone)
+
 
 func _on_next_day_pressed() -> void:
 	game_state.advance_to_next_day()

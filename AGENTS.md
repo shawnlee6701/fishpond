@@ -239,6 +239,18 @@ HOME=/private/tmp/fish_pool_history_test_home godot --headless --log-file /priva
 - Final settlement writes one persistent history record; “包塘记录” keeps it across restart, recomputes every displayed total from ledger line items, and remains scroll-safe at 540 × 960, 720 × 1280, and 1080 × 1920.
 - The automated full-flow smoke test checks the one-net sale quote modal, self-adaptive modal height, cash-after-accept copy, success banner, revenue-source breakdown, and hidden sold-state action card.
 
+## Lightweight Animation System
+
+- `scripts/ui_kit.gd` owns shared Tween helpers: `animate_page_entry`, `apply_button_click_feedback`, `animate_emphasis`, `animate_pop_in`, `animate_shine`, `spawn_sparkles`.
+- `FishPoolUIKit.animations_enabled` is a static bool that auto-disables in headless mode (`DisplayServer.get_name() == "headless"`); no manual toggling needed for tests.
+- Button click feedback is applied automatically by `scripts/UI_Manager.gd` via `apply_button_click_feedback` in its recursive theme pass; every `Button` inside `UIRoot` gets a 0.05s scale-down + 0.12s bounce-back on press.
+- Page transitions: `scripts/ui_controller.gd` calls `animate_page_entry` after instantiation — 48 px rightward slide + alpha 0→1 over 0.18 s, no crossfade.
+- Settlement emphasis: `scripts/settlement.gd` scales the final `profit_highlight_label` 1.08×→1.0 bonus bounce; `spawn_sparkles` fires 28 gold/green/red one-shot `CPUParticles2D` around the profit header or fish-king panel.
+- Harvest result modal: `scripts/after_contract_choice.gd` emphasis-bounces the title and fires sparkles around `CatchVisual` (fish king) or `harvest_result_label` (standard) when the modal opens.
+- Sell-one-net success banner: `_set_banner_visible` applies `animate_pop_in` (scale 0.92→1 + alpha fade) and a brief modulate shine on the banner title.
+- Transfer accept: a fire-and-forget `animate_shine` on the offer-highlight label before closing the dialog and transitioning to settlement.
+- All animations are fire-and-forget or deferred; no `await` blocks the core game loop. In headless all helpers return null / skip immediately.
+
 ## Known Gaps / Next Likely Work
 
 - README still needs a real product/game overview.

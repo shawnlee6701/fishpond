@@ -7,6 +7,7 @@ const AFTER_CONTRACT_CHOICE_SCENE := preload("res://scenes/AfterContractChoice.t
 const SETTLEMENT_SCENE := preload("res://scenes/Settlement.tscn")
 const SETTLEMENT_HISTORY_SCENE := preload("res://scenes/SettlementHistory.tscn")
 const SaveSystem := preload("res://scripts/save_system.gd")
+const UIKit := preload("res://scripts/ui_kit.gd")
 
 static func replace_screen(container: Control, next_screen: Control) -> void:
 	for child in container.get_children():
@@ -14,6 +15,7 @@ static func replace_screen(container: Control, next_screen: Control) -> void:
 
 	container.add_child(next_screen)
 	next_screen.set_anchors_preset(Control.PRESET_FULL_RECT)
+	UIKit.animate_page_entry(next_screen, 1.0)
 
 static func show_pond_list(container: Control, game_state: GameState, save_checkpoint := false) -> void:
 	var screen := POND_LIST_SCENE.instantiate()

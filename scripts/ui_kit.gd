@@ -23,6 +23,17 @@ const FONT_PAGE_TITLE := 44
 const PAGE_ACTION_HEIGHT := 96
 const MODAL_ACTION_HEIGHT := 84
 const DESIGN_SIZE := Vector2(1080, 1920)
+
+static var animations_enabled: bool = true
+
+
+static func _static_init() -> void:
+	# headless 模式下禁用所有动效，避免阻止测试 tween 卡住帧循环
+	if OS.has_feature("headless"):
+		animations_enabled = false
+		return
+	if not Engine.is_editor_hint() and DisplayServer.get_name() == "headless":
+		animations_enabled = false
 const PAGE_SAFE_X := 52.0
 const PAGE_TOP := 32.0
 const PAGE_BOTTOM := 48.0
@@ -375,3 +386,105 @@ static func wrap_nodes_in_scroll(parent: VBoxContainer, nodes: Array[Control], s
 			inner.add_child(node)
 
 	return scroll
+
+
+# ---------------------------------------------------------------------------
+# 轻量动效 helpers（不影响核心玩法，headless 下自动禁用）
+# ---------------------------------------------------------------------------
+
+static func animate_page_entry(screen: Control, direction := 1.0) -> Tween:
+	if not animations_enabled or screen == null:
+		return null
+	screen.modulate.a = 0.0
+	var offset := Vector2(48.0 * direction, 0.0)
+	screen.position += offset
+	var tween := screen.create_tween()
+	tween.set_parallel(false)
+	tween.tween_property(screen, "modulate:a", 1.0, 0.18).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tween.parallel().tween_property(screen, "position", screen.position - offset, 0.18).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	return tween
+
+
+static func apply_button_click_feedback(button: Button) -> void:
+	if button == null or button.has_meta("_fp_click_feedback"):
+		return
+	button.set_meta("_fp_click_feedback", true)
+	button.pressed.connect(_on_button_clicked_for_animation.bind(button))
+
+
+static func _on_button_clicked_for_animation(button: Button) -> void:
+	if not animations_enabled or not is_instance_valid(button):
+		return
+	var tween := button.create_tween()
+	button.pivot_offset = button.size * 0.5
+	tween.tween_property(button, "scale", Vector2(0.94, 0.94), 0.05).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tween.tween_property(button, "scale", Vector2.ONE, 0.12).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+
+static func animate_emphasis(control: Control, tone := "gold") -> Tween:
+	if not animations_enabled or control == null:
+		return null
+	control.pivot_offset = control.size * 0.5
+	var tween := control.create_tween()
+	tween.tween_property(control, "scale", Vector2(1.08, 1.08), 0.14).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tween.tween_property(control, "scale", Vector2.ONE, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	return tween
+
+
+static func animate_pop_in(control: Control) -> Tween:
+	if not animations_enabled or control == null:
+		return null
+	control.pivot_offset = control.size * 0.5
+	control.modulate.a = 0.0
+	control.scale = Vector2(0.92, 0.92)
+	var tween := control.create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(control, "modulate:a", 1.0, 0.22).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tween.tween_property(control, "scale", Vector2.ONE, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	return tween
+
+
+static func animate_shine(control: Control) -> Tween:
+	if not animations_enabled or control == null:
+		return null
+	var tween := control.create_tween()
+	var original := control.modulate
+	tween.tween_property(control, "modulate", Color(1.5, 1.45, 1.1, 1.0), 0.12).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tween.tween_property(control, "modulate", original, 0.20).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN_OUT)
+	return tween
+
+
+static func spawn_sparkles(parent: Control, local_rect: Rect2, tone := "gold") -> void:
+	if not animations_enabled or parent == null:
+		return
+	var particles := CPUParticles2D.new()
+	particles.name = "SparkleParticles"
+	particles.position = local_rect.position + local_rect.size * 0.5
+	particles.emitting = false
+	particles.one_shot = true
+	particles.explosiveness = 0.85
+	particles.lifetime = 0.7
+	particles.amount = 28
+	particles.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+	particles.emission_rect_extents = Vector2(local_rect.size.x * 0.5, local_rect.size.y * 0.5)
+	particles.direction = Vector2(0.0, -1.0)
+	particles.spread = 90.0
+	particles.initial_velocity_min = 60.0
+	particles.initial_velocity_max = 180.0
+	particles.scale_amount_min = 2.0
+	particles.scale_amount_max = 5.0
+	particles.gravity = Vector2(0.0, 280.0)
+	particles.color = _sparkle_color(tone)
+	particles.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	particles.z_index = 20
+	parent.add_child(particles)
+	particles.emitting = true
+	particles.finished.connect(particles.queue_free)
+
+
+static func _sparkle_color(tone: String) -> Color:
+	if tone == "positive":
+		return Color(0.25, 0.85, 0.35)
+	if tone == "negative":
+		return Color(0.90, 0.25, 0.18)
+	return Color(1.0, 0.85, 0.25)

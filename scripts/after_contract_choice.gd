@@ -171,6 +171,7 @@ var harvest_result_overlay: Control
 var harvest_result_dialog: PanelContainer
 var harvest_result_title: Label
 var harvest_catch_list: VBoxContainer
+var harvest_catch_visual: TextureRect
 var harvest_fish_revenue_value: Label
 var harvest_net_cost_value: Label
 var harvest_net_profit_value: Label
@@ -555,14 +556,14 @@ func _create_harvest_result_dialog() -> void:
 	body.add_theme_constant_override("separation", 14)
 	body_scroll.add_child(body)
 
-	var catch_visual := TextureRect.new()
-	catch_visual.name = "CatchVisual"
-	catch_visual.texture = CATCH_RESULT_TEXTURE
-	catch_visual.expand_mode = TextureRect.EXPAND_FIT_WIDTH
-	catch_visual.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	catch_visual.custom_minimum_size = Vector2(0, 280)
-	catch_visual.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	body.add_child(catch_visual)
+	harvest_catch_visual = TextureRect.new()
+	harvest_catch_visual.name = "CatchVisual"
+	harvest_catch_visual.texture = CATCH_RESULT_TEXTURE
+	harvest_catch_visual.expand_mode = TextureRect.EXPAND_FIT_WIDTH
+	harvest_catch_visual.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	harvest_catch_visual.custom_minimum_size = Vector2(0, 280)
+	harvest_catch_visual.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	body.add_child(harvest_catch_visual)
 
 	var catch_card := PanelContainer.new()
 	catch_card.name = "CatchListCard"
@@ -1357,6 +1358,9 @@ func _close_sell_one_net_dialog() -> void:
 func _set_banner_visible(flag: bool) -> void:
 	if is_instance_valid(_sell_one_net_result_banner):
 		_sell_one_net_result_banner.visible = flag
+		if flag and UIKit.animations_enabled:
+			UIKit.animate_pop_in(_sell_one_net_result_banner)
+			UIKit.animate_shine(_sell_one_net_banner_title)
 
 func _set_banner_text(title: String, detail := "这一网已卖出，不能重复卖") -> void:
 	if is_instance_valid(_sell_one_net_banner_title):
@@ -1436,6 +1440,7 @@ func _on_accept_transfer_pressed() -> void:
 func _confirm_accept_transfer() -> void:
 	if accept_transfer_button != null:
 		accept_transfer_button.disabled = true
+	UIKit.animate_shine(transfer_offer_highlight_label)
 	_close_transfer_dialog()
 	var ledger := _get_transfer_decision_ledger()
 	game_state.apply_transfer(int(ledger.get("offer_price", 0)), int(ledger.get("transfer_profit_loss", 0)))
@@ -1621,6 +1626,27 @@ func _show_harvest_result(result: Dictionary) -> void:
 	_update_harvest_opportunity_hint()
 	harvest_continue_button.disabled = false
 	UIKit.show_modal(self, harvest_result_overlay, harvest_result_dialog, 0.86, 1060, Vector2i(340, 700), Vector2i(860, 1160))
+
+	if UIKit.animations_enabled:
+		var result_tone := "positive" if round_profit > 0 else "negative" if round_profit < 0 else "gold"
+		UIKit.animate_emphasis(harvest_result_title, "gold" if caught_fish_king else result_tone)
+		var sparkle_target: Control = harvest_catch_visual if caught_fish_king else harvest_result_label
+		_spawn_harvest_sparkles.call_deferred("gold" if caught_fish_king else result_tone)
+
+func _spawn_harvest_sparkles(tone: String) -> void:
+	if not is_instance_valid(harvest_result_dialog):
+		return
+	var target: Control = harvest_catch_visual if _is_fish_king_harvest() else harvest_result_label
+	if is_instance_valid(target):
+		UIKit.spawn_sparkles(harvest_result_dialog, target.get_rect(), tone)
+
+
+func _is_fish_king_harvest() -> bool:
+	for item in Array(pending_harvest_result.get("catch_details", [])):
+		if str(Dictionary(item).get("id", "")) == "fish_king":
+			return true
+	return false
+
 
 func _render_harvest_catch_rows(result: Dictionary) -> void:
 	for child in harvest_catch_list.get_children():
