@@ -38,6 +38,15 @@ func _run() -> void:
 	if records.size() == 1:
 		_check_record_schema(records[0], expected_profit)
 
+	var cached_records := SaveSystem.load_settlement_records()
+	_check(cached_records.size() == 1, "缓存命中时仍返回相同数量的记录")
+	if cached_records.size() == 1:
+		_check(cached_records[0].record_id == records[0].record_id, "缓存返回的记录内容与首次读取一致")
+		cached_records[0].pond_name = "被篡改的塘口"
+		var still_intact := SaveSystem.load_settlement_records()
+		if still_intact.size() == 1:
+			_check(still_intact[0].pond_name == records[0].pond_name, "外部修改缓存副本不会破坏底层记录")
+
 	SaveSystem.clear_checkpoint()
 	_check(SaveSystem.load_settlement_records().size() == 1, "重新开始清档不会删除包塘记录")
 	UIController.show_settlement_history(container, game_state)
@@ -94,6 +103,9 @@ func _run() -> void:
 	_seed_settlement(next_state, "南埂新塘", -420, "抽干结算")
 	_check(SaveSystem.record_settlement(next_state), "下一次结算继续追加记录")
 	_check(SaveSystem.load_settlement_records().size() == 2, "记录列表不写死数量")
+
+	SaveSystem.clear_settlement_history_cache()
+	_check(SaveSystem.load_settlement_records().size() == 2, "手动清除缓存后重新读取仍保持两条记录")
 	UIController.show_settlement_history(container, next_state)
 	await _settle_frames()
 	var two_record_screen := _current_screen(container)
@@ -146,6 +158,7 @@ func _tree_has_text(node: Node, expected: String) -> bool:
 func _clear_history() -> void:
 	if FileAccess.file_exists(SaveSystem.SETTLEMENT_HISTORY_PATH):
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(SaveSystem.SETTLEMENT_HISTORY_PATH))
+	SaveSystem.clear_settlement_history_cache()
 
 func _settle_frames() -> void:
 	await process_frame

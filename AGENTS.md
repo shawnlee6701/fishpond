@@ -43,7 +43,7 @@ This file is the live handoff guide for agents working on **这塘我包了**. K
 - `scripts/balance_rules.gd` is the shared helper for reading balance rule dictionaries.
 - `scripts/game_state.gd` owns mutable run state, cash changes, round reset, contracting, settlement totals, and day advancement.
 - `scripts/save_system.gd` owns `user://save_game.json` persistence and stores only safe pond-list checkpoints: day, cash, and the current day's stable pond offers.
-- `scripts/save_system.gd` also owns the separate version-2 `user://settlement_history.json` ledger. It normalizes version-1 records, recalculates income/expense totals from canonical line items, and keeps completed history when restart clears the checkpoint.
+- `scripts/save_system.gd` also owns the separate version-2 `user://settlement_history.json` ledger. It normalizes version-1 records, recalculates income/expense totals from canonical line items, and keeps completed history when restart clears the checkpoint. Settlement records are cached in-memory (`_settlement_records_cache` / `_settlement_records_cache_valid`) so opening the history page only reads the file on the first access or after a new record is written; subsequent calls return a deep copy from cache. `record_settlement()` refreshes the cache after a successful write, and `clear_settlement_history_cache()` is exposed for test/debug invalidation without touching the file.
 - `scripts/ui_controller.gd` is the only screen router. Add new scene transitions here rather than scattering scene replacement logic.
 - `scripts/pond_generator.gd` creates daily pond offers and hidden pond qualities.
 - `scripts/inspection_system.gd` turns hidden pond values into fuzzy player-facing signals.

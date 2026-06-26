@@ -2,9 +2,28 @@ extends SceneTree
 
 var failures: Array[String] = []
 
+# Tool costs read from data/tools.json so the test does not break when balance is tuned.
+var _fish_finder_cost: int = 0
+var _master_cost: int = 0
+var _paid_inspection_cost_total: int = 0
+
 
 func _init() -> void:
+	_load_tool_costs()
 	_run.call_deferred()
+
+
+func _load_tool_costs() -> void:
+	var tools: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/tools.json"))
+	if tools is Array:
+		for tool_variant in tools:
+			var tool := tool_variant as Dictionary
+			var tool_id := str(tool.get("id", ""))
+			if tool_id == "fish_finder":
+				_fish_finder_cost = int(tool.get("cost", 0))
+			elif tool_id == "master":
+				_master_cost = int(tool.get("cost", 0))
+		_paid_inspection_cost_total = _fish_finder_cost + _master_cost
 
 
 func _run() -> void:
@@ -99,8 +118,8 @@ func _run() -> void:
 	inspection_state = pond_detail.get("game_state") as GameState
 	money_label = pond_detail.get_node("SafeArea/PageLayout/TopStatusBar/StatusRow/MoneyLabel") as Label
 	cost_label = pond_detail.get_node("SafeArea/PageLayout/TopStatusBar/StatusRow/InspectionCostLabel") as Label
-	_check(inspection_state.cash == cash_before_paid - 300 and inspection_state.inspection_cost_total == 300, "付费验塘只扣除对应费用")
-	_check(money_label.text.contains(str(inspection_state.cash)) and cost_label.text.contains("300 元"), "付费验塘后顶部金额和累计费用同步更新")
+	_check(inspection_state.cash == cash_before_paid - _fish_finder_cost and inspection_state.inspection_cost_total == _fish_finder_cost, "付费验塘只扣除对应费用")
+	_check(money_label.text.contains(str(inspection_state.cash)) and cost_label.text.contains("%d 元" % _fish_finder_cost), "付费验塘后顶部金额和累计费用同步更新")
 	var master_card := pond_detail.find_child("InspectionOptionCard_LaoShiFu", true, false) as PanelContainer
 	var master_button := master_card.find_child("ActionButton", true, false) as Button
 	master_button.pressed.emit()
@@ -108,8 +127,8 @@ func _run() -> void:
 	inspection_state = pond_detail.get("game_state") as GameState
 	money_label = pond_detail.get_node("SafeArea/PageLayout/TopStatusBar/StatusRow/MoneyLabel") as Label
 	cost_label = pond_detail.get_node("SafeArea/PageLayout/TopStatusBar/StatusRow/InspectionCostLabel") as Label
-	_check(inspection_state.cash == cash_before_paid - 1300 and inspection_state.inspection_cost_total == 1300, "连续使用 300 元和 1000 元验塘后累计费用为 1300 元")
-	_check(money_label.text.contains(str(inspection_state.cash)) and cost_label.text.contains("1300 元"), "多次付费验塘后顶部金额和累计费用继续同步")
+	_check(inspection_state.cash == cash_before_paid - _paid_inspection_cost_total and inspection_state.inspection_cost_total == _paid_inspection_cost_total, "连续使用探鱼器和老师傅验塘后累计费用正确")
+	_check(money_label.text.contains(str(inspection_state.cash)) and cost_label.text.contains("%d 元" % _paid_inspection_cost_total), "多次付费验塘后顶部金额和累计费用继续同步")
 
 	back_button = pond_detail.get_node("SafeArea/PageLayout/BottomDecisionBar/DecisionButtons/GiveUpButton") as Button
 	back_button.pressed.emit()
@@ -146,7 +165,7 @@ func _run() -> void:
 	var dialog_body_scroll := contract_modal.get_node_or_null("%s/DialogBodyScroll" % popup_content_path) as ScrollContainer
 	var bill_rows := contract_modal.get_node("%s/DialogBody/BillRows" % popup_content_path) as VBoxContainer
 	_check(balance_highlight.text.contains("%d 元" % remaining_after_contract), "承包账单高亮显示包下后剩余且来自当前现金减承包价")
-	_check(inspection_spent_value.text.contains("1300 元") and inspection_spent_value.text.contains("不退"), "承包账单显示已花验塘费且标明不退")
+	_check(inspection_spent_value.text.contains("%d 元" % _paid_inspection_cost_total) and inspection_spent_value.text.contains("不退"), "承包账单显示已花验塘费且标明不退")
 	_check(pond_price_value.text == "-%d 元" % pond_price, "承包账单将塘主要价显示为负数扣款")
 	_check(extra_cost_row == null and contract_extra_cost == 0, "承包账单无杂费时隐藏包塘杂费行")
 	_check(total_contract_cost_value.text == "-%d 元" % contract_total_cost, "承包账单显示合计扣款")

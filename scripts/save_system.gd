@@ -6,6 +6,11 @@ const SETTLEMENT_HISTORY_PATH := "user://settlement_history.json"
 const SAVE_VERSION := 1
 const SETTLEMENT_HISTORY_VERSION := 2
 
+# In-memory cache for settlement records. Valid for the lifetime of the game process
+# unless the history file is changed by record_settlement() or cleared externally.
+static var _settlement_records_cache: Array[Dictionary] = []
+static var _settlement_records_cache_valid: bool = false
+
 static func has_checkpoint() -> bool:
 	return FileAccess.file_exists(SAVE_PATH)
 
@@ -61,6 +66,11 @@ static func clear_checkpoint() -> bool:
 		return true
 	return DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PATH)) == OK
 
+
+static func clear_settlement_history_cache() -> void:
+	_settlement_records_cache.clear()
+	_settlement_records_cache_valid = false
+
 static func record_settlement(game_state: GameState) -> bool:
 	if game_state.settlement_recorded or game_state.current_pond.is_empty():
 		return false
@@ -105,14 +115,19 @@ static func record_settlement(game_state: GameState) -> bool:
 		return false
 	file.store_string(JSON.stringify(payload))
 	file.close()
+	_refresh_settlement_records_cache(records)
 	game_state.settlement_recorded = true
 	return true
 
 static func load_settlement_records() -> Array[Dictionary]:
-	var records: Array[Dictionary] = []
 	if not FileAccess.file_exists(SETTLEMENT_HISTORY_PATH):
-		return records
+		clear_settlement_history_cache()
+		return _copy_settlement_records_cache()
 
+	if _settlement_records_cache_valid:
+		return _copy_settlement_records_cache()
+
+	var records: Array[Dictionary] = []
 	var file := FileAccess.open(SETTLEMENT_HISTORY_PATH, FileAccess.READ)
 	if file == null:
 		return records
@@ -129,7 +144,23 @@ static func load_settlement_records() -> Array[Dictionary]:
 		for record_variant in saved_records:
 			if record_variant is Dictionary:
 				records.append(normalize_settlement_record(Dictionary(record_variant)))
-	return records
+
+	_refresh_settlement_records_cache(records)
+	return _copy_settlement_records_cache()
+
+static func _copy_settlement_records_cache() -> Array[Dictionary]:
+	var copy: Array[Dictionary] = []
+	for record in _settlement_records_cache:
+		copy.append(record.duplicate(true))
+	return copy
+
+
+static func _refresh_settlement_records_cache(records: Array[Dictionary]) -> void:
+	_settlement_records_cache.clear()
+	for record in records:
+		_settlement_records_cache.append(record.duplicate(true))
+	_settlement_records_cache_valid = true
+
 
 static func normalize_settlement_record(source: Dictionary) -> Dictionary:
 	# Version 1 used shorter field names. Normalize every record before the UI sees it,
