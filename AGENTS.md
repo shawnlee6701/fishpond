@@ -103,7 +103,7 @@ This file is the live handoff guide for agents working on **这塘我包了**. K
   - full/drain work cost: max 2000 or 20% of current pond quote
 - `data/tools.json`
   - `observe`: free, low accuracy
-  - `fish_finder`: 300
+  - `fish_finder`: 800 (raised from 300 to close the cheap-info farm gap)
   - `master`: 1000
 - `data/fish_types.json`
   - `small_fish`, `normal_fish`, `big_fish`, `fish_king`
@@ -118,6 +118,14 @@ This file is the live handoff guide for agents working on **这塘我包了**. K
   - `pond_generation.min_quote`: 4000, keeping fixed drain cost from dominating tiny ponds.
   - `pond_generation.profile_roi_bands`: maps surplus / break-even / loss pond profiles into high / middle / low positions inside each pond type's ROI band.
   - `scripts/balance_simulator.gd` prints `STRATEGY_ECONOMY` for player-path cost/revenue breakdown and `POND_TYPE_GROSS_ROI` for pond-type band verification.
+  - Latest 1000×12 balance pass (seed 20260619): no strategy shows positive average ROI or average round net.
+    - `random_no_inspection`: ~-78% avg ROI, ~67% bankrupt rate (punishing baseline)
+    - `basic_stop_loss`: ~-17% avg ROI, 0% bankrupt rate (slow defensive bleed)
+    - `master_estimate_stop_loss`: ~-8% avg ROI, ~36% bankrupt rate, highest upside (p75 final cash ~46k–47k)
+    - `fish_finder_estimate_stop_loss` (added probe): ~-13% avg ROI, ~32% bankrupt rate, middle-risk option
+  - Key tuning levers changed in this pass:
+    - `data/balance_rules.json` `market.one_net.estimated_value_ratio`: 0.12 → 0.10 (reduces the guaranteed cash-out that subsidized every informed strategy)
+    - `data/tools.json` `fish_finder.cost`: 300 → 800 (cheap inspection + one-net was a hidden farm because it picked the same ponds as master for far less cost)
 
 ## Development Rules
 
@@ -236,7 +244,8 @@ HOME=/private/tmp/fish_pool_history_test_home godot --headless --log-file /priva
 - Save/load currently covers safe pond-list checkpoints only; active mid-round state is not resumed.
 - No meta progression, tutorial, or end condition exists yet.
 - First P0 art batch is integrated; remaining screens (pond detail, post-contract choice, settlement, history) still use native themed controls and await their art pass.
-- Balance has not yet been tuned against the simulator output across many design passes.
+- Balance has received one simulator-tuned pass; monitor for new emergent farms if players combine one-net + low-cost inspection or find deterministic signal reads.
+- The simulator's strategy selection uses a noisy hidden-value ratio rather than modeling real inspection accuracy; `tools.json` accuracy values are not yet consumed by `inspection_system.gd` or the simulator.
 - Fish-king panel currently generates presentation weight/value at settlement time rather than reusing exact catch detail data.
 - Main menu stats are not refreshed after returning from later screens because the current loop stays inside `ScreenContainer`.
 
