@@ -32,11 +32,9 @@ func _apply_to_added_subtree(node: Node):
 func apply_theme_recursive(node: Node):
 	if node is Control:
 		node.theme = theme_resource
-		# 清除所有样式覆盖，防止后续生成的代码污染统一样式
+		# 清除字体颜色覆盖，保持主题语义色一致
 		for color_name in ["font_color", "font_hover_color", "font_pressed_color", "font_disabled_color", "font_focus_color"]:
 			node.remove_theme_color_override(color_name)
-		for style_name in ["normal", "hover", "pressed", "disabled", "focus", "panel"]:
-			node.remove_theme_stylebox_override(style_name)
 		node.remove_theme_constant_override("corner_radius")
 		node.remove_theme_constant_override("h_separation")
 		node.remove_theme_constant_override("v_separation")

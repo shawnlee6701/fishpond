@@ -1,5 +1,6 @@
 extends Control
 
+const UIKit := preload("res://scripts/ui_kit.gd")
 const DataLoaderScript := preload("res://scripts/data_loader.gd")
 const InspectionSystemScript := preload("res://scripts/inspection_system.gd")
 
@@ -9,6 +10,22 @@ const CARD_NAMES := {
 	"master": "InspectionOptionCard_LaoShiFu"
 }
 
+const INSPECTION_CARD_TEXTURES: Dictionary[String, Texture2D] = {
+	"observe": preload("res://assets/ui/inspection_method_card_observe.png"),
+	"fish_finder": preload("res://assets/ui/inspection_method_card_fish_finder.png"),
+	"master": preload("res://assets/ui/inspection_method_card_master.png")
+}
+
+const INSPECTION_COST_BADGE_TEXTURE: Texture2D = preload("res://assets/ui/inspection_cost_badge.png")
+const INSPECTION_USED_BADGE_TEXTURE: Texture2D = preload("res://assets/ui/inspection_used_badge.png")
+const BALANCE_HIGHLIGHT_BG_TEXTURE: Texture2D = preload("res://assets/ui/balance_highlight_bg.png")
+const STATUS_BOX_BG_TEXTURE: Texture2D = preload("res://assets/ui/status_box_bg.png")
+const PRICE_BADGE_TEXTURE: Texture2D = preload("res://assets/ui/price_badge.png")
+const BUTTON_SECONDARY_TEXTURE: Texture2D = preload("res://assets/buttons/button_secondary.png")
+const POND_ACTION_BUTTON_TEXTURE: Texture2D = preload("res://assets/buttons/pond_action_button.png")
+const OWNED_POND_CARD_BG_TEXTURE: Texture2D = preload("res://assets/ui/owned_pond_card_bg.png")
+
+@onready var top_status_bar: PanelContainer = $SafeArea/PageLayout/TopStatusBar
 @onready var day_label: Label = $SafeArea/PageLayout/TopStatusBar/StatusRow/DayLabel
 @onready var money_label: Label = $SafeArea/PageLayout/TopStatusBar/StatusRow/MoneyLabel
 @onready var inspection_cost_label: Label = $SafeArea/PageLayout/TopStatusBar/StatusRow/InspectionCostLabel
@@ -18,9 +35,12 @@ const CARD_NAMES := {
 @onready var known_info_grid: GridContainer = $SafeArea/PageLayout/ContentScroll/Content/PondSummaryCard/SummaryContent/KnownInfoGrid
 @onready var risk_hint_label: Label = $SafeArea/PageLayout/ContentScroll/Content/PondSummaryCard/SummaryContent/RiskHintLabel
 @onready var content_scroll: ScrollContainer = $SafeArea/PageLayout/ContentScroll
+@onready var pond_summary_card: PanelContainer = $SafeArea/PageLayout/ContentScroll/Content/PondSummaryCard
 @onready var inspection_cards: VBoxContainer = $SafeArea/PageLayout/ContentScroll/Content/InspectionSection/InspectionCards
+@onready var decision_summary_card: PanelContainer = $SafeArea/PageLayout/ContentScroll/Content/DecisionSummaryCard
 @onready var summary_numbers_label: Label = $SafeArea/PageLayout/ContentScroll/Content/DecisionSummaryCard/Summary/SummaryNumbersLabel
 @onready var reserve_hint_label: Label = $SafeArea/PageLayout/ContentScroll/Content/DecisionSummaryCard/Summary/ReserveHintLabel
+@onready var bottom_decision_bar: PanelContainer = $SafeArea/PageLayout/BottomDecisionBar
 @onready var give_up_button: Button = $SafeArea/PageLayout/BottomDecisionBar/DecisionButtons/GiveUpButton
 @onready var commit_button: Button = $SafeArea/PageLayout/BottomDecisionBar/DecisionButtons/CommitButton
 
@@ -44,6 +64,14 @@ func _ready() -> void:
 		pond = game_state.current_pond
 
 	tools = DataLoaderScript.load_json(DataLoaderScript.TOOLS_PATH, [])
+	_apply_texture_panel_bg(top_status_bar, BALANCE_HIGHLIGHT_BG_TEXTURE, 14, 20)
+	_apply_texture_panel_bg(pond_summary_card, OWNED_POND_CARD_BG_TEXTURE, 24, 24)
+	_apply_texture_label_bg(price_badge, PRICE_BADGE_TEXTURE, 14, 4, 16)
+	decision_summary_card.add_theme_stylebox_override("panel", UIKit.make_translucent_readability_panel(0.82))
+	_apply_texture_panel_bg(bottom_decision_bar, STATUS_BOX_BG_TEXTURE, 16, 20)
+	UIKit.apply_texture_button(give_up_button, BUTTON_SECONDARY_TEXTURE)
+	UIKit.apply_texture_button(commit_button, POND_ACTION_BUTTON_TEXTURE)
+	UIKit.set_scrollbar_auto_hide(content_scroll)
 	_render_page()
 	give_up_button.pressed.connect(_on_give_up_pressed)
 	commit_button.pressed.connect(_on_commit_pressed)
@@ -59,8 +87,8 @@ func _render_page() -> void:
 
 func _render_status() -> void:
 	day_label.text = "第 %d 天" % game_state.day
-	money_label.text = "本钱：%d 元" % game_state.cash
-	inspection_cost_label.text = "已花验塘费：%d 元" % game_state.inspection_cost_total
+	money_label.text = "兜里：%d 元" % game_state.cash
+	inspection_cost_label.text = "验塘已花：%d 元" % game_state.inspection_cost_total
 
 
 func _render_pond_summary() -> void:
@@ -76,7 +104,7 @@ func _render_pond_summary() -> void:
 	_add_info_block("塘龄", "%d 年" % int(pond.get("age_years", 0)))
 	_add_info_block("水色", str(pond.get("water_state", "-")))
 
-	risk_hint_label.text = "塘边消息：%s\n原始风险：%s" % [pond.get("rumor", "暂无消息"), pond.get("risk_tag", "暂时看不准")]
+	risk_hint_label.text = "镇上有人说：%s\n老手看下来：%s" % [pond.get("rumor", "暂无消息"), pond.get("risk_tag", "暂时看不太透")]
 
 
 func _add_tag(text: String) -> void:
@@ -149,7 +177,8 @@ func _build_inspection_card(option: Dictionary) -> PanelContainer:
 	card.name = str(CARD_NAMES.get(tool_id, "InspectionOptionCard_%s" % tool_id))
 	card.custom_minimum_size = Vector2(0, 190 if bool(option.get("is_used", false)) else 178)
 	card.theme_type_variation = &"InspectionUsedCard" if bool(option.get("is_used", false)) else &"InspectionOptionCard"
-	card.set_meta("_future_texture_slot", "inspection_method_card_%s" % tool_id)
+	var card_texture: Texture2D = INSPECTION_CARD_TEXTURES.get(tool_id, INSPECTION_CARD_TEXTURES["observe"])
+	_apply_texture_panel_bg(card, card_texture, 24, 24)
 
 	var content := VBoxContainer.new()
 	content.name = "CardContent"
@@ -172,6 +201,7 @@ func _build_inspection_card(option: Dictionary) -> PanelContainer:
 		var used_badge := Label.new()
 		used_badge.name = "UsedBadge"
 		used_badge.theme_type_variation = &"InspectUsedBadge"
+		_apply_texture_label_bg(used_badge, INSPECTION_USED_BADGE_TEXTURE, 8, 2, 12)
 		used_badge.text = "已验"
 		used_badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		used_badge.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -197,7 +227,7 @@ func _build_inspection_card(option: Dictionary) -> PanelContainer:
 		cost_badge.text = "免费" if int(option.get("cost", 0)) == 0 else "%d 元" % int(option.get("cost", 0))
 		cost_badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		cost_badge.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		cost_badge.set_meta("_future_texture_slot", "inspection_cost_badge")
+		_apply_texture_label_bg(cost_badge, INSPECTION_COST_BADGE_TEXTURE, 14, 4, 12)
 		header.add_child(cost_badge)
 
 		var desc := Label.new()
@@ -210,13 +240,53 @@ func _build_inspection_card(option: Dictionary) -> PanelContainer:
 		var action := Button.new()
 		action.name = "ActionButton"
 		action.custom_minimum_size = Vector2(0, 68)
-		action.theme_type_variation = &"InspectClueButton"
 		action.disabled = not bool(option.get("can_afford", true))
-		action.text = "钱不够" if action.disabled else ("免费查看" if int(option.get("cost", 0)) == 0 else "花 %d 元买线索" % int(option.get("cost", 0)))
+		var tool_id_for_label := str(option.get("id", ""))
+		if action.disabled:
+			action.text = "钱不够"
+		elif int(option.get("cost", 0)) == 0:
+			action.text = "瞄一眼（免费）"
+		elif tool_id_for_label == "fish_finder":
+			action.text = "花 %d 元扫一梭子" % int(option.get("cost", 0))
+		elif tool_id_for_label == "master":
+			action.text = "花 %d 元请老师傅" % int(option.get("cost", 0))
+		else:
+			action.text = "花 %d 元买线索" % int(option.get("cost", 0))
+		UIKit.apply_texture_button(action, POND_ACTION_BUTTON_TEXTURE)
 		action.pressed.connect(_on_inspection_pressed.bind(option))
 		content.add_child(action)
 
 	return card
+
+
+func _apply_texture_panel_bg(panel: PanelContainer, texture: Texture2D, margin: int = 24, texture_margin: int = 0) -> void:
+	var style := StyleBoxTexture.new()
+	style.texture = texture
+	style.content_margin_left = margin
+	style.content_margin_top = margin
+	style.content_margin_right = margin
+	style.content_margin_bottom = margin
+	if texture_margin > 0:
+		style.texture_margin_left = texture_margin
+		style.texture_margin_top = texture_margin
+		style.texture_margin_right = texture_margin
+		style.texture_margin_bottom = texture_margin
+	panel.add_theme_stylebox_override("panel", style)
+
+
+func _apply_texture_label_bg(label: Label, texture: Texture2D, margin_h: int = 14, margin_v: int = 4, texture_margin: int = 0) -> void:
+	var style := StyleBoxTexture.new()
+	style.texture = texture
+	style.content_margin_left = margin_h
+	style.content_margin_top = margin_v
+	style.content_margin_right = margin_h
+	style.content_margin_bottom = margin_v
+	if texture_margin > 0:
+		style.texture_margin_left = texture_margin
+		style.texture_margin_top = texture_margin
+		style.texture_margin_right = texture_margin
+		style.texture_margin_bottom = texture_margin
+	label.add_theme_stylebox_override("normal", style)
 
 
 func _on_inspection_pressed(option: Dictionary) -> void:
@@ -267,10 +337,10 @@ func _render_decision_summary() -> void:
 	var remaining_cash := int(preview.get("remaining_after_contract", preview.get("remaining_cash", 0)))
 	var can_contract := bool(preview.get("can_contract", false))
 
-	summary_numbers_label.text = "已花验塘费：%d 元\n承包价：%d 元\n承包后剩余：%d 元" % [game_state.inspection_cost_total, quote_price, remaining_cash]
-	reserve_hint_label.text = "提醒：承包后还要预留捞鱼、抽水、鱼车和运输成本" if can_contract else "钱不够承包：包下后留不出最低开工资金"
+	summary_numbers_label.text = "验塘已花：%d 元\n塘主开价：%d 元\n包完还剩：%d 元" % [game_state.inspection_cost_total, quote_price, remaining_cash]
+	reserve_hint_label.text = "留够开工钱，别让一口塘拖死你。" if can_contract else "包了也没钱开工，这塘先放一放吧。"
 	reserve_hint_label.theme_type_variation = &"InspectReserveHintLabel" if can_contract else &"InspectWarningLabel"
-	commit_button.text = "承包 %d 元" % quote_price
+	commit_button.text = "包了！给塘主 %d 元" % quote_price
 	commit_button.disabled = false
 
 
@@ -280,12 +350,12 @@ func _on_give_up_pressed() -> void:
 		return
 
 	_show_global_confirm({
-		"title": "确定放弃这口塘？",
-		"subtitle": "已花的钱不回头，回去重新挑塘。",
+		"title": "这塘不看了？",
+		"subtitle": "已花的验塘钱就当交学费了，咱们回去再看别的。",
 		"balance_text": "已花验塘费：%d 元" % game_state.inspection_cost_total,
 		"body": "已花的验塘费不会退回，确定放弃这口塘吗？",
-		"cancel_text": "继续验塘",
-		"confirm_text": "确定放弃",
+		"cancel_text": "再看看",
+		"confirm_text": "不包了，走",
 		"on_confirm": Callable(self, "_return_to_pond_list")
 	})
 
@@ -306,36 +376,36 @@ func _contract_confirm_config(preview: Dictionary) -> Dictionary:
 	var remaining_after_contract := current_money - contract_total_cost
 	var can_contract := remaining_after_contract >= min_working_capital
 	var status_type := "ok"
-	var status_title := "资金状态：够开工"
-	var status_desc := "能包，但后面还要支付下网、人工、抽水和鱼车成本。"
+	var status_title := "钱够开工"
+	var status_desc := "包是能包，但后面下网、人工、抽水、拉鱼——哪样都要钱。"
 	if not can_contract:
 		status_type = "bad"
-		status_title = "资金状态：资金不足"
-		status_desc = "包下后连基本开工资金都不够，建议别包。"
+		status_title = "钱不够开工"
+		status_desc = "包了也没钱开工，这塘先放一放吧。"
 	elif remaining_after_contract < recommended_working_capital:
 		status_type = "tight"
-		status_title = "资金状态：余额偏紧"
-		status_desc = "能包，但后续下网、人工、抽水和鱼车成本会比较吃紧。"
+		status_title = "稍微有点紧"
+		status_desc = "包了也能开工，但账要算紧，后面一步都不能错。"
 
 	return {
-		"title": "盘一盘再承包",
-		"subtitle": "承包后还要留钱开工，别一把梭哈。",
-		"balance_text": "包下后剩余：%d 元" % remaining_after_contract,
+		"title": "包塘前再算一卦",
+		"subtitle": "留够开工钱，别让一口塘拖死你。",
+		"balance_text": "包完还剩：%d 元" % remaining_after_contract,
 		"bill_rows": [
-			{"name": "CurrentMoneyRow", "label": "手上钱", "value": "%d 元" % current_money},
-			{"name": "InspectionSpentRow", "label": "已花验塘费", "value": "%d 元（不退）" % inspection_spent, "visible": inspection_spent > 0},
-			{"name": "PondPriceRow", "label": "塘主要价", "value": "-%d 元" % pond_price, "negative": true},
-			{"name": "ExtraCostRow", "label": "包塘杂费", "value": "-%d 元" % contract_extra_cost, "negative": true, "visible": contract_extra_cost > 0},
-			{"name": "TotalContractCostRow", "label": "合计扣款", "value": "-%d 元" % contract_total_cost, "negative": true},
-			{"name": "RemainingAfterContractRow", "label": "包下后剩余", "value": "%d 元" % remaining_after_contract},
-			{"name": "MinWorkingCapitalRow", "label": "最低开工资金", "value": "%d 元" % min_working_capital}
+			{"name": "CurrentMoneyRow", "label": "兜里", "value": "%d 元" % current_money},
+			{"name": "InspectionSpentRow", "label": "已花看塘费", "value": "%d 元（不退）" % inspection_spent, "visible": inspection_spent > 0},
+			{"name": "PondPriceRow", "label": "塘主开价", "value": "-%d 元" % pond_price, "negative": true},
+			{"name": "ExtraCostRow", "label": "杂费（盖章跑腿）", "value": "-%d 元" % contract_extra_cost, "negative": true, "visible": contract_extra_cost > 0},
+			{"name": "TotalContractCostRow", "label": "合计从兜里扣", "value": "-%d 元" % contract_total_cost, "negative": true},
+			{"name": "RemainingAfterContractRow", "label": "包完还剩", "value": "%d 元" % remaining_after_contract},
+			{"name": "MinWorkingCapitalRow", "label": "开工底线", "value": "%d 元" % min_working_capital}
 		],
 		"status_type": status_type,
 		"status_title": status_title,
 		"status_desc": status_desc,
 		"warning_text": "承包后还要支付下网、人工、抽水、鱼车等成本。",
-		"cancel_text": "再想想",
-		"confirm_text": "就包这塘（-%d）" % contract_total_cost if can_contract else "钱不够",
+		"cancel_text": "再掂量掂量",
+		"confirm_text": "干！包了（-%d）" % contract_total_cost if can_contract else "包不了",
 		"confirm_disabled": not can_contract,
 		"on_confirm": Callable(self, "_on_contract_confirmed")
 	}

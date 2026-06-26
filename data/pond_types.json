@@ -2,7 +2,7 @@
   {
     "id": "artificial_pond",
     "name": "人工塘",
-    "description": "管理规整、鱼情稳定，适合新手承包。",
+    "description": "塘底规整、鱼情稳，新手包塘首选。",
     "big_fish_modifier": 0.9,
     "fish_king_modifier": 0.7,
     "difficulty_modifier": 0.8,
@@ -11,7 +11,7 @@
   {
     "id": "old_pond",
     "name": "老塘",
-    "description": "多年未清的老塘，传闻深处藏着大货。",
+    "description": "多年没清过底的老塘，水里有没有大货，谁也说不好。",
     "big_fish_modifier": 1.2,
     "fish_king_modifier": 1.1,
     "difficulty_modifier": 1.1,
@@ -20,7 +20,7 @@
   {
     "id": "reservoir_pond",
     "name": "水库塘",
-    "description": "水面宽、鱼种杂，上限高但更难判断。",
+    "description": "水面宽，鱼种杂。上限高，但空军的风险也高。",
     "big_fish_modifier": 1.4,
     "fish_king_modifier": 1.5,
     "difficulty_modifier": 1.3,

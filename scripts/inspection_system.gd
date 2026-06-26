@@ -214,13 +214,13 @@ func _build_master_lines(pond: Dictionary, profile: Dictionary) -> Array[String]
 	match str(profile.get("price", "fair")):
 		"cheap":
 			lines.append(_pick([
-				"塘主报价看着有机会，但得防鱼不好起。",
-				"这报价不算硬，顺利的话有赚头。"
+				"这报价不算硬，顺利的话有赚头。",
+				"塘主报价看着有机会，但得防鱼不好起。"
 			]))
 		"expensive":
 			lines.append(_pick([
-				"报价不算便宜，除非真出大货，不然压力不小。",
-				"老板要价偏满，回旋余地可能不多。"
+				"老板要价偏满，回旋余地可能不多。",
+				"报价不算便宜，除非真出大货，不然压力不小。"
 			]))
 		_:
 			lines.append(_pick([
@@ -266,11 +266,11 @@ func _estimate_value_range(hidden_value: float) -> Vector2i:
 func _uncertainty_note(tool_id: String) -> String:
 	match tool_id:
 		"fish_finder":
-			return "设备信号比目测清楚，但水下障碍和鱼口状态仍会干扰判断。"
+			return "信号比目测清楚，但水下障碍和鱼口状态还是会干扰判断。"
 		"master":
-			return "老师傅判断更接近实情，但仍是估值区间，不是保底收益。"
+			return "老师傅说得更透，但仍是估值区间，不是保底收益。"
 		_:
-			return "目测只能看个大概，后续验塘可以把判断收窄。"
+			return "目测只能看个大概，换个法子验塘能把判断收窄。"
 
 func _round_to_nearest(value: float, step: int) -> int:
 	return int(round(value / float(step)) * float(step))

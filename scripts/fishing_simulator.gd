@@ -352,13 +352,13 @@ func _get_plan_catch_scale(plan_id: String) -> float:
 func _get_plan_name(plan_id: String) -> String:
 	match plan_id:
 		"low":
-			return "省着下网"
+			return "小捞一网"
 		"standard":
-			return "正常作业"
+			return "稳捞一网"
 		"full", "drain":
 			return "抽干收尾"
 		_:
-			return "正常作业"
+			return "这一网"
 
 func _build_fish_description(fish_income: int, work_cost: int, fish_name: String) -> String:
 	var harvest_profit := fish_income - work_cost

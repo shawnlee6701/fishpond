@@ -3,6 +3,13 @@ extends Control
 const UIKit := preload("res://scripts/ui_kit.gd")
 const SaveSystem := preload("res://scripts/save_system.gd")
 
+const RECORD_HEADER_BG_TEXTURE: Texture2D = preload("res://assets/ui/record_header_bg.png")
+const RECORD_CARD_BG_TEXTURE: Texture2D = preload("res://assets/ui/record_card_bg.png")
+const BALANCE_HIGHLIGHT_BG_TEXTURE: Texture2D = preload("res://assets/ui/balance_highlight_bg.png")
+const BUTTON_ACCEPT_TEXTURE: Texture2D = preload("res://assets/buttons/button_accept.png")
+const BUTTON_SECONDARY_TEXTURE: Texture2D = preload("res://assets/buttons/button_secondary.png")
+
+@onready var top_status_bar: PanelContainer = $SafeArea/PageLayout/TopStatusBar
 @onready var day_label: Label = $SafeArea/PageLayout/TopStatusBar/StatusRow/DayLabel
 @onready var money_label: Label = $SafeArea/PageLayout/TopStatusBar/StatusRow/MoneyLabel
 @onready var summary_bar: PanelContainer = $SafeArea/PageLayout/RecordSummaryBar
@@ -18,6 +25,44 @@ const SaveSystem := preload("res://scripts/save_system.gd")
 var game_state: GameState
 var screen_container: Control
 
+func _apply_panel_texture(panel: PanelContainer, texture: Texture2D, margin: int = 24, texture_margin: int = 0) -> void:
+	var style := StyleBoxTexture.new()
+	style.texture = texture
+	style.content_margin_left = margin
+	style.content_margin_top = margin
+	style.content_margin_right = margin
+	style.content_margin_bottom = margin
+	if texture_margin > 0:
+		style.texture_margin_left = texture_margin
+		style.texture_margin_top = texture_margin
+		style.texture_margin_right = texture_margin
+		style.texture_margin_bottom = texture_margin
+	panel.add_theme_stylebox_override("panel", style)
+
+
+func _apply_button_texture(button: Button, texture: Texture2D) -> void:
+	var patch := 20
+	var normal := _make_nine_patch_style(texture, patch, Color(1.0, 1.0, 1.0, 1.0))
+	var hover := _make_nine_patch_style(texture, patch, Color(1.12, 1.12, 1.12, 1.0))
+	var pressed := _make_nine_patch_style(texture, patch, Color(0.88, 0.88, 0.88, 1.0))
+	var disabled := _make_nine_patch_style(texture, patch, Color(0.65, 0.65, 0.65, 0.85))
+	button.add_theme_stylebox_override("normal", normal)
+	button.add_theme_stylebox_override("hover", hover)
+	button.add_theme_stylebox_override("pressed", pressed)
+	button.add_theme_stylebox_override("disabled", disabled)
+
+
+func _make_nine_patch_style(texture: Texture2D, patch: int, modulate: Color) -> StyleBoxTexture:
+	var style := StyleBoxTexture.new()
+	style.texture = texture
+	style.modulate_color = modulate
+	style.texture_margin_left = patch
+	style.texture_margin_top = patch
+	style.texture_margin_right = patch
+	style.texture_margin_bottom = patch
+	return style
+
+
 func setup(next_game_state: GameState, next_screen_container: Control) -> void:
 	game_state = next_game_state
 	screen_container = next_screen_container
@@ -27,6 +72,12 @@ func _ready() -> void:
 		game_state = GameState.new()
 	go_pond_list_button.pressed.connect(_on_bottom_pressed)
 	bottom_button.pressed.connect(_on_bottom_pressed)
+	_apply_panel_texture(top_status_bar, BALANCE_HIGHLIGHT_BG_TEXTURE, 14, 20)
+	_apply_panel_texture(summary_bar, BALANCE_HIGHLIGHT_BG_TEXTURE, 14, 20)
+	_apply_button_texture(go_pond_list_button, BUTTON_SECONDARY_TEXTURE)
+	_apply_button_texture(bottom_button, BUTTON_ACCEPT_TEXTURE)
+	empty_state.add_theme_stylebox_override("panel", UIKit.make_translucent_readability_panel(0.82))
+	UIKit.set_scrollbar_auto_hide(record_scroll)
 	_render_page()
 
 func _render_page() -> void:
@@ -57,14 +108,14 @@ func _render_summary(records: Array[Dictionary]) -> void:
 		profit_loss_stat.text = "累计亏损\n%d 元" % total_profit_loss
 	else:
 		profit_loss_stat.text = "累计打平\n0 元"
-	current_money_stat.text = "当前本钱\n%d 元" % game_state.cash
+	current_money_stat.text = "现在兜里\n%d 元" % game_state.cash
 
 func _create_record_card(record: Dictionary) -> PanelContainer:
 	var card := PanelContainer.new()
 	card.name = "PondRecordCard"
 	card.theme_type_variation = &"PondRecordCard"
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	card.set_meta("future_texture", "record_card_bg.png")
+	_apply_panel_texture(card, RECORD_CARD_BG_TEXTURE, 24, 24)
 
 	var content := VBoxContainer.new()
 	content.add_theme_constant_override("separation", 0)
@@ -84,7 +135,7 @@ func _create_record_header(record: Dictionary) -> Button:
 	header.theme_type_variation = &"RecordHeaderButton"
 	header.custom_minimum_size = Vector2(0, 118)
 	header.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	header.set_meta("future_texture", "record_header_bg.png")
+	_apply_button_texture(header, RECORD_HEADER_BG_TEXTURE)
 
 	var row := HBoxContainer.new()
 	row.name = "RecordHeaderRow"
@@ -207,8 +258,8 @@ func _create_final_ledger_section(record: Dictionary) -> PanelContainer:
 func _create_section(section_name: String, title: String, is_final := false) -> PanelContainer:
 	var section := PanelContainer.new()
 	section.name = section_name
-	section.theme_type_variation = &"RecordFinalSectionPanel" if is_final else &"RecordDetailSectionPanel"
 	section.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	section.add_theme_stylebox_override("panel", UIKit.make_translucent_readability_panel(0.78) if not is_final else UIKit.make_translucent_readability_panel(0.85))
 
 	var margin := MarginContainer.new()
 	margin.name = "SectionMargin"

@@ -2,145 +2,104 @@ extends Control
 
 const UIKit := preload("res://scripts/ui_kit.gd")
 
-class OwnedPondVisualPlaceholder:
-	extends Control
+const BUYER_TRANSFER_TEXTURE: Texture2D = preload("res://assets/decorations/buyer_transfer_placeholder.png")
+const CATCH_RESULT_TEXTURE: Texture2D = preload("res://assets/effects/catch_result_visual.png")
+const NET_METHOD_LOW_TEXTURE: Texture2D = preload("res://assets/effects/net_method_low.png")
+const NET_METHOD_STANDARD_TEXTURE: Texture2D = preload("res://assets/effects/net_method_standard.png")
+const NET_METHOD_FULL_TEXTURE: Texture2D = preload("res://assets/effects/net_method_full.png")
 
-	func _draw() -> void:
-		var rect := Rect2(Vector2.ZERO, size)
-		var center := rect.get_center()
-		var water_rect := Rect2(Vector2(30.0, size.y * 0.16), Vector2(maxf(1.0, size.x - 60.0), maxf(1.0, size.y * 0.68)))
-		_draw_ellipse(water_rect, Color(0.18, 0.46, 0.58, 1.0))
-		draw_arc(center, minf(size.x, size.y) * 0.34, 0.0, TAU, 96, Color(0.06, 0.18, 0.18, 1.0), 6.0, true)
-		for index in range(3):
-			var wave_y := size.y * (0.36 + float(index) * 0.14)
-			var from_x := size.x * 0.22
-			var to_x := size.x * 0.78
-			var points := PackedVector2Array()
-			for step in range(24):
-				var t := float(step) / 23.0
-				points.append(Vector2(lerpf(from_x, to_x, t), wave_y + sin(t * TAU * 2.0 + float(index)) * 7.0))
-			draw_polyline(points, Color(0.78, 0.95, 0.94, 0.75), 3.0, true)
-		_draw_ellipse(Rect2(Vector2(size.x * 0.38, size.y * 0.50), Vector2(76.0, 26.0)), Color(0.04, 0.15, 0.13, 0.55))
-		_draw_ellipse(Rect2(Vector2(size.x * 0.58, size.y * 0.36), Vector2(54.0, 20.0)), Color(0.04, 0.15, 0.13, 0.45))
+const _NET_METHOD_TEXTURES: Dictionary[String, Texture2D] = {
+	"low": NET_METHOD_LOW_TEXTURE,
+	"standard": NET_METHOD_STANDARD_TEXTURE,
+	"full": NET_METHOD_FULL_TEXTURE
+}
 
-	func _draw_ellipse(rect: Rect2, color: Color) -> void:
-		var points := PackedVector2Array()
-		var center := rect.get_center()
-		var radius := rect.size * 0.5
-		for index in range(64):
-			var angle := float(index) / 64.0 * TAU
-			points.append(center + Vector2(cos(angle) * radius.x, sin(angle) * radius.y))
-		draw_colored_polygon(points, color)
+const FISH_TEXTURES: Dictionary[String, Texture2D] = {
+	"small_fish": preload("res://assets/fish/fish_small.png"),
+	"normal_fish": preload("res://assets/fish/fish_normal.png"),
+	"big_fish": preload("res://assets/fish/fish_big.png"),
+	"fish_king": preload("res://assets/fish/fish_king.png")
+}
 
-class TransferBuyerPlaceholder:
-	extends Control
+const FISH_ICON_HEIGHTS: Dictionary[String, int] = {
+	"small_fish": 24,
+	"normal_fish": 32,
+	"big_fish": 40,
+	"fish_king": 56
+}
 
-	func _draw() -> void:
-		var rect := Rect2(Vector2.ZERO, size)
-		var center := rect.get_center()
-		var avatar_center := Vector2(rect.size.x * 0.34, rect.size.y * 0.42)
-		var avatar_radius := minf(rect.size.x, rect.size.y) * 0.18
-		_draw_circle_shape(avatar_center, avatar_radius, Color(0.94, 0.72, 0.48, 1.0))
-		_draw_circle_shape(avatar_center + Vector2(0.0, avatar_radius * 1.75), avatar_radius * 1.35, Color(0.18, 0.36, 0.25, 1.0))
-		_draw_circle_shape(avatar_center + Vector2(-avatar_radius * 0.33, -avatar_radius * 0.10), avatar_radius * 0.08, Color(0.12, 0.10, 0.06, 1.0))
-		_draw_circle_shape(avatar_center + Vector2(avatar_radius * 0.33, -avatar_radius * 0.10), avatar_radius * 0.08, Color(0.12, 0.10, 0.06, 1.0))
-		draw_arc(avatar_center + Vector2(0.0, avatar_radius * 0.12), avatar_radius * 0.36, 0.18, PI - 0.18, 18, Color(0.12, 0.10, 0.06, 1.0), 3.0, true)
+const OWNED_POND_CARD_BG_TEXTURE: Texture2D = preload("res://assets/ui/owned_pond_card_bg.png")
+const ACTION_CARD_BG_TEXTURE: Texture2D = preload("res://assets/ui/action_card_bg.png")
+const NET_OPTION_CARD_BG_TEXTURE: Texture2D = preload("res://assets/ui/net_option_card_bg.png")
+const TRANSFER_DIALOG_BG_TEXTURE: Texture2D = preload("res://assets/ui/transfer_dialog_bg.png")
+const SPEECH_BUBBLE_TEXTURE: Texture2D = preload("res://assets/ui/speech_bubble.png")
+const OWNED_POND_VISUAL_TEXTURE: Texture2D = preload("res://assets/ponds/owned_pond_visual.png")
+const OFFER_PRICE_BADGE_TEXTURE: Texture2D = preload("res://assets/ui/offer_price_badge.png")
+const BALANCE_HIGHLIGHT_BG_TEXTURE: Texture2D = preload("res://assets/ui/balance_highlight_bg.png")
+const STATUS_BOX_BG_TEXTURE: Texture2D = preload("res://assets/ui/status_box_bg.png")
+const PROFIT_LOSS_BADGE_TEXTURE: Texture2D = preload("res://assets/ui/profit_loss_badge.png")
+const BG_CARD_PAPER_TEXTURE: Texture2D = preload("res://assets/decorations/bg_card_paper.png")
+const BG_PARCHMENT_TEXTURE: Texture2D = preload("res://assets/decorations/bg_parchment.png")
+const BUTTON_ACCEPT_TEXTURE: Texture2D = preload("res://assets/buttons/button_accept.png")
+const BUTTON_DANGER_CONFIRM_TEXTURE: Texture2D = preload("res://assets/buttons/button_danger_confirm.png")
+const BUTTON_SECONDARY_TEXTURE: Texture2D = preload("res://assets/buttons/button_secondary.png")
 
-		var paper_rect := Rect2(Vector2(rect.size.x * 0.50, rect.size.y * 0.22), Vector2(rect.size.x * 0.34, rect.size.y * 0.52))
-		draw_rect(paper_rect, Color(1.0, 0.95, 0.78, 1.0), true)
-		draw_rect(paper_rect, Color(0.43, 0.31, 0.16, 1.0), false, 4.0)
-		for index in range(3):
-			var line_y := paper_rect.position.y + paper_rect.size.y * (0.26 + float(index) * 0.18)
-			draw_line(
-				Vector2(paper_rect.position.x + paper_rect.size.x * 0.18, line_y),
-				Vector2(paper_rect.position.x + paper_rect.size.x * 0.82, line_y),
-				Color(0.61, 0.45, 0.25, 0.80),
-				3.0,
-				true
-			)
-		draw_circle(paper_rect.position + paper_rect.size * Vector2(0.72, 0.78), paper_rect.size.x * 0.10, Color(0.66, 0.16, 0.11, 0.88))
+func _get_net_method_texture(method_id: String) -> Texture2D:
+	return _NET_METHOD_TEXTURES.get(method_id, NET_METHOD_LOW_TEXTURE)
 
-	func _draw_circle_shape(center: Vector2, radius: float, color: Color) -> void:
-		var points := PackedVector2Array()
-		for index in range(48):
-			var angle := float(index) / 48.0 * TAU
-			points.append(center + Vector2(cos(angle) * radius, sin(angle) * radius))
-		draw_colored_polygon(points, color)
 
-class NetMethodPlaceholder:
-	extends Control
+func _apply_panel_texture(panel: PanelContainer, texture: Texture2D, margin: int = 24, texture_margin: int = 0) -> void:
+	var style := StyleBoxTexture.new()
+	style.texture = texture
+	style.content_margin_left = margin
+	style.content_margin_top = margin
+	style.content_margin_right = margin
+	style.content_margin_bottom = margin
+	if texture_margin > 0:
+		style.texture_margin_left = texture_margin
+		style.texture_margin_top = texture_margin
+		style.texture_margin_right = texture_margin
+		style.texture_margin_bottom = texture_margin
+	panel.add_theme_stylebox_override("panel", style)
 
-	var method_id := "low"
 
-	func _init(next_method_id := "low") -> void:
-		method_id = next_method_id
+func _apply_label_texture(label: Label, texture: Texture2D, margin_h: int = 14, margin_v: int = 4, texture_margin: int = 0) -> void:
+	var style := StyleBoxTexture.new()
+	style.texture = texture
+	style.content_margin_left = margin_h
+	style.content_margin_top = margin_v
+	style.content_margin_right = margin_h
+	style.content_margin_bottom = margin_v
+	if texture_margin > 0:
+		style.texture_margin_left = texture_margin
+		style.texture_margin_top = texture_margin
+		style.texture_margin_right = texture_margin
+		style.texture_margin_bottom = texture_margin
+	label.add_theme_stylebox_override("normal", style)
 
-	func _draw() -> void:
-		var rect := Rect2(Vector2.ZERO, size)
-		var base := Color(0.18, 0.46, 0.58, 1.0)
-		var ink := Color(0.07, 0.16, 0.13, 1.0)
-		if method_id == "full":
-			base = Color(0.64, 0.42, 0.22, 1.0)
-			ink = Color(0.22, 0.12, 0.06, 1.0)
-		_draw_round_rect(Rect2(Vector2(size.x * 0.08, size.y * 0.20), Vector2(size.x * 0.84, size.y * 0.62)), base, 22.0)
-		if method_id == "full":
-			var pump := Rect2(Vector2(size.x * 0.20, size.y * 0.32), Vector2(size.x * 0.32, size.y * 0.25))
-			draw_rect(pump, Color(0.22, 0.29, 0.25, 1.0), true)
-			draw_rect(pump, ink, false, 4.0)
-			draw_line(Vector2(size.x * 0.52, size.y * 0.44), Vector2(size.x * 0.78, size.y * 0.34), ink, 5.0, true)
-			draw_line(Vector2(size.x * 0.52, size.y * 0.52), Vector2(size.x * 0.80, size.y * 0.68), ink, 5.0, true)
-			draw_arc(Vector2(size.x * 0.72, size.y * 0.44), size.x * 0.10, 0.0, TAU, 32, Color(0.94, 0.86, 0.58, 1.0), 4.0, true)
-			for index in range(3):
-				draw_line(Vector2(size.x * (0.22 + index * 0.18), size.y * 0.74), Vector2(size.x * (0.34 + index * 0.18), size.y * 0.72), Color(0.93, 0.78, 0.48, 1.0), 4.0, true)
-			return
 
-		var net_center := Vector2(size.x * (0.46 if method_id == "low" else 0.50), size.y * 0.48)
-		var net_radius := minf(size.x, size.y) * (0.22 if method_id == "low" else 0.30)
-		draw_arc(net_center, net_radius, 0.0, TAU, 48, Color(0.88, 0.96, 0.90, 1.0), 5.0, true)
-		for index in range(-2, 3):
-			var x := net_center.x + float(index) * net_radius * 0.34
-			draw_line(Vector2(x, net_center.y - net_radius * 0.78), Vector2(x, net_center.y + net_radius * 0.78), Color(0.88, 0.96, 0.90, 0.72), 2.0, true)
-			var y := net_center.y + float(index) * net_radius * 0.26
-			draw_line(Vector2(net_center.x - net_radius * 0.82, y), Vector2(net_center.x + net_radius * 0.82, y), Color(0.88, 0.96, 0.90, 0.72), 2.0, true)
-		draw_line(Vector2(net_center.x + net_radius * 0.68, net_center.y + net_radius * 0.60), Vector2(size.x * 0.86, size.y * 0.78), ink, 7.0, true)
+func _apply_button_texture(button: Button, texture: Texture2D) -> void:
+	var patch := 20
+	var normal := _make_nine_patch_style(texture, patch, Color(1.0, 1.0, 1.0, 1.0))
+	var hover := _make_nine_patch_style(texture, patch, Color(1.12, 1.12, 1.12, 1.0))
+	var pressed := _make_nine_patch_style(texture, patch, Color(0.88, 0.88, 0.88, 1.0))
+	var disabled := _make_nine_patch_style(texture, patch, Color(0.65, 0.65, 0.65, 0.85))
+	button.add_theme_stylebox_override("normal", normal)
+	button.add_theme_stylebox_override("hover", hover)
+	button.add_theme_stylebox_override("pressed", pressed)
+	button.add_theme_stylebox_override("disabled", disabled)
 
-	func _draw_round_rect(rect: Rect2, color: Color, radius: float) -> void:
-		draw_rect(rect, color, true)
-		draw_rect(rect, Color(0.06, 0.18, 0.14, 0.85), false, 4.0)
 
-class CatchVisualPlaceholder:
-	extends Control
+func _make_nine_patch_style(texture: Texture2D, patch: int, modulate: Color) -> StyleBoxTexture:
+	var style := StyleBoxTexture.new()
+	style.texture = texture
+	style.modulate_color = modulate
+	style.texture_margin_left = patch
+	style.texture_margin_top = patch
+	style.texture_margin_right = patch
+	style.texture_margin_bottom = patch
+	return style
 
-	func _draw() -> void:
-		var bag_center := Vector2(size.x * 0.50, size.y * 0.48)
-		var bag_radius := minf(size.x, size.y) * 0.30
-		draw_arc(bag_center, bag_radius, 0.0, TAU, 64, Color(0.08, 0.18, 0.15, 1.0), 5.0, true)
-		for index in range(-3, 4):
-			var x := bag_center.x + float(index) * bag_radius * 0.22
-			draw_line(Vector2(x, bag_center.y - bag_radius * 0.82), Vector2(x, bag_center.y + bag_radius * 0.82), Color(0.82, 0.94, 0.88, 0.70), 2.0, true)
-		for index in range(4):
-			var fish_center := Vector2(size.x * (0.35 + index * 0.10), size.y * (0.42 + (index % 2) * 0.12))
-			_draw_fish(fish_center, 38.0 + float(index % 2) * 10.0, Color(0.08, 0.30, 0.24, 0.70))
-		for index in range(5):
-			draw_circle(Vector2(size.x * (0.18 + index * 0.14), size.y * (0.24 + (index % 3) * 0.10)), 7.0 + index % 2 * 3.0, Color(0.80, 0.95, 0.94, 0.72))
-
-	func _draw_fish(center: Vector2, length: float, color: Color) -> void:
-		_draw_ellipse(Rect2(center - Vector2(length * 0.32, length * 0.16), Vector2(length * 0.64, length * 0.32)), color)
-		var tail := PackedVector2Array([
-			center + Vector2(length * 0.34, 0.0),
-			center + Vector2(length * 0.55, -length * 0.16),
-			center + Vector2(length * 0.55, length * 0.16)
-		])
-		draw_colored_polygon(tail, color)
-
-	func _draw_ellipse(rect: Rect2, color: Color) -> void:
-		var points := PackedVector2Array()
-		var center := rect.get_center()
-		var radius := rect.size * 0.5
-		for index in range(40):
-			var angle := float(index) / 40.0 * TAU
-			points.append(center + Vector2(cos(angle) * radius.x, sin(angle) * radius.y))
-		draw_colored_polygon(points, color)
 
 @onready var safe_area: MarginContainer = $SafeArea
 @onready var top_status_bar: PanelContainer = $SafeArea/PageLayout/TopStatusBar
@@ -217,7 +176,10 @@ var harvest_net_cost_value: Label
 var harvest_net_profit_value: Label
 var harvest_result_label: Label
 var harvest_continue_button: Button
+var harvest_opportunity_card: PanelContainer
+var harvest_opportunity_label: Label
 var pending_harvest_result: Dictionary = {}
+var pending_harvest_opportunities: Dictionary = {}
 var harvest_collect_locked := false
 var net_option_empty_state: Label
 var latest_net_result: Dictionary = {}
@@ -273,16 +235,15 @@ func _ready() -> void:
 
 func _apply_ui_frame() -> void:
 	UIKit.set_safe_panel(safe_area, int(UIKit.PAGE_SAFE_X), int(UIKit.PAGE_TOP), -int(UIKit.PAGE_SAFE_X), -int(UIKit.PAGE_BOTTOM))
-	UIKit.style_card(top_status_bar, UIKit.GOLD)
+	_apply_panel_texture(top_status_bar, BALANCE_HIGHLIGHT_BG_TEXTURE, 14, 20)
 	UIKit.style_page_title(title_label)
 	UIKit.style_label(subtitle_label, "muted")
 	subtitle_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	UIKit.style_page_frame(owned_pond_card, UIKit.GREEN)
-	owned_pond_card.set_meta("_future_texture_slot", "owned_pond_card_bg.png")
-	pond_visual_host.set_meta("_future_texture_slot", "owned_pond_visual.png")
-	UIKit.style_chip(pond_status_badge, UIKit.GREEN)
+	_apply_panel_texture(owned_pond_card, OWNED_POND_CARD_BG_TEXTURE, 24, 24)
+	_apply_label_texture(pond_status_badge, PROFIT_LOSS_BADGE_TEXTURE, 12, 4, 16)
 	UIKit.style_label(pond_name_label, "content_title")
-	UIKit.style_card(latest_net_result_card, UIKit.GOLD)
+	_apply_panel_texture(latest_net_result_card, STATUS_BOX_BG_TEXTURE, 24, 20)
 	UIKit.style_label(latest_title_label, "section")
 	UIKit.style_label(latest_method_label, "body_dark")
 	UIKit.style_label(latest_revenue_label, "body_dark")
@@ -295,19 +256,23 @@ func _apply_ui_frame() -> void:
 	_style_action_card(sell_one_net_card, sell_one_net_button, "ghost")
 	_style_action_card(harvest_self_card, harvest_self_button, "primary")
 	UIKit.style_card(ledger_accordion, UIKit.GOLD)
-	UIKit.style_button(ledger_toggle_button, "ghost")
+	UIKit.apply_texture_button(ledger_toggle_button, BUTTON_SECONDARY_TEXTURE)
 	UIKit.style_label(ledger_detail_label, "body_dark")
 	_create_ledger_detail_card()
 	work_plan_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	work_plan_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	UIKit.set_scrollbar_auto_hide(content_scroll)
+	UIKit.set_scrollbar_auto_hide(work_plan_scroll)
 	_show_choice_page()
 
 func _create_owned_pond_visual() -> void:
 	if pond_visual_host.get_child_count() > 0:
 		return
-	# Future art pass: replace this drawn placeholder with owned_pond_visual.png.
-	var visual := OwnedPondVisualPlaceholder.new()
-	visual.name = "PondVisualPlaceholder"
+	var visual := TextureRect.new()
+	visual.name = "PondVisual"
+	visual.texture = OWNED_POND_VISUAL_TEXTURE
+	visual.expand_mode = TextureRect.EXPAND_FIT_WIDTH
+	visual.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	visual.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	visual.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	pond_visual_host.add_child(visual)
@@ -346,8 +311,7 @@ func _style_ledger_rows() -> void:
 		name_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 
 func _style_action_card(card: PanelContainer, button: Button, role: String) -> void:
-	card.set_meta("_future_texture_slot", "action_card_bg.png")
-	UIKit.style_card(card, UIKit.RED if role == "primary" else UIKit.GREEN)
+	_apply_panel_texture(card, ACTION_CARD_BG_TEXTURE, 24, 24)
 	for label in card.find_children("*", "Label", true, false):
 		var typed_label := label as Label
 		typed_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -357,8 +321,7 @@ func _style_action_card(card: PanelContainer, button: Button, role: String) -> v
 			UIKit.style_label(typed_label, "muted")
 		else:
 			UIKit.style_label(typed_label, "body_dark")
-	UIKit.style_button(button, role)
-	button.set_meta("_future_texture_button", "button_primary.png" if role == "primary" else "button_secondary.png")
+	_apply_button_texture(button, BUTTON_ACCEPT_TEXTURE if role == "primary" else BUTTON_DANGER_CONFIRM_TEXTURE)
 
 func _create_ledger_detail_card() -> void:
 	if ledger_detail_card != null and is_instance_valid(ledger_detail_card):
@@ -368,7 +331,7 @@ func _create_ledger_detail_card() -> void:
 	ledger_detail_card.name = "LedgerDetailCard"
 	ledger_detail_card.visible = false
 	ledger_detail_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	ledger_detail_card.add_theme_stylebox_override("panel", UIKit.make_style(Color(1.0, 0.96, 0.84, 0.96), Color(0.61, 0.45, 0.25, 0.65), 8, 2, false))
+	_apply_panel_texture(ledger_detail_card, BG_CARD_PAPER_TEXTURE, 12, 24)
 	ledger_accordion_content.add_child(ledger_detail_card)
 
 	var margin := MarginContainer.new()
@@ -393,9 +356,7 @@ func _create_transfer_dialog() -> void:
 	dim_overlay.name = "DimOverlay"
 	transfer_overlay.set_meta("_structure_name", "TransferOfferDialog")
 	transfer_dialog.name = "DialogCard"
-	# Future art pass: replace this native card with transfer_dialog_bg.png.
-	transfer_dialog.set_meta("_future_texture_slot", "transfer_dialog_bg.png")
-	transfer_dialog.add_theme_stylebox_override("panel", UIKit.make_style(Color(0.98, 0.90, 0.72, 0.99), UIKit.RED, 16, 4, true))
+	_apply_panel_texture(transfer_dialog, TRANSFER_DIALOG_BG_TEXTURE, 40, 40)
 
 	var content := VBoxContainer.new()
 	content.name = "Content"
@@ -404,7 +365,7 @@ func _create_transfer_dialog() -> void:
 
 	var title := Label.new()
 	title.name = "TitleLabel"
-	title.text = "有人愿意接手"
+	title.text = "有人来看塘了"
 	UIKit.style_modal_title(title)
 	content.add_child(title)
 
@@ -412,9 +373,9 @@ func _create_transfer_dialog() -> void:
 	transfer_offer_highlight_label.name = "OfferHighlight"
 	transfer_offer_highlight_label.custom_minimum_size = Vector2(0, 70)
 	transfer_offer_highlight_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	# Future art pass: replace this native badge with offer_price_badge.png.
-	transfer_offer_highlight_label.set_meta("_future_texture_slot", "offer_price_badge.png")
-	UIKit.style_highlight_label(transfer_offer_highlight_label, "price")
+	transfer_offer_highlight_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	transfer_offer_highlight_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_apply_label_texture(transfer_offer_highlight_label, OFFER_PRICE_BADGE_TEXTURE, 24, 12, 20)
 	content.add_child(transfer_offer_highlight_label)
 
 	var body_scroll := ScrollContainer.new()
@@ -434,13 +395,14 @@ func _create_transfer_dialog() -> void:
 	buyer_area.add_theme_constant_override("separation", 14)
 	body.add_child(buyer_area)
 
-	# Future art pass: replace this drawn placeholder with buyer_transfer_placeholder.png.
-	var buyer_placeholder := TransferBuyerPlaceholder.new()
-	buyer_placeholder.name = "BuyerPlaceholder"
+	var buyer_placeholder := TextureRect.new()
+	buyer_placeholder.name = "BuyerTexture"
+	buyer_placeholder.texture = BUYER_TRANSFER_TEXTURE
+	buyer_placeholder.expand_mode = TextureRect.EXPAND_KEEP_SIZE
+	buyer_placeholder.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	buyer_placeholder.custom_minimum_size = Vector2(190, 190)
 	buyer_placeholder.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	buyer_placeholder.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	buyer_placeholder.set_meta("_future_texture_slot", "buyer_transfer_placeholder.png")
 	buyer_area.add_child(buyer_placeholder)
 
 	var bubble := PanelContainer.new()
@@ -448,9 +410,7 @@ func _create_transfer_dialog() -> void:
 	bubble.custom_minimum_size = Vector2(210, 0)
 	bubble.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	bubble.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	bubble.add_theme_stylebox_override("panel", UIKit.make_style(Color("fff8df"), Color("6d241f"), 24, 3, true))
-	# Future art pass: replace this native bubble with speech_bubble.png.
-	bubble.set_meta("_future_texture_slot", "speech_bubble.png")
+	_apply_panel_texture(bubble, SPEECH_BUBBLE_TEXTURE, 18, 16)
 	buyer_area.add_child(bubble)
 
 	var bubble_margin := MarginContainer.new()
@@ -462,7 +422,7 @@ func _create_transfer_dialog() -> void:
 
 	var bubble_text := Label.new()
 	bubble_text.name = "BuyerSpeechText"
-	bubble_text.text = "兄弟一场，把这塘包给我"
+	bubble_text.text = "哥，你这塘我盯好久了，给个痛快价呗。"
 	bubble_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	bubble_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	bubble_text.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -488,24 +448,36 @@ func _create_transfer_dialog() -> void:
 	summary_rows.add_theme_constant_override("separation", 6)
 	summary_margin.add_child(summary_rows)
 
-	transfer_total_invested_value = _add_transfer_summary_row(summary_rows, "TotalInvestedRow", "当前总投入")
-	transfer_offer_price_value = _add_transfer_summary_row(summary_rows, "OfferPriceRow", "对方接手价")
-	transfer_profit_loss_value = _add_transfer_summary_row(summary_rows, "TransferProfitLossRow", "转包盈亏")
+	transfer_total_invested_value = _add_transfer_summary_row(summary_rows, "TotalInvestedRow", "你投进去的")
+	transfer_offer_price_value = _add_transfer_summary_row(summary_rows, "OfferPriceRow", "对方报价")
+	transfer_profit_loss_value = _add_transfer_summary_row(summary_rows, "TransferProfitLossRow", "这单转手")
 	transfer_profit_loss_status_label = Label.new()
 	transfer_profit_loss_status_label.name = "TransferProfitLossStatus"
 	transfer_profit_loss_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	transfer_profit_loss_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	UIKit.style_label(transfer_profit_loss_status_label, "muted")
 	summary_rows.add_child(transfer_profit_loss_status_label)
-	transfer_money_after_accept_value = _add_transfer_summary_row(summary_rows, "MoneyAfterAcceptRow", "接受后本钱")
+	transfer_money_after_accept_value = _add_transfer_summary_row(summary_rows, "MoneyAfterAcceptRow", "接了你兜里")
+
+	var risk_panel := PanelContainer.new()
+	risk_panel.name = "RiskNotePanel"
+	risk_panel.add_theme_stylebox_override("panel", UIKit.make_translucent_readability_panel(0.75))
+	body.add_child(risk_panel)
+
+	var risk_margin := MarginContainer.new()
+	risk_margin.add_theme_constant_override("margin_left", 14)
+	risk_margin.add_theme_constant_override("margin_top", 10)
+	risk_margin.add_theme_constant_override("margin_right", 14)
+	risk_margin.add_theme_constant_override("margin_bottom", 10)
+	risk_panel.add_child(risk_margin)
 
 	transfer_risk_note_label = Label.new()
 	transfer_risk_note_label.name = "RiskNoteLabel"
-	transfer_risk_note_label.text = "对方报价只是外面人根据鱼情估出来的价，不等于塘里的真实剩货。"
+	transfer_risk_note_label.text = "来人出价是照行情估的，不一定等于塘里真剩的。"
 	transfer_risk_note_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	transfer_risk_note_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	UIKit.style_label(transfer_risk_note_label, "muted")
-	body.add_child(transfer_risk_note_label)
+	risk_margin.add_child(transfer_risk_note_label)
 
 	var buttons := HBoxContainer.new()
 	buttons.name = "ButtonRow"
@@ -514,23 +486,19 @@ func _create_transfer_dialog() -> void:
 
 	accept_transfer_button = Button.new()
 	accept_transfer_button.name = "AcceptTransferButton"
-	accept_transfer_button.text = "接受转包"
+	accept_transfer_button.text = "转！接了这个价"
 	accept_transfer_button.custom_minimum_size = Vector2(0, 96)
 	accept_transfer_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	# Future art pass: replace this native button with button_accept.png.
-	accept_transfer_button.set_meta("_future_texture_button", "button_accept.png")
-	UIKit.style_button(accept_transfer_button, "primary")
+	_apply_button_texture(accept_transfer_button, BUTTON_ACCEPT_TEXTURE)
 	accept_transfer_button.pressed.connect(_on_accept_transfer_pressed)
 	buttons.add_child(accept_transfer_button)
 
 	reject_transfer_button = Button.new()
 	reject_transfer_button.name = "ContinueButton"
-	reject_transfer_button.text = "继续自己扛"
+	reject_transfer_button.text = "不转，自己干"
 	reject_transfer_button.custom_minimum_size = Vector2(0, 96)
 	reject_transfer_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	# Future art pass: replace this native button with button_secondary.png.
-	reject_transfer_button.set_meta("_future_texture_button", "button_secondary.png")
-	UIKit.style_button(reject_transfer_button, "secondary")
+	_apply_button_texture(reject_transfer_button, BUTTON_SECONDARY_TEXTURE)
 	reject_transfer_button.pressed.connect(_on_reject_transfer_pressed)
 	buttons.add_child(reject_transfer_button)
 
@@ -587,12 +555,13 @@ func _create_harvest_result_dialog() -> void:
 	body.add_theme_constant_override("separation", 14)
 	body_scroll.add_child(body)
 
-	# Future art pass: replace this drawn placeholder with catch_result_visual.png.
-	var catch_visual := CatchVisualPlaceholder.new()
-	catch_visual.name = "CatchVisualPlaceholder"
+	var catch_visual := TextureRect.new()
+	catch_visual.name = "CatchVisual"
+	catch_visual.texture = CATCH_RESULT_TEXTURE
+	catch_visual.expand_mode = TextureRect.EXPAND_FIT_WIDTH
+	catch_visual.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	catch_visual.custom_minimum_size = Vector2(0, 280)
 	catch_visual.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	catch_visual.set_meta("_future_texture_slot", "catch_result_visual.png")
 	body.add_child(catch_visual)
 
 	var catch_card := PanelContainer.new()
@@ -639,13 +608,44 @@ func _create_harvest_result_dialog() -> void:
 	UIKit.style_label(harvest_result_label, "body_dark")
 	body.add_child(harvest_result_label)
 
+	# "New opportunities brought by this net" hint (uses existing opportunities data).
+	harvest_opportunity_card = PanelContainer.new()
+	harvest_opportunity_card.name = "OpportunityHintCard"
+	UIKit.style_card(harvest_opportunity_card, UIKit.GOLD)
+	body.add_child(harvest_opportunity_card)
+
+	var opportunity_margin := MarginContainer.new()
+	opportunity_margin.name = "OpportunityMargin"
+	opportunity_margin.add_theme_constant_override("margin_left", 16)
+	opportunity_margin.add_theme_constant_override("margin_top", 14)
+	opportunity_margin.add_theme_constant_override("margin_right", 16)
+	opportunity_margin.add_theme_constant_override("margin_bottom", 14)
+	harvest_opportunity_card.add_child(opportunity_margin)
+
+	var opportunity_content := VBoxContainer.new()
+	opportunity_content.name = "OpportunityContent"
+	opportunity_content.add_theme_constant_override("separation", 8)
+	opportunity_margin.add_child(opportunity_content)
+
+	var opportunity_title := Label.new()
+	opportunity_title.name = "OpportunityTitle"
+	opportunity_title.text = "这一网带来的新机会"
+	opportunity_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	UIKit.style_label(opportunity_title, "section")
+	opportunity_content.add_child(opportunity_title)
+
+	harvest_opportunity_label = Label.new()
+	harvest_opportunity_label.name = "OpportunityBody"
+	harvest_opportunity_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	harvest_opportunity_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	UIKit.style_label(harvest_opportunity_label, "body_dark")
+	opportunity_content.add_child(harvest_opportunity_label)
+
 	harvest_continue_button = Button.new()
 	harvest_continue_button.name = "CollectResultButton"
-	harvest_continue_button.text = "收下结果"
+	harvest_continue_button.text = "收工"
 	harvest_continue_button.custom_minimum_size = Vector2(0, UIKit.MODAL_ACTION_HEIGHT)
-	# Future art pass: replace this native button with TextureButton.
-	harvest_continue_button.set_meta("_future_texture_button", "button_primary.png")
-	UIKit.style_button(harvest_continue_button, "primary")
+	_apply_button_texture(harvest_continue_button, BUTTON_ACCEPT_TEXTURE)
 	harvest_continue_button.pressed.connect(_on_harvest_result_continue_pressed)
 	content.add_child(harvest_continue_button)
 
@@ -653,9 +653,9 @@ func _rebuild_work_plan_cards() -> void:
 	for child in work_plan_panel.get_children():
 		child.queue_free()
 	net_option_empty_state = null
-	low_work_button = _create_net_option_card("low", "小捞一网", "低成本试一网，鱼获不稳定。", "捞完还能继续。", false)
-	standard_work_button = _create_net_option_card("standard", "稳捞一网", "多下点功夫，鱼获更稳定。", "捞完还能继续。", false)
-	full_work_button = _create_net_option_card("full", "抽干收尾", "直接抽干收尾，看清这口塘最后有多少货。", "本塘直接结算。", true)
+	low_work_button = _create_net_option_card("low", "小捞一网", "成本低，鱼获看天。捞完还能接着来。", "捞完还能继续。", false)
+	standard_work_button = _create_net_option_card("standard", "稳捞一网", "功夫花到，鱼获更稳。捞完还能接着来。", "捞完还能继续。", false)
+	full_work_button = _create_net_option_card("full", "抽干收尾", "水抽干、网收净，这口塘不再折腾。直接结算。", "本塘直接结算。", true)
 	_ensure_net_option_list_layout()
 
 func _create_net_option_card(plan_id: String, title_text: String, desc_text: String, consequence_text: String, is_final: bool) -> Button:
@@ -663,9 +663,8 @@ func _create_net_option_card(plan_id: String, title_text: String, desc_text: Str
 	card.name = "NetOptionCard_%s" % ("Final" if is_final else "Small" if plan_id == "low" else "Normal")
 	card.custom_minimum_size = Vector2(0, 250 if is_final else 220)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	card.set_meta("_future_texture_slot", "net_option_card_bg.png")
 	work_plan_panel.add_child(card)
-	UIKit.style_card(card, UIKit.RED if is_final else UIKit.GREEN)
+	_apply_panel_texture(card, NET_OPTION_CARD_BG_TEXTURE, 24, 24)
 
 	var margin := MarginContainer.new()
 	margin.name = "CardMargin"
@@ -680,13 +679,14 @@ func _create_net_option_card(plan_id: String, title_text: String, desc_text: Str
 	row.add_theme_constant_override("separation", 18)
 	margin.add_child(row)
 
-	# Future art pass: replace this drawn placeholder with net_method_xxx.png.
-	var visual := NetMethodPlaceholder.new(plan_id)
-	visual.name = "NetMethodPlaceholder"
+	var visual := TextureRect.new()
+	visual.name = "NetMethodTexture"
+	visual.texture = _get_net_method_texture(plan_id)
+	visual.expand_mode = TextureRect.EXPAND_KEEP_SIZE
+	visual.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	visual.custom_minimum_size = Vector2(150, 150)
 	visual.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	visual.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	visual.set_meta("_future_texture_slot", "net_method_%s.png" % plan_id)
 	row.add_child(visual)
 
 	var info := VBoxContainer.new()
@@ -745,7 +745,7 @@ func _create_net_option_card(plan_id: String, title_text: String, desc_text: Str
 	if is_final:
 		var warning := Label.new()
 		warning.name = "FinalWarningLabel"
-		warning.text = "选择后本塘将进入最终结算"
+		warning.text = "选了就不能回头了"
 		warning.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		warning.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		UIKit.style_label(warning, "muted")
@@ -757,30 +757,29 @@ func _create_net_option_card(plan_id: String, title_text: String, desc_text: Str
 	button.custom_minimum_size = Vector2(0, 74)
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	button.text = title_text
-	button.set_meta("_future_texture_button", "button_primary.png" if is_final else "button_secondary.png")
-	UIKit.style_button(button, "primary" if is_final else "secondary")
+	_apply_button_texture(button, BUTTON_DANGER_CONFIRM_TEXTURE if is_final else BUTTON_ACCEPT_TEXTURE)
 	button.pressed.connect(_on_work_plan_pressed.bind(plan_id))
 	info.add_child(button)
 	return button
 
 func _render() -> void:
 	var pond := game_state.current_pond
-	pond_name_label.text = "已包下：%s" % str(pond.get("name", "未承包鱼塘"))
+	pond_name_label.text = "已拿下：%s" % str(pond.get("name", "未承包鱼塘"))
 	day_label.text = "第 %d 天" % game_state.day
-	cash_label.text = "本钱：%d 元" % game_state.cash
+	cash_label.text = "兜里：%d 元" % game_state.cash
 	_render_ledger()
 	_render_latest_net_result()
 	_render_ledger_accordion()
 
 	var has_net_result := not latest_net_result.is_empty() or game_state.self_net_count > 0 or game_state.fish_income > 0
-	harvest_self_title_label.text = "继续下网" if has_net_result else "自己下网"
-	harvest_self_desc_label.text = "再下一网，看看塘里还有多少货。" if has_net_result else "继续投入开工成本，看看这口塘到底有没有货。"
-	harvest_self_button.text = "继续下网" if has_net_result else "开始下网"
+	harvest_self_title_label.text = "再下一网" if has_net_result else "下网开工"
+	harvest_self_desc_label.text = "看看塘里还有多少货。" if has_net_result else "花点开工钱，看看这口塘到底有没有货。"
+	harvest_self_button.text = "再下一网" if has_net_result else "下网开工"
 	transfer_button.text = "去转包"
 	transfer_button.disabled = current_transfer_offer.is_empty() or game_state.drained
 	harvest_self_button.disabled = not game_state.can_pay(game_state.get_work_cost("low"))
-	transfer_status_label.text = "有接手价" if not transfer_button.disabled else "暂无报价"
-	harvest_self_status_label.text = "主操作" if not harvest_self_button.disabled else "本钱不够"
+	transfer_status_label.text = "有人出价" if not transfer_button.disabled else "暂无报价"
+	harvest_self_status_label.text = "主操作" if not harvest_self_button.disabled else "钱不够"
 	if current_transfer_offer.is_empty():
 		transfer_button.text = "暂无报价"
 
@@ -789,23 +788,23 @@ func _render() -> void:
 	match current_state:
 		SellOneNetState.LOCKED_NO_CATCH:
 			sell_one_net_card.visible = true
-			sell_one_net_status_label.text = "未解锁"
-			sell_one_net_desc_label.text = "先下一网，有鱼情才有人报价。"
-			sell_one_net_button.text = "暂无买家"
+			sell_one_net_status_label.text = "还没下过网"
+			sell_one_net_desc_label.text = "先下一网，让外面的人看到货才会有人出价。"
+			sell_one_net_button.text = "没人出价"
 			sell_one_net_button.disabled = true
 			_set_banner_visible(false)
 		SellOneNetState.AVAILABLE:
 			sell_one_net_card.visible = true
-			sell_one_net_status_label.text = "有报价"
-			sell_one_net_desc_label.text = "有人愿意出钱买这一网，接受后立刻入账。"
-			sell_one_net_button.text = "查看报价"
+			sell_one_net_status_label.text = "有人出价"
+			sell_one_net_desc_label.text = "有人要你这网鱼，接了就入账，鱼归人家。"
+			sell_one_net_button.text = "看看出多少"
 			sell_one_net_button.disabled = false
 			_set_banner_visible(false)
 		SellOneNetState.NO_BUYER:
 			sell_one_net_card.visible = true
-			sell_one_net_status_label.text = "暂无买家"
-			sell_one_net_desc_label.text = "现在没人出价，可以继续下网看看。"
-			sell_one_net_button.text = "暂无买家"
+			sell_one_net_status_label.text = "没人出价"
+			sell_one_net_desc_label.text = "暂时没人要。再下一网，可能就有人开口了。"
+			sell_one_net_button.text = "没人出价"
 			sell_one_net_button.disabled = true
 			_set_banner_visible(false)
 		SellOneNetState.SOLD:
@@ -814,7 +813,7 @@ func _render() -> void:
 			_set_banner_visible(true)
 			var sold_income := _last_sell_one_net_income if _last_sell_one_net_income > 0 else game_state.one_net_income
 			if sold_income > 0:
-				_set_banner_text("卖一网成功：+%d 元已入账" % sold_income, "这一网已卖出，不能重复卖")
+				_set_banner_text("这网出手了：+%d 元到兜里" % sold_income, "这一网的货已经是人家的了")
 			else:
 				_set_banner_text("这一网已经卖过", "不能重复卖")
 
@@ -832,6 +831,16 @@ func _render_ledger() -> void:
 	UIKit.style_label(profit_loss_value, "body_dark")
 	profit_loss_value.add_theme_color_override("font_color", UIKit.GREEN if current_profit_loss > 0 else UIKit.RED if current_profit_loss < 0 else UIKit.INK)
 	profit_loss_row.add_theme_stylebox_override("panel", UIKit.make_style(Color(1.0, 0.92, 0.70, 0.95), UIKit.GREEN_LIGHT if current_profit_loss > 0 else UIKit.RED if current_profit_loss < 0 else UIKit.GOLD, 8, 3, false))
+
+	if current_profit_loss > 0:
+		pond_status_badge.text = "赚了"
+		pond_status_badge.add_theme_color_override("font_color", UIKit.GREEN)
+	elif current_profit_loss < 0:
+		pond_status_badge.text = "亏了"
+		pond_status_badge.add_theme_color_override("font_color", UIKit.RED)
+	else:
+		pond_status_badge.text = "持平"
+		pond_status_badge.add_theme_color_override("font_color", UIKit.INK)
 
 func _render_revenue_breakdown() -> void:
 	if not is_instance_valid(_revenue_breakdown_label):
@@ -858,14 +867,14 @@ func _render_latest_net_result() -> void:
 	var net_cost := int(latest_net_result.get("work_cost", 0))
 	var latest_net_profit := fish_revenue - net_cost
 	latest_method_label.text = "最新一网：%s" % method_name
-	latest_revenue_label.text = "鱼获收入：%d 元" % fish_revenue
-	latest_cost_label.text = "本次成本：%d 元" % net_cost
+	latest_revenue_label.text = "鱼获：%d 元" % fish_revenue
+	latest_cost_label.text = "成本：%d 元" % net_cost
 	if latest_net_profit > 0:
-		latest_profit_label.text = "本次净赚：+%d 元" % latest_net_profit
+		latest_profit_label.text = "这网净赚：+%d 元" % latest_net_profit
 	elif latest_net_profit < 0:
-		latest_profit_label.text = "本次净亏：%d 元" % latest_net_profit
+		latest_profit_label.text = "这网净亏：%d 元" % latest_net_profit
 	else:
-		latest_profit_label.text = "本次打平：0 元"
+		latest_profit_label.text = "这网打平：0 元"
 	latest_profit_label.add_theme_color_override("font_color", UIKit.GREEN if latest_net_profit > 0 else UIKit.RED if latest_net_profit < 0 else UIKit.INK)
 
 func _render_ledger_accordion() -> void:
@@ -1091,7 +1100,7 @@ func _render_transfer_decision_dialog() -> Dictionary:
 	var transfer_profit_loss := int(ledger.get("transfer_profit_loss", 0))
 	var money_after_accept := int(ledger.get("money_after_accept", 0))
 
-	transfer_offer_highlight_label.text = "对方报价：%d 元" % offer_price
+	transfer_offer_highlight_label.text = "来人出价：%d 元" % offer_price
 	transfer_total_invested_value.text = "%d 元" % total_invested
 	transfer_offer_price_value.text = "%d 元" % offer_price
 	transfer_profit_loss_value.text = "%+d 元" % transfer_profit_loss if transfer_profit_loss != 0 else "0 元"
@@ -1100,7 +1109,7 @@ func _render_transfer_decision_dialog() -> Dictionary:
 	var outcome_text := "不赚不亏"
 	var outcome_tone := "gold"
 	if transfer_profit_loss < 0:
-		outcome_text = "亏钱止损"
+		outcome_text = "亏了"
 		outcome_tone = "negative"
 	elif transfer_profit_loss > 0:
 		outcome_text = "转手赚了"
@@ -1113,13 +1122,13 @@ func _render_transfer_decision_dialog() -> Dictionary:
 	transfer_profit_loss_status_label.add_theme_color_override("font_color", UIKit.RED if transfer_profit_loss < 0 else UIKit.GREEN if transfer_profit_loss > 0 else UIKit.MUTED)
 
 	if transfer_profit_loss < 0:
-		accept_transfer_button.text = "接受转包（亏%d元）" % abs(transfer_profit_loss)
+		accept_transfer_button.text = "转！接了这个价（亏%d元）" % abs(transfer_profit_loss)
 		UIKit.style_button(accept_transfer_button, "gold")
 	elif transfer_profit_loss > 0:
-		accept_transfer_button.text = "接受转包（赚%d元）" % transfer_profit_loss
+		accept_transfer_button.text = "转！接了这个价（赚%d元）" % transfer_profit_loss
 		UIKit.style_button(accept_transfer_button, "primary")
 	else:
-		accept_transfer_button.text = "接受转包（不赚不亏）"
+		accept_transfer_button.text = "转！接了这个价（不赚不亏）"
 		UIKit.style_button(accept_transfer_button, "gold")
 	accept_transfer_button.add_theme_font_size_override("font_size", 26)
 	reject_transfer_button.add_theme_font_size_override("font_size", 26)
@@ -1134,8 +1143,8 @@ func _hide_detail_panels() -> void:
 	_show_choice_page()
 
 func _show_choice_page() -> void:
-	title_label.text = "塘已经包下"
-	subtitle_label.text = "看清现在亏多少，再决定下一步。"
+	title_label.text = "这塘归你了"
+	subtitle_label.text = "塘在你名下，下一步怎么走？"
 	owned_pond_card.custom_minimum_size = Vector2(0, 360)
 	owned_pond_card.visible = true
 	pond_visual_host.visible = true
@@ -1148,8 +1157,8 @@ func _show_choice_page() -> void:
 	work_plan_scroll.visible = false
 
 func _show_work_plan_page() -> void:
-	title_label.text = "自己下网"
-	subtitle_label.text = "选一种下网方式，成本越高，越可能看到真东西。"
+	title_label.text = "下网开工"
+	subtitle_label.text = "花多少钱，就看到多少真东西。"
 	owned_pond_card.custom_minimum_size = Vector2(0, 238)
 	owned_pond_card.visible = true
 	pond_visual_host.visible = false
@@ -1193,7 +1202,7 @@ func _create_sell_one_net_dialog() -> void:
 	dim_overlay.name = "SellOneNetDimOverlay"
 	_sell_one_net_overlay.set_meta("_structure_name", "SellOneNetDialog")
 	_sell_one_net_dialog.name = "SellOneNetDialogCard"
-	_sell_one_net_dialog.add_theme_stylebox_override("panel", UIKit.make_style(Color(0.98, 0.90, 0.72, 0.99), UIKit.GREEN, 16, 4, true))
+	_apply_panel_texture(_sell_one_net_dialog, TRANSFER_DIALOG_BG_TEXTURE, 40, 40)
 
 	var content := VBoxContainer.new()
 	content.name = "Content"
@@ -1203,49 +1212,68 @@ func _create_sell_one_net_dialog() -> void:
 	# -- Title --
 	var title := Label.new()
 	title.name = "TitleLabel"
-	title.text = "有人要买这一网"
+	title.text = "有人要你这网鱼"
 	UIKit.style_modal_title(title)
 	content.add_child(title)
 
 	# -- Offer price highlight --
 	_sell_one_net_highlight_label = Label.new()
 	_sell_one_net_highlight_label.name = "SellOneNetOfferHighlight"
-	_sell_one_net_highlight_label.custom_minimum_size = Vector2(0, 64)
+	_sell_one_net_highlight_label.custom_minimum_size = Vector2(0, 70)
 	_sell_one_net_highlight_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	UIKit.style_highlight_label(_sell_one_net_highlight_label, "price")
+	_sell_one_net_highlight_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_sell_one_net_highlight_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_apply_label_texture(_sell_one_net_highlight_label, OFFER_PRICE_BADGE_TEXTURE, 24, 12, 20)
 	content.add_child(_sell_one_net_highlight_label)
+
+	# -- Deal body (summary rows + explanation on translucent panel) --
+	var body_panel := PanelContainer.new()
+	body_panel.name = "DealBodyPanel"
+	body_panel.add_theme_stylebox_override("panel", UIKit.make_translucent_readability_panel(0.82))
+	content.add_child(body_panel)
+
+	var body_margin := MarginContainer.new()
+	body_margin.add_theme_constant_override("margin_left", 18)
+	body_margin.add_theme_constant_override("margin_top", 14)
+	body_margin.add_theme_constant_override("margin_right", 18)
+	body_margin.add_theme_constant_override("margin_bottom", 14)
+	body_panel.add_child(body_margin)
+
+	var body := VBoxContainer.new()
+	body.name = "DealBody"
+	body.add_theme_constant_override("separation", 10)
+	body_margin.add_child(body)
 
 	# -- Deal summary rows --
 	var summary := VBoxContainer.new()
 	summary.name = "DealSummaryRows"
 	summary.add_theme_constant_override("separation", 6)
-	summary.custom_minimum_size = Vector2(0, 8)
-	content.add_child(summary)
+	body.add_child(summary)
 
 	_sell_one_net_offer_price_label = Label.new()
 	_sell_one_net_offer_price_label.name = "ImmediateIncomeRow"
-	_sell_one_net_offer_price_label.text = "接受后入账：+0 元"
+	_sell_one_net_offer_price_label.text = "接了到手：+0 元"
 	_sell_one_net_offer_price_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	UIKit.style_label(_sell_one_net_offer_price_label, "body_dark")
 	summary.add_child(_sell_one_net_offer_price_label)
 
 	_sell_one_net_current_money_label = Label.new()
 	_sell_one_net_current_money_label.name = "CurrentMoneyRow"
-	_sell_one_net_current_money_label.text = "当前本钱：0 元"
+	_sell_one_net_current_money_label.text = "兜里有：0 元"
 	_sell_one_net_current_money_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	UIKit.style_label(_sell_one_net_current_money_label, "body_dark")
 	summary.add_child(_sell_one_net_current_money_label)
 
 	_sell_one_net_after_money_label = Label.new()
 	_sell_one_net_after_money_label.name = "MoneyAfterSellOneNetRow"
-	_sell_one_net_after_money_label.text = "接受后本钱：0 元"
+	_sell_one_net_after_money_label.text = "接了兜里变：0 元"
 	_sell_one_net_after_money_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	UIKit.style_label(_sell_one_net_after_money_label, "body_dark")
 	summary.add_child(_sell_one_net_after_money_label)
 
 	var sold_state_row := Label.new()
 	sold_state_row.name = "SoldStateRow"
-	sold_state_row.text = "卖出后：这一网不能重复卖"
+	sold_state_row.text = "卖出后：这网就是人家的了"
 	sold_state_row.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	UIKit.style_label(sold_state_row, "body_dark")
 	summary.add_child(sold_state_row)
@@ -1253,10 +1281,10 @@ func _create_sell_one_net_dialog() -> void:
 	# -- Explain text --
 	var explain := Label.new()
 	explain.name = "ExplainText"
-	explain.text = "买家只买这一网，不买整口塘。接受后，这一网会标记为已卖出。"
+	explain.text = "来人只买这一网，不买塘。接了这一网的货就归人家了。"
 	explain.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	UIKit.style_label(explain, "muted")
-	content.add_child(explain)
+	body.add_child(explain)
 
 	# -- Buttons --
 	var buttons := HBoxContainer.new()
@@ -1266,19 +1294,19 @@ func _create_sell_one_net_dialog() -> void:
 
 	_sell_one_net_reject_button = Button.new()
 	_sell_one_net_reject_button.name = "RejectSellOneNetButton"
-	_sell_one_net_reject_button.text = "再等等"
+	_sell_one_net_reject_button.text = "再等等看"
 	_sell_one_net_reject_button.custom_minimum_size = Vector2(0, 78)
 	_sell_one_net_reject_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	UIKit.style_button(_sell_one_net_reject_button, "ghost")
+	_apply_button_texture(_sell_one_net_reject_button, BUTTON_SECONDARY_TEXTURE)
 	_sell_one_net_reject_button.pressed.connect(_on_sell_one_net_reject_pressed)
 	buttons.add_child(_sell_one_net_reject_button)
 
 	_sell_one_net_accept_button = Button.new()
 	_sell_one_net_accept_button.name = "AcceptSellOneNetButton"
-	_sell_one_net_accept_button.text = "接受卖出"
+	_sell_one_net_accept_button.text = "接！卖给他"
 	_sell_one_net_accept_button.custom_minimum_size = Vector2(0, 78)
 	_sell_one_net_accept_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	UIKit.style_button(_sell_one_net_accept_button, "primary")
+	_apply_button_texture(_sell_one_net_accept_button, BUTTON_ACCEPT_TEXTURE)
 	_sell_one_net_accept_button.pressed.connect(_on_sell_one_net_accept_pressed)
 	buttons.add_child(_sell_one_net_accept_button)
 
@@ -1340,11 +1368,11 @@ func _show_sell_one_net_dialog() -> void:
 	var income := int(current_one_net_offer.get("income", 0))
 	var current_money := game_state.cash
 	var money_after_sell_one_net := current_money + income
-	_sell_one_net_highlight_label.text = "买家出价：%d 元" % income
-	_sell_one_net_offer_price_label.text = "接受后入账：+%d 元" % income
-	_sell_one_net_current_money_label.text = "当前本钱：%d 元" % current_money
-	_sell_one_net_after_money_label.text = "接受后本钱：%d 元" % money_after_sell_one_net
-	_sell_one_net_accept_button.text = "接受卖出（+%d）" % income
+	_sell_one_net_highlight_label.text = "来人出到 %d 元" % income
+	_sell_one_net_offer_price_label.text = "接了到手：+%d 元" % income
+	_sell_one_net_current_money_label.text = "兜里有：%d 元" % current_money
+	_sell_one_net_after_money_label.text = "接了兜里变：%d 元" % money_after_sell_one_net
+	_sell_one_net_accept_button.text = "接！卖给他（+%d）" % income
 	_sell_one_net_accept_button.disabled = false
 	_show_auto_sell_one_net_modal()
 
@@ -1376,7 +1404,7 @@ func _refresh_transfer_offer() -> void:
 
 func _on_transfer_pressed() -> void:
 	if current_transfer_offer.is_empty():
-		message_label.text = "现在没人肯接手。先自己下一网，让外面的人看到这塘到底有没有货。"
+		message_label.text = "没人出价。先下一网，让外面的人看到货，自然有人开口。"
 		return
 
 	_open_transfer_offer_dialog()
@@ -1395,10 +1423,10 @@ func _on_accept_transfer_pressed() -> void:
 	if transfer_profit_loss < 0:
 		accept_transfer_button.disabled = true
 		_show_global_confirm({
-			"title": "确定亏钱转包？",
-			"body": "接受后本塘亏损 %d 元，但可以提前止损。" % abs(transfer_profit_loss),
-			"cancel_text": "再想想",
-			"confirm_text": "确定转包",
+			"title": "真要亏钱转出去？",
+			"body": "接了这个价，这口塘你亏 %d 元，但至少不用再往里贴钱了。" % abs(transfer_profit_loss),
+			"cancel_text": "再掂量掂量",
+			"confirm_text": "转出去，认亏",
 			"on_confirm": Callable(self, "_confirm_accept_transfer"),
 			"on_cancel": Callable(self, "_on_cancel_loss_transfer_confirm")
 		})
@@ -1419,7 +1447,7 @@ func _on_cancel_loss_transfer_confirm() -> void:
 
 func _on_reject_transfer_pressed() -> void:
 	_close_transfer_dialog()
-	message_label.text = "你没接这个转包价。后面是赚是亏，继续自己扛。"
+	message_label.text = "没接。这口塘的账，你自己算到底。"
 	_render()
 
 func _on_viewport_size_changed() -> void:
@@ -1434,7 +1462,7 @@ func _on_sell_one_net_pressed() -> void:
 	var current_state := _get_sell_one_net_state()
 
 	if current_state != SellOneNetState.AVAILABLE:
-		message_label.text = "当前不能卖一网。"
+		message_label.text = "现在不能卖一网。"
 		_render()
 		return
 
@@ -1447,12 +1475,12 @@ func _on_sell_one_net_accept_pressed() -> void:
 
 	_sell_one_net_accept_button.disabled = true
 	if current_one_net_offer.is_empty():
-		message_label.text = "卖一网报价已过期，无法完成交易。"
+		message_label.text = "卖一网报价已过期，没法交易了。"
 		_close_sell_one_net_dialog()
 		_render()
 		return
 	if game_state.sold_one_net:
-		message_label.text = "这一网已经卖过，不能重复交易。"
+		message_label.text = "这一网已经卖过了，不能重复卖。"
 		_close_sell_one_net_dialog()
 		_render()
 		return
@@ -1460,9 +1488,9 @@ func _on_sell_one_net_accept_pressed() -> void:
 	var income := int(current_one_net_offer.get("income", 0))
 	if game_state.apply_one_net(income, str(current_one_net_offer.get("text", ""))):
 		_last_sell_one_net_income = income
-		_set_banner_text("卖一网成功：+%d 元已入账" % income, "这一网已卖出，不能重复卖")
+		_set_banner_text("这网出手了：+%d 元到兜里" % income, "这一网的货已经是人家的了")
 		_set_banner_visible(true)
-		message_label.text = "卖一网成功，+%d 元已入账。" % income
+		message_label.text = "成了，%d 元到手。这网的货归买家了。" % income
 		current_one_net_offer = {}
 		_refresh_transfer_offer()
 	_close_sell_one_net_dialog()
@@ -1470,7 +1498,7 @@ func _on_sell_one_net_accept_pressed() -> void:
 
 func _on_sell_one_net_reject_pressed() -> void:
 	_close_sell_one_net_dialog()
-	message_label.text = "你决定先不出售这一网，继续看看行情。"
+	message_label.text = "不卖了。再看看行情，说不定后面更高。"
 	_render()
 
 func _on_harvest_self_pressed() -> void:
@@ -1479,7 +1507,7 @@ func _on_harvest_self_pressed() -> void:
 
 func _open_work_plan_page() -> void:
 	_show_work_plan_page()
-	message_label.text = "选一种下网方式。抽干会直接结算，钱不够的方案不能选。"
+	message_label.text = "选个方案。抽干就是终局了，钱不够的干不了。"
 	_update_work_buttons()
 
 func _show_global_confirm(config: Dictionary) -> void:
@@ -1497,14 +1525,14 @@ func _on_work_plan_back_pressed() -> void:
 func _on_work_plan_pressed(plan_id: String) -> void:
 	var cost := game_state.get_work_cost(plan_id)
 	if not game_state.can_pay(cost):
-		message_label.text = "本钱不够，干不了这个作业方案。"
+		message_label.text = "钱不够，干不了这个方案。"
 		_update_work_buttons()
 		return
 
 	if plan_id == "full":
 		_show_global_confirm({
-			"title": "确定抽干收尾？",
-			"body": "抽干后这口塘会直接结算，不能再继续下网。",
+			"title": "确定要抽干收尾？",
+			"body": "抽干了就不能再下了，这口塘的账到此为止。",
 			"cancel_text": "再想想",
 			"confirm_text": "抽干收尾",
 			"on_confirm": Callable(self, "_execute_work_plan").bind(plan_id)
@@ -1515,12 +1543,13 @@ func _on_work_plan_pressed(plan_id: String) -> void:
 func _execute_work_plan(plan_id: String) -> void:
 	var cost := game_state.get_work_cost(plan_id)
 	if not game_state.can_pay(cost):
-		message_label.text = "本钱不够，干不了这个作业方案。"
+		message_label.text = "钱不够，干不了这个方案。"
 		_update_work_buttons()
 		return
 
 	var result := resolver.generate_harvest_result(game_state.current_pond, plan_id, cost)
 	pending_harvest_result = result
+	pending_harvest_opportunities = resolver.generate_disposal_opportunities(game_state.current_pond, result)
 	harvest_collect_locked = false
 	_show_harvest_result(result)
 
@@ -1574,11 +1603,11 @@ func _show_harvest_result(result: Dictionary) -> void:
 	var net_cost := int(result.get("work_cost", 0))
 	var round_profit := fish_revenue - net_cost
 	if caught_fish_king:
-		harvest_result_title.text = "鱼王出现！"
+		harvest_result_title.text = "鱼王出水！"
 	elif round_profit > 0:
-		harvest_result_title.text = "这一网赚到了"
+		harvest_result_title.text = "这一网赚了"
 	elif round_profit == 0:
-		harvest_result_title.text = "这一网打平"
+		harvest_result_title.text = "这一网平了"
 	else:
 		harvest_result_title.text = "这一网亏了"
 
@@ -1589,6 +1618,7 @@ func _show_harvest_result(result: Dictionary) -> void:
 	harvest_net_profit_value.add_theme_color_override("font_color", UIKit.GREEN if round_profit > 0 else UIKit.RED if round_profit < 0 else UIKit.INK)
 	harvest_result_label.text = "本次赚亏 %+d 元" % round_profit
 	UIKit.style_highlight_label(harvest_result_label, "positive" if round_profit > 0 else "negative" if round_profit < 0 else "gold")
+	_update_harvest_opportunity_hint()
 	harvest_continue_button.disabled = false
 	UIKit.show_modal(self, harvest_result_overlay, harvest_result_dialog, 0.86, 1060, Vector2i(340, 700), Vector2i(860, 1160))
 
@@ -1605,18 +1635,42 @@ func _render_harvest_catch_rows(result: Dictionary) -> void:
 	harvest_catch_list.add_child(title)
 	for item_variant in catch_details:
 		var item := Dictionary(item_variant)
-		var row_text := "%s：%d 斤 × %d 元/斤 = %d 元" % [
-			str(item.get("name", "未知鱼获")),
-			int(item.get("weight_jin", 0)),
-			int(item.get("unit_price", 0)),
-			int(item.get("income", 0))
-		]
-		if str(item.get("id", "")) == "fish_king" and item.has("integrity"):
-			row_text += "，完整度 %d%%" % int(item.get("integrity", 0))
-		harvest_catch_list.add_child(_make_plain_card_label(row_text))
+		harvest_catch_list.add_child(_create_fish_catch_row(item))
 		var price_note := str(item.get("price_note", ""))
 		if not price_note.is_empty():
 			harvest_catch_list.add_child(UIKit.make_label(price_note, UIKit.FONT_SECONDARY, UIKit.MUTED, HORIZONTAL_ALIGNMENT_LEFT))
+
+func _create_fish_catch_row(item: Dictionary) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.name = "FishCatchRow_%s" % str(item.get("id", "unknown"))
+	row.add_theme_constant_override("separation", 10)
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+
+	var fish_id := str(item.get("id", "normal_fish"))
+	var texture: Texture2D = FISH_TEXTURES.get(fish_id, FISH_TEXTURES["normal_fish"])
+	var icon := TextureRect.new()
+	icon.name = "FishIcon"
+	icon.texture = texture
+	icon.expand_mode = TextureRect.EXPAND_FIT_HEIGHT
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.custom_minimum_size = Vector2(0, int(FISH_ICON_HEIGHTS.get(fish_id, 32)))
+	icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(icon)
+
+	var row_text := "%s：%d 斤 × %d 元/斤 = %d 元" % [
+		str(item.get("name", "未知鱼获")),
+		int(item.get("weight_jin", 0)),
+		int(item.get("unit_price", 0)),
+		int(item.get("income", 0))
+	]
+	if fish_id == "fish_king" and item.has("integrity"):
+		row_text += "，完整度 %d%%" % int(item.get("integrity", 0))
+	var label := _make_plain_card_label(row_text)
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	row.add_child(label)
+	return row
 
 func _make_plain_card_label(text: String) -> Label:
 	var label := UIKit.make_label(text, UIKit.FONT_BODY, UIKit.INK, HORIZONTAL_ALIGNMENT_LEFT)
@@ -1634,7 +1688,7 @@ func _on_harvest_result_continue_pressed() -> void:
 	var result := pending_harvest_result
 	pending_harvest_result = {}
 	if not game_state.apply_harvest(result):
-		message_label.text = "本钱不够，干不了这个作业方案。"
+		message_label.text = "钱不够，干不了这个方案。"
 		_update_work_buttons()
 		return
 	if bool(result.get("is_final", false)):
@@ -1642,7 +1696,10 @@ func _on_harvest_result_continue_pressed() -> void:
 		return
 
 	latest_net_result = result.duplicate(true)
-	var opportunities := resolver.generate_disposal_opportunities(game_state.current_pond, result)
+	var opportunities := pending_harvest_opportunities
+	if opportunities.is_empty():
+		opportunities = resolver.generate_disposal_opportunities(game_state.current_pond, result)
+	pending_harvest_opportunities = {}
 	current_transfer_offer = opportunities.get("transfer_offer", {})
 	if current_transfer_offer.is_empty():
 		_refresh_transfer_offer()
@@ -1651,6 +1708,25 @@ func _on_harvest_result_continue_pressed() -> void:
 	message_label.text = "%s\n%s" % [str(result.get("text", "")), str(opportunities.get("message", ""))]
 	_show_choice_page()
 	_render()
+
+
+func _update_harvest_opportunity_hint() -> void:
+	if harvest_opportunity_label == null:
+		return
+	var transfer_offer := Dictionary(pending_harvest_opportunities.get("transfer_offer", {}))
+	var one_net_offer := Dictionary(pending_harvest_opportunities.get("one_net_offer", {}))
+	var lines: Array[String] = []
+	if not transfer_offer.is_empty():
+		var transfer_price := int(transfer_offer.get("income", 0))
+		lines.append("有人愿意转包这口塘：%d 元" % transfer_price)
+	if not one_net_offer.is_empty():
+		var one_net_price := int(one_net_offer.get("income", 0))
+		lines.append("有买家想买一网试试：%d 元" % one_net_price)
+	if lines.is_empty():
+		lines.append("暂无新机会，可以继续下网或抽干收尾。")
+	harvest_opportunity_label.text = "\n".join(lines)
+	if is_instance_valid(harvest_opportunity_card):
+		harvest_opportunity_card.visible = not pending_harvest_opportunities.is_empty()
 
 func _update_work_buttons() -> void:
 	var low_cost := game_state.get_work_cost("low")
@@ -1695,7 +1771,7 @@ func _show_net_option_empty_state() -> void:
 		return
 	net_option_empty_state = Label.new()
 	net_option_empty_state.name = "NetOptionEmptyState"
-	net_option_empty_state.text = "暂无可用下网方式，请返回处理选择。"
+	net_option_empty_state.text = "暂无可用下网方式，请返回看看其他选择。"
 	net_option_empty_state.custom_minimum_size = Vector2(0, 140)
 	net_option_empty_state.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	net_option_empty_state.vertical_alignment = VERTICAL_ALIGNMENT_CENTER

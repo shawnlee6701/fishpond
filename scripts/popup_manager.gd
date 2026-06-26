@@ -2,6 +2,15 @@ extends CanvasLayer
 
 const UI_THEME := preload("res://themes/UI_Theme.tres")
 
+const CONTRACT_DIALOG_BG_TEXTURE: Texture2D = preload("res://assets/ui/contract_dialog_bg.png")
+const TRANSFER_DIALOG_BG_TEXTURE: Texture2D = preload("res://assets/ui/transfer_dialog_bg.png")
+const BALANCE_HIGHLIGHT_BG_TEXTURE: Texture2D = preload("res://assets/ui/balance_highlight_bg.png")
+const STATUS_BOX_BG_TEXTURE: Texture2D = preload("res://assets/ui/status_box_bg.png")
+const BUTTON_ACCEPT_TEXTURE: Texture2D = preload("res://assets/buttons/button_accept.png")
+const BUTTON_DANGER_CONFIRM_TEXTURE: Texture2D = preload("res://assets/buttons/button_danger_confirm.png")
+const BUTTON_SECONDARY_TEXTURE: Texture2D = preload("res://assets/buttons/button_secondary.png")
+const UIKit := preload("res://scripts/ui_kit.gd")
+
 var dim_overlay: Panel
 var center_container: CenterContainer
 var modal_panel: PanelContainer
@@ -37,6 +46,11 @@ func show_confirm(config: Dictionary) -> void:
 	close_on_overlay = bool(config.get("close_on_overlay", true))
 	on_confirm_callback = config.get("on_confirm", Callable()) as Callable
 	on_cancel_callback = config.get("on_cancel", Callable()) as Callable
+
+	var is_transfer := bool(config.get("transfer_dialog", false))
+	var is_danger := bool(config.get("danger_confirm", false))
+	_apply_panel_texture(modal_panel, TRANSFER_DIALOG_BG_TEXTURE if is_transfer else CONTRACT_DIALOG_BG_TEXTURE, 40, 40)
+	_apply_button_texture(confirm_button, BUTTON_DANGER_CONFIRM_TEXTURE if is_danger else BUTTON_ACCEPT_TEXTURE)
 
 	title_label.text = str(config.get("title", "确认"))
 	subtitle_label.text = str(config.get("subtitle", config.get("message", "")))
@@ -107,7 +121,7 @@ func _build_popup_tree() -> void:
 	modal_panel.theme = UI_THEME
 	modal_panel.theme_type_variation = &"ContractDialogCard"
 	modal_panel.mouse_filter = Control.MOUSE_FILTER_STOP
-	modal_panel.set_meta("_future_texture_slot", "contract_dialog_bg.png")
+	_apply_panel_texture(modal_panel, CONTRACT_DIALOG_BG_TEXTURE, 40)
 	center_container.add_child(modal_panel)
 
 	var margin := MarginContainer.new()
@@ -135,6 +149,7 @@ func _build_popup_tree() -> void:
 	subtitle_label.theme_type_variation = &"ContractDialogSubtitleLabel"
 	subtitle_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	subtitle_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	subtitle_label.add_theme_stylebox_override("normal", UIKit.make_translucent_readability_panel(0.78))
 	content_stack.add_child(subtitle_label)
 
 	balance_highlight = Label.new()
@@ -144,7 +159,7 @@ func _build_popup_tree() -> void:
 	balance_highlight.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	balance_highlight.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	balance_highlight.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	balance_highlight.set_meta("_future_texture_slot", "balance_highlight_bg.png")
+	_apply_label_texture(balance_highlight, BALANCE_HIGHLIGHT_BG_TEXTURE, 20, 8, 20)
 	content_stack.add_child(balance_highlight)
 
 	dialog_body = VBoxContainer.new()
@@ -161,7 +176,7 @@ func _build_popup_tree() -> void:
 	status_box = PanelContainer.new()
 	status_box.name = "StatusBox"
 	status_box.theme_type_variation = &"ContractStatusOkPanel"
-	status_box.set_meta("_future_texture_slot", "status_box_bg.png")
+	_apply_panel_texture(status_box, STATUS_BOX_BG_TEXTURE, 16, 20)
 	dialog_body.add_child(status_box)
 
 	var status_content := VBoxContainer.new()
@@ -191,6 +206,7 @@ func _build_popup_tree() -> void:
 	message_label.name = "MessageLabel"
 	message_label.theme_type_variation = &"InspectDialogBodyLabel"
 	message_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	message_label.add_theme_stylebox_override("normal", UIKit.make_translucent_readability_panel(0.82))
 	dialog_body.add_child(message_label)
 
 	var action_row := HBoxContainer.new()
@@ -202,8 +218,7 @@ func _build_popup_tree() -> void:
 	cancel_button.name = "CancelButton"
 	cancel_button.custom_minimum_size = Vector2(0, 96)
 	cancel_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	cancel_button.theme_type_variation = &"ContractSecondaryButton"
-	cancel_button.set_meta("_future_texture_button", "button_secondary.png")
+	_apply_button_texture(cancel_button, BUTTON_SECONDARY_TEXTURE)
 	cancel_button.pressed.connect(_on_cancel_pressed)
 	action_row.add_child(cancel_button)
 
@@ -212,9 +227,62 @@ func _build_popup_tree() -> void:
 	confirm_button.custom_minimum_size = Vector2(0, 96)
 	confirm_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	confirm_button.theme_type_variation = &"PondActionButton"
-	confirm_button.set_meta("_future_texture_button", "button_danger_confirm.png")
+	_apply_button_texture(confirm_button, BUTTON_ACCEPT_TEXTURE)
 	confirm_button.pressed.connect(_on_confirm_pressed)
 	action_row.add_child(confirm_button)
+
+
+func _apply_panel_texture(panel: PanelContainer, texture: Texture2D, margin: int, texture_margin: int = 0) -> void:
+	var style := StyleBoxTexture.new()
+	style.texture = texture
+	style.content_margin_left = margin
+	style.content_margin_top = margin
+	style.content_margin_right = margin
+	style.content_margin_bottom = margin
+	if texture_margin > 0:
+		style.texture_margin_left = texture_margin
+		style.texture_margin_top = texture_margin
+		style.texture_margin_right = texture_margin
+		style.texture_margin_bottom = texture_margin
+	panel.add_theme_stylebox_override("panel", style)
+
+
+func _apply_label_texture(label: Label, texture: Texture2D, margin_h: int, margin_v: int, texture_margin: int = 0) -> void:
+	var style := StyleBoxTexture.new()
+	style.texture = texture
+	style.content_margin_left = margin_h
+	style.content_margin_top = margin_v
+	style.content_margin_right = margin_h
+	style.content_margin_bottom = margin_v
+	if texture_margin > 0:
+		style.texture_margin_left = texture_margin
+		style.texture_margin_top = texture_margin
+		style.texture_margin_right = texture_margin
+		style.texture_margin_bottom = texture_margin
+	label.add_theme_stylebox_override("normal", style)
+
+
+func _apply_button_texture(button: Button, texture: Texture2D) -> void:
+	var normal := _make_nine_patch_style(texture, Color(1.0, 1.0, 1.0, 1.0))
+	var hover := _make_nine_patch_style(texture, Color(1.12, 1.12, 1.12, 1.0))
+	var pressed := _make_nine_patch_style(texture, Color(0.88, 0.88, 0.88, 1.0))
+	var disabled := _make_nine_patch_style(texture, Color(0.65, 0.65, 0.65, 0.85))
+	button.add_theme_stylebox_override("normal", normal)
+	button.add_theme_stylebox_override("hover", hover)
+	button.add_theme_stylebox_override("pressed", pressed)
+	button.add_theme_stylebox_override("disabled", disabled)
+
+
+func _make_nine_patch_style(texture: Texture2D, modulate: Color) -> StyleBoxTexture:
+	var style := StyleBoxTexture.new()
+	style.texture = texture
+	style.modulate_color = modulate
+	var patch := 20
+	style.texture_margin_left = patch
+	style.texture_margin_top = patch
+	style.texture_margin_right = patch
+	style.texture_margin_bottom = patch
+	return style
 
 
 func _render_bill_rows(rows_value: Variant) -> void:
@@ -235,8 +303,8 @@ func _render_bill_rows(rows_value: Variant) -> void:
 func _build_bill_row(row_data: Dictionary) -> PanelContainer:
 	var row := PanelContainer.new()
 	row.name = str(row_data.get("name", "BillRow"))
-	row.theme_type_variation = &"ContractBillRowPanel"
 	row.custom_minimum_size = Vector2(0, 38)
+	row.add_theme_stylebox_override("panel", UIKit.make_translucent_readability_panel(0.68, 10, 0.45))
 
 	var row_content := HBoxContainer.new()
 	row_content.name = "RowContent"

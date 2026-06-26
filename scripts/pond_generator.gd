@@ -4,7 +4,7 @@ class_name PondGenerator
 const DataLoaderScript := preload("res://scripts/data_loader.gd")
 const BalanceRulesScript := preload("res://scripts/balance_rules.gd")
 
-const WATER_STATES := ["清亮微绿", "偏浑发黄", "肥水泛绿", "水面起花", "深水偏暗"]
+const WATER_STATES := ["清亮泛绿", "水浑发黄", "肥水绿汪汪", "水面起花浪", "水深色暗"]
 const RUMORS := [
 	"老板说去年有人钓到过大货",
 	"塘边常有人夜里听见炸水",
@@ -19,11 +19,17 @@ const RUMORS := [
 	"邻塘老板说这口塘被压价转过两手",
 	"有人说夜里听到大鱼炸水，也有人说是风浪",
 	"塘底淤泥厚，网下去可能拖不动",
-	"水草边小鱼很多，大货要看运气"
+	"水草边小鱼很多，大货要看运气",
+	"隔壁镇的老王去年在这塘里拉起来一条三十斤的",
+	"塘主儿子在城里欠了钱，急着出手",
+	"附近鱼贩子天天来转一圈，但没见出过价",
+	"看塘的老头说这塘三年没干了",
+	"村里有人说半夜听见塘里有东西翻水",
+	"塘主每次报价都不一样，看人喊价"
 ]
-const RISK_TAGS := ["低风险", "鱼情不明", "可能偏贵", "大鱼难捞", "高波动"]
+const RISK_TAGS := ["风险不大", "水底看不准", "要价高了些", "大鱼怕是不好起", "这塘说不准"]
 const AREA_LABELS := ["小塘", "中塘", "大塘", "宽水面"]
-const POND_NAMES := ["东湾塘", "南埂塘", "西桥塘", "北坡塘", "柳树塘", "三岔塘", "月牙塘", "瓦窑塘", "竹林塘", "渡口塘", "石坝塘", "老井塘"]
+const POND_NAMES := ["东湾塘", "南埂塘", "西桥塘", "北坡塘", "柳树塘", "三岔塘", "月牙塘", "瓦窑塘", "竹林塘", "渡口塘", "石坝塘", "老井塘", "老鳖塘", "大弯塘", "芦苇塘"]
 const VALUE_PROFILES := ["surplus", "break_even", "loss"]
 const QUOTE_TIERS := ["quarter", "half", "high"]
 

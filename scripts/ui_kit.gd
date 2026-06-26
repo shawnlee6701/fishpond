@@ -43,6 +43,58 @@ static func make_style(bg: Color, border: Color, radius: int = 18, border_width:
 		style.shadow_offset = Vector2(0, 5)
 	return style
 
+
+static func make_translucent_readability_panel(alpha := 0.78, radius := 16, border_alpha := 0.55) -> StyleBoxFlat:
+	## Returns a cream/light panel that lets the global background show through slightly
+	## while keeping text readable. Use behind text that sits on top of textured backgrounds.
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.99, 0.95, 0.82, alpha)
+	style.border_color = Color(0.61, 0.45, 0.25, border_alpha)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(radius)
+	return style
+
+
+static func make_translucent_dark_panel(alpha := 0.72, radius := 16) -> StyleBoxFlat:
+	## A darker translucent panel for high-contrast text over busy textures.
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.08, 0.14, 0.10, alpha)
+	style.border_color = Color(0.22, 0.36, 0.26, 0.65)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(radius)
+	return style
+
+
+static func apply_texture_button(button: Button, texture: Texture2D, patch := 20) -> void:
+	## Applies a nine-patch texture to all button states.
+	var normal := _make_nine_patch_style(texture, patch, Color(1.0, 1.0, 1.0, 1.0))
+	var hover := _make_nine_patch_style(texture, patch, Color(1.12, 1.12, 1.12, 1.0))
+	var pressed := _make_nine_patch_style(texture, patch, Color(0.88, 0.88, 0.88, 1.0))
+	var disabled := _make_nine_patch_style(texture, patch, Color(0.65, 0.65, 0.65, 0.85))
+	button.add_theme_stylebox_override("normal", normal)
+	button.add_theme_stylebox_override("hover", hover)
+	button.add_theme_stylebox_override("pressed", pressed)
+	button.add_theme_stylebox_override("disabled", disabled)
+
+
+static func _make_nine_patch_style(texture: Texture2D, patch: int, modulate: Color) -> StyleBoxTexture:
+	var style := StyleBoxTexture.new()
+	style.texture = texture
+	style.modulate_color = modulate
+	style.texture_margin_left = patch
+	style.texture_margin_top = patch
+	style.texture_margin_right = patch
+	style.texture_margin_bottom = patch
+	return style
+
+
+static func set_scrollbar_auto_hide(scroll: ScrollContainer) -> void:
+	## Hides scrollbars when content fits; shows them only while scrolling / when needed.
+	if scroll == null:
+		return
+	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+
 static func apply_root(root: Control) -> void:
 	root.custom_minimum_size = DESIGN_SIZE
 	root.add_theme_color_override("font_color", CREAM)

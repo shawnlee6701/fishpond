@@ -10,24 +10,29 @@ This file is the live handoff guide for agents working on **这塘我包了**. K
 - UI copy pass completed for the first MVP loop: main menu, pond cards, inspection, contract confirmation, post-contract choices, transfer, one-net sale, work plans, and settlement now use clearer grounded Chinese business wording.
 - Gameplay UI now follows one 1080 × 1920 hierarchy: global day/cash status at the top, page title below it, bounded or scrollable content in the middle, and visible actions that stay inside the authored canvas.
 - Current README is minimal; treat this file as the primary working guide until README is expanded.
-- The current UI-layout pass intentionally uses no texture or image references in active scenes/scripts. `Main.tscn` provides one shared solid pond-green `#2F6B4F` background behind the homepage and all routed screens; existing artwork files remain unused for a later visual pass.
-- Intended future image slots are represented by native placeholders; pond cards, harvest result, and settlement result still use centered `×` slots, while the transfer offer popup now uses a self-drawn buyer/contract placeholder instead of an `×`.
-- Other asset folders remain placeholders: `assets/ponds`, `assets/effects`, `assets/fish`.
+- The first P0 art batch is now wired into the homepage and pond list. `Main.tscn` uses `assets/background/bg_game.png`, `assets/ui/title_sign.png`, `assets/ui/pond_main_visual.png`, and `assets/buttons/button_primary.png` / `button_secondary.png`. `scripts/pond_list.gd` uses per-type `assets/ponds/pond_card_bg_*.png` and `assets/ponds/pond_thumb_*.png`.
+- The first P1 art batch is now wired into the post-contract choice page and settlement page. `scripts/after_contract_choice.gd` uses `assets/effects/net_method_*.png` for the three work-plan cards, `assets/effects/catch_result_visual.png` for the harvest-result modal banner, and `assets/decorations/buyer_transfer_placeholder.png` for the transfer-offer buyer avatar. `scripts/settlement.gd` uses `assets/effects/settlement_visual.png` as the scorecard header illustration.
+- Fish-type icons from `assets/fish/fish_*.png` are now rendered inline next to each catch row in both the harvest-result modal and the final settlement scorecard.
+- The P2 art batch is now wired into the remaining gameplay pages and popups. `scripts/pond_detail.gd` uses per-method `assets/ui/inspection_method_card_*.png` backgrounds and badge textures. `scripts/popup_manager.gd` uses `assets/ui/contract_dialog_bg.png` / `assets/ui/transfer_dialog_bg.png`, `assets/ui/balance_highlight_bg.png`, `assets/ui/status_box_bg.png`, and `assets/buttons/button_accept.png` / `button_danger_confirm.png`. `scripts/after_contract_choice.gd` uses `assets/ui/owned_pond_card_bg.png`, `action_card_bg.png`, `net_option_card_bg.png`, `transfer_dialog_bg.png`, `speech_bubble.png`, `offer_price_badge.png`, `status_box_bg.png`, `profit_loss_badge.png`, and `assets/ponds/owned_pond_visual.png`. `scripts/settlement.gd` uses `assets/ui/settlement_card_bg.png`, `profit_loss_badge.png`, and `assets/buttons/button_accept.png`. `scripts/settlement_history.gd` uses `assets/ui/record_header_bg.png`, `record_card_bg.png`, `balance_highlight_bg.png`, and `assets/buttons/button_accept.png`. `scripts/pond_list.gd` uses `assets/ui/price_badge.png` and `assets/buttons/pond_action_button.png`.
+- All routed gameplay pages now have their P0/P1/P2 texture slots filled and the P2 nine-patch margins have been verified in 1080×1920, 720×1280, and 540×960.
+- `tools/ui_flow_smoke_test.gd` has been updated to match the texture pass: old "self-drawn placeholder" assertions are replaced with texture-existence checks, the `find_child("NetOptionCard_*")` wildcard bug is fixed, and null guards are added around buttons/cards to prevent a single failure from crashing the whole run.
+- Headless smoke test result: `UI_FLOW_TEST_OK`. All UI flow assertions pass. The only runtime warnings are sandbox-blocked writes to `user://save_game.json` and `user://settlement_history.json`, which do not affect UI validation.
 
 ## Current Implemented Flow
 
 - `scripts/main.gd` starts on the designed homepage. The first button shows “开始包塘” without a checkpoint and “继续包塘” with one; “重新开始” clears it and creates a fresh run.
-- The homepage uses `Background` as an independent full-screen color layer. `HomeScreen/SafeArea` divides the page into `TopArea`, `MainVisualArea`, and `BottomActionArea`; future title, pond, and button textures can replace their named slots independently.
-- `scripts/pond_placeholder.gd` draws the temporary oval pond, ripples, fish line, and bubbles with native canvas commands. It owns no gameplay state and should be replaced by the future main pond visual.
+- The homepage uses `Background` as an independent full-screen `TextureRect` with `assets/background/bg_game.png`. `HomeScreen/SafeArea` divides the page into `TopArea`, `MainVisualArea`, and `BottomActionArea`; the title sign, pond visual, and primary/secondary buttons now use their P0 textures.
+- `scripts/pond_placeholder.gd` is no longer attached to the homepage; `PondMainVisual` is a `TextureRect` using `assets/ui/pond_main_visual.png`.
 - `UIRoot` fills the viewport, ignores mouse input, and applies `themes/UI_Theme.tres` for inherited styling.
 - `UIRoot` runs `scripts/UI_Manager.gd` on ready to apply the shared theme recursively, remove selected per-control overrides, and add a 2 px black outline to every `Label`.
 - `scripts/pond_list.gd` generates or reuses 3 ponds for the current day.
-- `scripts/pond_detail.gd` presents inspection as three data-driven clue cards, updates cash and cumulative inspection spend, separates each unlocked result into a conclusion and detail, and owns explicit give-up / contract confirmations.
-- `scripts/after_contract_choice.gd` preserves transfer, one-net sale, and self-fishing/work-plan logic; its transfer offer modal is a decision popup with offer price, total invested, transfer profit/loss, money after accept, buyer speech bubble, and a self-drawn buyer/contract placeholder.
-- `scripts/after_contract_choice.gd` also renders the one-net sale quote as a compact modal with current cash, offer income, cash after accept, a weaker “再等等” action, and a primary “接受卖出（+报价）” action; accepting shows a success banner between the latest net result and action section.
-- `scripts/after_contract_choice.gd` also owns the dedicated self-net decision page and one-net result modal. The three net options use self-drawn method placeholders, cost badges, consequence copy, and a separate confirmation for final drain settlement; the result modal shows catch rows plus fish revenue, net cost, and per-net profit before applying the harvest.
-- `scripts/settlement.gd` renders the final pond scorecard dynamically from `GameState`: self-drawn settlement placeholder, prominent final profit/loss, pond summary, income section, expense section, and final ledger formula.
-- `scripts/settlement_history.gd` renders the persistent ledger newest-first with day/cash status, total pond/profit/cash summary, player-facing profit/loss badges, and independently expandable result, income, expense, and final-ledger sections.
+- `scripts/pond_detail.gd` presents inspection as three data-driven clue cards with P2 `assets/ui/inspection_method_card_*.png` backgrounds and `inspection_cost_badge.png` / `inspection_used_badge.png` labels, updates cash and cumulative inspection spend, separates each unlocked result into a conclusion and detail, and owns explicit give-up / contract confirmations rendered through `PopupManager`.
+- `scripts/after_contract_choice.gd` preserves transfer, one-net sale, and self-fishing/work-plan logic; its transfer offer modal uses P2 `assets/ui/transfer_dialog_bg.png`, `assets/ui/speech_bubble.png`, `assets/ui/offer_price_badge.png`, and the P1 `assets/decorations/buyer_transfer_placeholder.png` buyer avatar.
+- `scripts/after_contract_choice.gd` also renders the one-net sale quote as a compact modal with P2 `assets/ui/transfer_dialog_bg.png` and `assets/ui/offer_price_badge.png`; accepting shows a success banner between the latest net result and action section.
+- `scripts/after_contract_choice.gd` also owns the dedicated self-net decision page and one-net result modal. The owned-pond card uses `assets/ui/owned_pond_card_bg.png` and `assets/ponds/owned_pond_visual.png`; action cards use `assets/ui/action_card_bg.png`; the three net options use P2 `assets/ui/net_option_card_bg.png` plus P1 `assets/effects/net_method_*.png` textures, cost badges, consequence copy, and a separate confirmation for final drain settlement; the result modal shows catch rows (with inline fish-type icons) plus fish revenue, net cost, and per-net profit before applying the harvest.
+- `scripts/settlement.gd` renders the final pond scorecard dynamically from `GameState`: P1 `assets/effects/settlement_visual.png` header illustration, P2 `assets/ui/settlement_card_bg.png` section cards, `assets/ui/profit_loss_badge.png` profit/loss highlight, `assets/buttons/button_accept.png` next-day button, prominent final profit/loss, pond summary, income section with inline fish-type icons, expense section, and final ledger formula.
+- `scripts/settlement_history.gd` renders the persistent ledger newest-first with day/cash status, P2 `assets/ui/balance_highlight_bg.png` summary bar, `assets/ui/record_header_bg.png` expandable headers, `assets/ui/record_card_bg.png` record bodies, and `assets/buttons/button_accept.png` bottom action.
+- `scripts/pond_list.gd` generates or reuses 3 ponds for the current day, with per-type P0 pond card backgrounds/thumbnails, P2 `assets/ui/price_badge.png` quote badge, and `assets/buttons/pond_action_button.png` action button.
 
 ## Core Architecture
 
@@ -49,7 +54,7 @@ This file is the live handoff guide for agents working on **这塘我包了**. K
 - `scripts/ui_kit.gd` also owns the authored 1080 × 1920 design constants plus shared top-status, page-title, and modal-title styling.
 - `scripts/ui_kit.gd` defines the shared information hierarchy: 24 px minimum readable text, 27 px body text, 31 px section text, 32 px highlighted values, and 44 px page titles on the 1080 × 1920 canvas.
 - `scripts/ui_kit.gd` also owns the shared in-page modal layer: bounded paper cards, full-screen input-blocking masks, resize-safe centering, and scroll protection for oversized popup content.
-- `scripts/pond_thumb_placeholder.gd` draws the temporary pond-card water surface, ripples, fish shadow, and bubbles with native Godot drawing; replace that slot with `pond_thumb_xxx.png` during the art pass.
+- `scripts/pond_thumb_placeholder.gd` is no longer used by pond cards; `PondThumb` is a `TextureRect` using per-type `assets/ponds/pond_thumb_*.png`.
 - `scenes/Main.tscn` is the active entry scene. Its `CanvasLayer/MainUI` root owns a full-rect themed `UIRoot`, while `UIRoot/GameRoot` retains the original homepage and `ScreenContainer` routing contract expected by `scripts/main.gd`.
 - `scripts/UI_Manager.gd` is attached to `UIRoot` and enforces inherited theme usage plus the global `Label` outline pass when the entry scene becomes ready.
 - `themes/UI_Theme.tres` uses `fonts/ZCOOL_KuaiLe/ZCOOLKuaiLe-Regular.ttf` as the global default font at 28 px; child controls inherit it unless a layout intentionally specifies a larger hierarchy role.
@@ -178,15 +183,15 @@ Settlement-history persistence and foldout test:
 HOME=/private/tmp/fish_pool_history_test_home godot --headless --log-file /private/tmp/fish_pool_history_smoke.log --path . --script res://tools/settlement_history_smoke_test.gd
 ```
 
-- Homepage uses native themed controls and canvas drawing only. The centered warm-wood `TitleSign` replaces the old full-width header, `PondPlaceholder` fills the main visual area, and continue/start is visibly primary above the quieter “重新开始” action.
-- Homepage keeps independent future replacement slots for `title_sign.png`, `pond_main_visual.png`, `button_primary.png`, and `button_secondary.png`; no texture is currently loaded by those nodes.
+- Homepage loads P0 textures: `assets/background/bg_game.png` as the full-screen background, `assets/ui/title_sign.png` behind the title label, `assets/ui/pond_main_visual.png` in the main visual area, and `assets/buttons/button_primary.png` / `button_secondary.png` for the action buttons.
+- Homepage text remains rendered by Godot labels; verify title/subtitle/button text is readable over the new artwork at 540 × 960, 720 × 1280, and 1080 × 1920.
 - “开始包塘” / “继续包塘” restores saved day/cash/pond offers when a checkpoint exists and otherwise starts fresh.
 - “重新开始” clears the old checkpoint and starts from configured initial cash/day.
 - Pond list shows 3 ponds.
 - Pond list uses native themed controls only, with separate day/cash values and “包塘记录” inside a game-status bar, followed by the “今日鱼塘” decision header and guidance copy.
-- Pond cards use a clean native Godot panel with a pond-type accent border; no card-image texture is applied.
-- Every pond card uses the same generated component structure: drawn thumbnail slot, pond name and price badge, three compact tags, a three-column stat grid, rumor copy, and one full-width primary action.
-- The pond thumbnail is a native self-drawn placeholder with no `×`; card background, thumbnail, price badge, and action button carry named future-texture metadata.
+- Pond cards use per-type `assets/ponds/pond_card_bg_*.png` as a full-card background and per-type `assets/ponds/pond_thumb_*.png` as the left thumbnail; the price badge and action button remain native themed controls for now.
+- Every pond card uses the same generated component structure: thumbnail texture, pond name and price badge, three compact tags, a three-column stat grid, rumor copy, and one full-width primary action.
+- Verify each pond type maps to the correct card background and thumbnail, and that text remains readable over the new backgrounds at all target resolutions.
 - If a pond quote exceeds current cash, its price badge switches to warning styling and its disabled action reads “钱不够”.
 - At the 1080 × 1920 design resolution, each pond card is 500 logical pixels tall; a bottom spacer keeps the last card from ending hard against the scroll boundary.
 - Pond detail uses native themed cards and buttons with no hand-drawn textures.
@@ -229,7 +234,7 @@ HOME=/private/tmp/fish_pool_history_test_home godot --headless --log-file /priva
 - A deterministic balance simulator exists, but its strategies are first-pass proxies and need more design review before tuning against them.
 - Save/load currently covers safe pond-list checkpoints only; active mid-round state is not resumed.
 - No meta progression, tutorial, or end condition exists yet.
-- Visual assets are placeholders; current UI is mostly native Godot controls with first-pass grounded Chinese MVP copy.
+- First P0 art batch is integrated; remaining screens (pond detail, post-contract choice, settlement, history) still use native themed controls and await their art pass.
 - Balance has not yet been tuned against the simulator output across many design passes.
 - Fish-king panel currently generates presentation weight/value at settlement time rather than reusing exact catch detail data.
 - Main menu stats are not refreshed after returning from later screens because the current loop stays inside `ScreenContainer`.

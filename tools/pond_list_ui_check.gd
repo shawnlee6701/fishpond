@@ -35,14 +35,14 @@ func _run() -> void:
 	_check(cards.size() == 3, "当天生成三张统一鱼塘卡")
 	if not cards.is_empty():
 		var card := cards[0] as Control
-		var card_bg := card.get_node("CardBg") as PanelContainer
-		var info := card.get_node("CardBg/ContentRow/PondInfoArea") as VBoxContainer
+		var card_bg := card.get_node("CardBg") as Control
+		var info := card.get_node("CardBg/ContentMargin/ContentRow/PondInfoArea") as VBoxContainer
 		var price := info.get_node("HeaderRow/PriceBadge") as Label
 		var action := info.get_node("ViewButton") as Button
-		var thumb := card.get_node("CardBg/ContentRow/PondThumbPlaceholder") as PanelContainer
-		_check(card_bg.theme_type_variation == &"PondCardPanel", "卡片底图使用可替换主题槽")
-		_check(thumb.find_child("PlaceholderMarker", true, false) == null, "缩略图占位不再显示 X")
-		_check(thumb.find_child("ImagePlaceholder", true, false) is PondThumbPlaceholder, "缩略图使用原生自绘水面")
+		var thumb := card.get_node("CardBg/ContentMargin/ContentRow/PondThumb") as TextureRect
+		var card_texture := card_bg.get_node("CardTexture") as TextureRect
+		_check(card_texture != null and card_texture.texture != null, "卡片底图使用 pond_card_bg 纹理")
+		_check(thumb.texture != null, "缩略图使用 pond_thumb 纹理")
 		_check(price.theme_type_variation == &"PondPriceLabel" and price.get_theme_stylebox("normal") is StyleBoxFlat, "价格使用醒目 Badge")
 		_check(info.get_node("TagRow").get_child_count() == 3, "卡片显示三个紧凑标签")
 		_check((info.get_node("StatGrid") as GridContainer).columns == 3, "关键数据使用三列信息块")

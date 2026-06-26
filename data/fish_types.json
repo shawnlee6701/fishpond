@@ -1,34 +1,34 @@
 [
   {
     "id": "small_fish",
-    "name": "小鱼",
+    "name": "小鱼仔",
     "min_value": 10,
     "max_value": 10,
-    "display_text": "小鱼不断，保底回点血。",
+    "display_text": "小鱼仔不少，保底能回点血。",
     "is_jackpot": false
   },
   {
     "id": "normal_fish",
-    "name": "普通鱼",
+    "name": "家常鱼",
     "min_value": 15,
     "max_value": 15,
-    "display_text": "普通鱼获，今天不算白忙。",
+    "display_text": "家常鱼够一桌，不算白忙。",
     "is_jackpot": false
   },
   {
     "id": "big_fish",
-    "name": "大鱼",
+    "name": "大货",
     "min_value": 20,
     "max_value": 20,
-    "display_text": "大鱼上岸，利润有盼头。",
+    "display_text": "大货出水，这趟有奔头。",
     "is_jackpot": false
   },
   {
     "id": "fish_king",
-    "name": "鱼王",
+    "name": "青背老塘王",
     "min_value": 100,
     "max_value": 100,
-    "display_text": "鱼王出水，全塘沸腾！",
+    "display_text": "塘王现身，全镇震动！",
     "is_jackpot": true
   }
 ]

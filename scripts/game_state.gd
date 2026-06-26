@@ -265,7 +265,7 @@ func _get_one_net_reveal_signal(one_net_catch: Array[Dictionary]) -> float:
 
 func _format_one_net_reveal(one_net_catch: Array[Dictionary]) -> String:
 	if one_net_catch.is_empty():
-		return "买家这一网几乎没起货，外面会觉得这塘不太行。"
+		return "买家这一网几乎没起货，外面的人看了更摸不准这塘了。"
 
 	var lines: Array[String] = ["买家这一网开出来："]
 	for item in one_net_catch:
@@ -333,7 +333,7 @@ func apply_abandon() -> void:
 	last_result = {
 		"type": "abandon",
 		"title": "放弃结算",
-		"message": "你决定认亏收手，本局不再花作业钱，也不会再有卖鱼收入。"
+		"message": "你决定认亏收手，验塘钱就当交学费了。"
 	}
 
 func apply_harvest(result: Dictionary) -> bool:
