@@ -103,7 +103,7 @@ This file is the live handoff guide for agents working on **这塘我包了**. K
   - full/drain work cost: max 2000 or 20% of current pond quote
 - `data/tools.json`
   - `observe`: free, low accuracy
-  - `fish_finder`: 650 (mid-tier info tool, priced so it is attractive but not a farm)
+  - `fish_finder`: 650 (mid-tier info tool; gap from master widened by noisier selection to reward skill investment)
   - `master`: 1000
 - `data/fish_types.json`
   - `small_fish`, `normal_fish`, `big_fish`, `fish_king`
@@ -118,16 +118,16 @@ This file is the live handoff guide for agents working on **这塘我包了**. K
   - `pond_generation.min_quote`: 4000, keeping fixed drain cost from dominating tiny ponds.
   - `pond_generation.profile_roi_bands`: maps surplus / break-even / loss pond profiles into high / middle / low positions inside each pond type's ROI band.
   - `scripts/balance_simulator.gd` prints `STRATEGY_ECONOMY` for player-path cost/revenue breakdown and `POND_TYPE_GROSS_ROI` for pond-type band verification.
-  - Latest 1000×12 balance pass (seed 20260619): the economy is tuned for controlled, slow inflation. Tool-using strategies show small positive average ROI, while no-inspection and random play still bleed.
-    - `random_no_inspection`: ~-79% avg ROI, ~67% bankrupt rate (punishing baseline)
+  - Latest 1000×12 balance pass (seed 20260619): strategy gap widened — master is clearly the best path, mid-tier info play is near break-even, no-info play bleeds.
+    - `random_no_inspection`: ~-78% avg ROI, ~67% bankrupt rate (punishing baseline)
     - `basic_stop_loss`: ~-16% avg ROI, 0% bankrupt rate (slow defensive bleed for no-info play)
-    - `fish_finder_estimate_stop_loss` (mid-tier probe): ~+2% avg ROI, ~23% bankrupt rate, small positive average but still volatile
-    - `master_estimate_stop_loss`: ~+8% avg ROI, ~31% bankrupt rate, highest upside (p75 final cash ~53k–54k)
-  - Design intent: average tool-using players微赚, skilled master play grows slightly faster, but bankruptcy risk prevents any stable gold-printing path.
-  - Key tuning levers changed in this pass:
-    - `data/balance_rules.json` `market.one_net.estimated_value_ratio`: 0.10 → 0.115 (restores a small one-net upside so information play is +EV, but keeps it bounded)
-    - `data/tools.json` `fish_finder.cost`: 300 → 650 (cheap inspection + one-net was a hidden farm; 650 keeps mid-tier info attractive without dominating master)
-    - `data/balance_rules.json` `simulation.strategies.fish_finder_estimate_stop_loss`: added probe with selection noise 0.65–1.35 to model lower tool accuracy
+    - `fish_finder_estimate_stop_loss` (mid-tier probe): ~-5% avg ROI, ~25% bankrupt rate, near break-even with wider variance
+    - `master_estimate_stop_loss`: ~+15% avg ROI, ~29% bankrupt rate, top-skill path (p75 final cash ~56k)
+  - Design intent: skill investment pays off clearly; master is the growth engine, fish_finder is a safety net, basic/random punish neglect of information.
+  - Key tuning levers in this pass:
+    - `data/balance_rules.json` `market.one_net.estimated_value_ratio`: 0.115 → 0.12 (pushes master into clear +EV territory while keeping no-info play negative)
+    - `data/balance_rules.json` `fish_finder_estimate_stop_loss` noise: widened to 0.60–1.40 to pull mid-tier away from master
+    - `data/tools.json` `fish_finder.cost`: 650 (unchanged from prior pass)
 
 ## Development Rules
 
@@ -246,7 +246,7 @@ HOME=/private/tmp/fish_pool_history_test_home godot --headless --log-file /priva
 - Save/load currently covers safe pond-list checkpoints only; active mid-round state is not resumed.
 - No meta progression, tutorial, or end condition exists yet.
 - First P0 art batch is integrated; remaining screens (pond detail, post-contract choice, settlement, history) still use native themed controls and await their art pass.
-- Balance has received a second simulator-tuned pass aimed at controlled, slow inflation: tool-using strategies are now +EV, no-inspection play still bleeds, and no stable farm exists.
+- Balance has received a third simulator-tuned pass: master ~+15% and fish_finder ~-5% create a clear skill gradient; no-info play still bleeds; no strategy is a stable farm due to bankruptcy risk.
 - The simulator's strategy selection uses a noisy hidden-value ratio rather than modeling real inspection accuracy; `tools.json` accuracy values are not yet consumed by `inspection_system.gd` or the simulator. When accuracy is wired in, re-verify that master stays ahead of fish_finder and neither becomes a farm.
 - Fish-king panel currently generates presentation weight/value at settlement time rather than reusing exact catch detail data.
 - Main menu stats are not refreshed after returning from later screens because the current loop stays inside `ScreenContainer`.
