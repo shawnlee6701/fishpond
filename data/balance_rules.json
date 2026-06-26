@@ -307,7 +307,7 @@
       "quote_ratio_max": 0.28,
       "hidden_ratio_min": 0.04,
       "hidden_ratio_max": 0.09,
-      "estimated_value_ratio": 0.10,
+      "estimated_value_ratio": 0.115,
       "quality_weight": 0.3,
       "heat_factor_min": 0.75,
       "heat_factor_max": 1.35,
@@ -353,10 +353,10 @@
         "accept_one_net": true
       },
       "fish_finder_estimate_stop_loss": {
-        "inspection_cost": 800,
+        "inspection_cost": 650,
         "selection": "best_hidden_value_ratio_with_noise",
-        "selection_noise_min": 0.70,
-        "selection_noise_max": 1.30,
+        "selection_noise_min": 0.65,
+        "selection_noise_max": 1.35,
         "plans": ["standard", "full"],
         "accept_transfer_quality_below": -0.10,
         "accept_one_net": true

@@ -10,8 +10,8 @@
   {
     "id": "fish_finder",
     "name": "探鱼器扫一遍",
-    "cost": 800,
-    "short_desc": "用机器扫水下，能看个大概。800 元。",
+    "cost": 650,
+    "short_desc": "用机器扫水下，能看个大概。650 元。",
     "description": "用设备扫一遍水下情况，能看出大致鱼群和底况。",
     "accuracy": 0.65
   },
