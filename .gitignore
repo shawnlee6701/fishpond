@@ -3,3 +3,4 @@
 /android/
 /web/
 .DS_Store
+.vercel
