@@ -1,4 +1,9 @@
-*
-!web/
-!web/**
-!vercel.json
+.DS_Store
+.godot/
+.workbuddy/
+Design/
+outputs/
+tools/
+这塘我包了/
+*.zip
+*.md
