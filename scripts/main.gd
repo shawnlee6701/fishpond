@@ -24,6 +24,7 @@ func _ready() -> void:
 	_apply_home_styles.call_deferred()
 	continue_button.pressed.connect(_on_continue_pressed)
 	restart_button.pressed.connect(_on_restart_pressed)
+	BgmManager.start_playback()
 
 
 func _apply_home_styles() -> void:
