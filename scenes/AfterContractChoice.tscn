@@ -1,6 +1,8 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/after_contract_choice.gd" id="1_after_contract_choice"]
+[ext_resource type="Texture2D" path="res://assets/animations/contract_confirmation_spritesheet.png" id="2_contract_spritesheet"]
+[ext_resource type="Script" path="res://scripts/sprite_sheet_animator.gd" id="3_sprite_sheet_animator"]
 
 [node name="AfterContractChoice" type="Control"]
 custom_minimum_size = Vector2(1080, 1920)
@@ -471,3 +473,33 @@ text = "‹ 返回处置选择"
 visible = false
 layout_mode = 1
 anchors_preset = 0
+
+[node name="ContractEntryDimOverlay" type="ColorRect" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+color = Color(0, 0, 0, 0.62)
+
+[node name="ContractEntryAnimationOverlay" type="TextureRect" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("3_sprite_sheet_animator")
+spritesheet = ExtResource("2_contract_spritesheet")
+grid_size = 5
+total_frames = 24
+fps = 12.0
+autoplay = false
+loop = false
+expand_mode = 1
+stretch_mode = 5

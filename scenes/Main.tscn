@@ -1,13 +1,14 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Theme" path="res://themes/UI_Theme.tres" id="1_theme"]
 [ext_resource type="Script" path="res://scripts/UI_Manager.gd" id="2_ui_manager"]
 [ext_resource type="Script" path="res://scripts/main.gd" id="3_main"]
 [ext_resource type="Texture2D" path="res://assets/background/bg_game.png" id="4_bg_game"]
 [ext_resource type="Texture2D" path="res://assets/ui/title_sign.png" id="5_title_sign"]
-[ext_resource type="Texture2D" path="res://assets/ui/pond_main_visual.png" id="6_pond_main_visual"]
 [ext_resource type="Texture2D" path="res://assets/buttons/button_primary.png" id="7_button_primary"]
 [ext_resource type="Texture2D" path="res://assets/buttons/button_secondary.png" id="8_button_secondary"]
+[ext_resource type="Texture2D" path="res://assets/animations/fish_pond_spritesheet.png" id="9_spritesheet"]
+[ext_resource type="Script" path="res://scripts/sprite_sheet_animator.gd" id="10_animator"]
 
 [node name="MainUI" type="CanvasLayer"]
 
@@ -135,7 +136,11 @@ size_flags_vertical = 3
 custom_minimum_size = Vector2(820, 720)
 layout_mode = 2
 mouse_filter = 2
-texture = ExtResource("6_pond_main_visual")
+script = ExtResource("10_animator")
+spritesheet = ExtResource("9_spritesheet")
+grid_size = 5
+total_frames = 24
+fps = 12.0
 expand_mode = 1
 stretch_mode = 4
 

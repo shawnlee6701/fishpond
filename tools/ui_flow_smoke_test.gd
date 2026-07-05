@@ -262,8 +262,9 @@ func _run() -> void:
 		return
 	var cash_before_contract := contract_state.cash
 	confirm_button.pressed.emit()
-	await _settle_frames()
-	_check_screen(screen_container, "AfterContractChoice", "确认承包进入承包后选择页")
+	if not await _wait_after_contract_page_with_entry_animation(screen_container, "确认承包后进入承包后选择页并在新页播放动画"):
+		_finish()
+		return
 	_check(contract_state.cash == cash_before_contract - contract_total_cost, "确认承包只扣除合计扣款一次")
 
 	var choice_screen := _current_screen(screen_container)
@@ -538,7 +539,9 @@ func _run() -> void:
 		_finish()
 		return
 	restart_confirm.pressed.emit()
-	await _settle_frames()
+	if not await _wait_after_contract_page_with_entry_animation(restart_container, "重新开始流程确认承包后进入承包后选择页并在新页播放动画"):
+		_finish()
+		return
 	var restart_choice := _current_screen(restart_container)
 	var restart_transfer := restart_choice.find_child("TransferButton", true, false) as Button
 	_check(restart_transfer != null, "重新开始流程转包脱手按钮存在")
@@ -573,6 +576,28 @@ func _run() -> void:
 func _settle_frames() -> void:
 	await process_frame
 	await process_frame
+
+
+func _wait_after_contract_page_with_entry_animation(container: Control, description: String) -> bool:
+	await process_frame
+
+	var deadline_msec := Time.get_ticks_msec() + 3500
+	while Time.get_ticks_msec() < deadline_msec:
+		var screen := _current_screen(container)
+		if screen != null and screen.name == "AfterContractChoice":
+			_check(true, description)
+			var overlay := screen.get_node_or_null("ContractEntryAnimationOverlay") as Control
+			var dim_overlay := screen.get_node_or_null("ContractEntryDimOverlay") as Control
+			_check(overlay != null and overlay.visible and dim_overlay != null and dim_overlay.visible, "确认承包动画盖在已承包页上播放")
+			var finish_deadline_msec := Time.get_ticks_msec() + 3500
+			while Time.get_ticks_msec() < finish_deadline_msec and overlay != null and overlay.visible:
+				await process_frame
+			_check(overlay != null and not overlay.visible and dim_overlay != null and not dim_overlay.visible, "确认承包动画播放完成后放开已承包页操作")
+			return true
+		await process_frame
+
+	_check_screen(container, "AfterContractChoice", description)
+	return false
 
 
 func _current_screen(container: Control) -> Control:

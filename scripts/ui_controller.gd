@@ -17,6 +17,7 @@ static func replace_screen(container: Control, next_screen: Control) -> void:
 	next_screen.set_anchors_preset(Control.PRESET_FULL_RECT)
 	UIKit.animate_page_entry(next_screen, 1.0)
 
+
 static func show_pond_list(container: Control, game_state: GameState, save_checkpoint := false) -> void:
 	var screen := POND_LIST_SCENE.instantiate()
 	screen.setup(game_state, container)
@@ -32,9 +33,9 @@ static func show_pond_detail(container: Control, game_state: GameState, pond: Di
 	screen.setup(game_state, container, pond)
 	replace_screen(container, screen)
 
-static func show_after_contract_choice(container: Control, game_state: GameState) -> void:
+static func show_after_contract_choice(container: Control, game_state: GameState, play_contract_entry_animation := false) -> void:
 	var screen := AFTER_CONTRACT_CHOICE_SCENE.instantiate()
-	screen.setup(game_state, container)
+	screen.setup(game_state, container, play_contract_entry_animation)
 	replace_screen(container, screen)
 
 static func show_settlement(container: Control, game_state: GameState) -> void:

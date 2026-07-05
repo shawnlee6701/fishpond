@@ -475,7 +475,6 @@ static func spawn_sparkles(parent: Control, local_rect: Rect2, tone := "gold") -
 	particles.scale_amount_max = 5.0
 	particles.gravity = Vector2(0.0, 280.0)
 	particles.color = _sparkle_color(tone)
-	particles.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	particles.z_index = 20
 	parent.add_child(particles)
 	particles.emitting = true

@@ -417,7 +417,7 @@ func _on_contract_confirmed() -> void:
 		_show_global_confirm(_contract_confirm_config(preview))
 		return
 	if game_state.contract_pond(pond):
-		UIController.show_after_contract_choice(screen_container, game_state)
+		UIController.show_after_contract_choice(screen_container, game_state, true)
 
 
 func _show_global_confirm(config: Dictionary) -> void:

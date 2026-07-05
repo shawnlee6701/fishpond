@@ -150,9 +150,12 @@ func _make_nine_patch_style(texture: Texture2D, patch: int, modulate: Color) -> 
 @onready var low_work_button: Button = $SafeArea/PageLayout/ContentScroll/Content/WorkPlanScroll/WorkPlanPanel/LowWorkCard/CardContent/LowWorkButton
 @onready var standard_work_button: Button = $SafeArea/PageLayout/ContentScroll/Content/WorkPlanScroll/WorkPlanPanel/StandardWorkCard/CardContent/StandardWorkButton
 @onready var full_work_button: Button = $SafeArea/PageLayout/ContentScroll/Content/WorkPlanScroll/WorkPlanPanel/FullWorkCard/CardContent/FullWorkButton
+@onready var contract_entry_dim_overlay: ColorRect = $ContractEntryDimOverlay
+@onready var contract_entry_animation_overlay: SpriteSheetAnimator = $ContractEntryAnimationOverlay
 
 var game_state: GameState
 var screen_container: Control
+var play_contract_entry_animation := false
 var resolver := ActionResolver.new()
 var current_transfer_offer: Dictionary = {}
 var current_one_net_offer: Dictionary = {}
@@ -210,9 +213,10 @@ var _sell_one_net_banner_detail: Label
 var _revenue_breakdown_label: Label
 var _last_sell_one_net_income: int = 0
 
-func setup(next_game_state: GameState, next_screen_container: Control) -> void:
+func setup(next_game_state: GameState, next_screen_container: Control, should_play_contract_entry_animation := false) -> void:
 	game_state = next_game_state
 	screen_container = next_screen_container
+	play_contract_entry_animation = should_play_contract_entry_animation
 
 func _ready() -> void:
 	if game_state == null:
@@ -233,6 +237,28 @@ func _ready() -> void:
 	_apply_ui_frame()
 	_refresh_transfer_offer()
 	_render()
+	if play_contract_entry_animation:
+		_play_contract_entry_animation()
+
+
+func _play_contract_entry_animation() -> void:
+	contract_entry_dim_overlay.modulate.a = 1.0
+	contract_entry_animation_overlay.modulate.a = 1.0
+	contract_entry_dim_overlay.visible = true
+	contract_entry_animation_overlay.visible = true
+	contract_entry_animation_overlay.reset()
+	contract_entry_animation_overlay.play()
+
+	await contract_entry_animation_overlay.animation_finished
+
+	var fade_out := create_tween()
+	fade_out.tween_property(contract_entry_dim_overlay, "modulate:a", 0.0, 0.16).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN_OUT)
+	fade_out.parallel().tween_property(contract_entry_animation_overlay, "modulate:a", 0.0, 0.16).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN_OUT)
+	await fade_out.finished
+
+	contract_entry_dim_overlay.visible = false
+	contract_entry_animation_overlay.visible = false
+	contract_entry_animation_overlay.modulate.a = 1.0
 
 func _apply_ui_frame() -> void:
 	UIKit.set_safe_panel(safe_area, int(UIKit.PAGE_SAFE_X), int(UIKit.PAGE_TOP), -int(UIKit.PAGE_SAFE_X), -int(UIKit.PAGE_BOTTOM))

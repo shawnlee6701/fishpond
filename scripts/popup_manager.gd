@@ -378,9 +378,9 @@ func _on_confirm_pressed() -> void:
 		return
 	is_submitting = true
 	confirm_button.disabled = true
+	hide_popup(false)
 	if on_confirm_callback.is_valid():
 		on_confirm_callback.call()
-	hide_popup(false)
 
 
 func _clear_children(node: Node) -> void:
