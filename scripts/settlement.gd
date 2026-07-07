@@ -119,6 +119,7 @@ func _ready() -> void:
 		game_state = GameState.new()
 	_build_ui()
 	SaveSystem.record_settlement(game_state)
+	_play_sfx("settlement_stamp")
 	_render()
 
 func _build_ui() -> void:
@@ -566,6 +567,13 @@ func _spawn_settlement_sparkles(tone: String) -> void:
 		UIKit.spawn_sparkles(sections_box, profit_highlight_label.get_parent().get_rect(), tone)
 
 
+func _play_sfx(effect_id: String) -> void:
+	var sfx := get_tree().root.get_node_or_null("SfxManager")
+	if sfx != null and sfx.has_method("play"):
+		sfx.call("play", effect_id)
+
+
 func _on_next_day_pressed() -> void:
+	_play_sfx("card_select")
 	game_state.advance_to_next_day()
 	UIController.show_pond_list(screen_container, game_state, true)

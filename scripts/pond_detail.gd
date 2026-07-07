@@ -296,9 +296,11 @@ func _on_inspection_pressed(option: Dictionary) -> void:
 
 	var cost := int(option.get("cost", 0))
 	if not game_state.pay_inspection_cost(cost):
+		_play_sfx("cash_loss")
 		_render_page()
 		return
 
+	_play_sfx("coin_small" if cost > 0 else "card_select")
 	var tool := _find_tool(tool_id)
 	var result_data := inspection_system.generate_result_data(tool, pond)
 	game_state.set_inspection_result(tool_id, JSON.stringify(result_data))
@@ -361,6 +363,7 @@ func _on_give_up_pressed() -> void:
 
 
 func _on_commit_pressed() -> void:
+	_play_sfx("card_select")
 	var preview := game_state.get_contract_preview(pond)
 	_show_global_confirm(_contract_confirm_config(preview))
 
@@ -414,9 +417,11 @@ func _contract_confirm_config(preview: Dictionary) -> Dictionary:
 func _on_contract_confirmed() -> void:
 	var preview := game_state.get_contract_preview(pond)
 	if not bool(preview.get("can_contract", false)):
+		_play_sfx("cash_loss")
 		_show_global_confirm(_contract_confirm_config(preview))
 		return
 	if game_state.contract_pond(pond):
+		_play_sfx("coin_heavy")
 		UIController.show_after_contract_choice(screen_container, game_state, true)
 
 
@@ -428,7 +433,14 @@ func _show_global_confirm(config: Dictionary) -> void:
 	popup_manager.call("show_confirm", config)
 
 
+func _play_sfx(effect_id: String) -> void:
+	var sfx := get_tree().root.get_node_or_null("SfxManager")
+	if sfx != null and sfx.has_method("play"):
+		sfx.call("play", effect_id)
+
+
 func _return_to_pond_list() -> void:
+	_play_sfx("ui_tap_soft")
 	UIController.show_pond_list(screen_container, game_state)
 
 

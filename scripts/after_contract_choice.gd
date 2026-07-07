@@ -152,6 +152,8 @@ func _make_nine_patch_style(texture: Texture2D, patch: int, modulate: Color) -> 
 @onready var full_work_button: Button = $SafeArea/PageLayout/ContentScroll/Content/WorkPlanScroll/WorkPlanPanel/FullWorkCard/CardContent/FullWorkButton
 @onready var contract_entry_dim_overlay: ColorRect = $ContractEntryDimOverlay
 @onready var contract_entry_animation_overlay: SpriteSheetAnimator = $ContractEntryAnimationOverlay
+@onready var fishing_work_dim_overlay: ColorRect = $FishingWorkDimOverlay
+@onready var fishing_work_animation_overlay: SpriteSheetAnimator = $FishingWorkAnimationOverlay
 
 var game_state: GameState
 var screen_container: Control
@@ -1072,6 +1074,7 @@ func _plan_display_name(plan_id: String) -> String:
 			return "这一网"
 
 func _on_ledger_toggle_pressed() -> void:
+	_play_sfx("card_flip")
 	ledger_expanded = not ledger_expanded
 	_render_ledger_accordion()
 
@@ -1384,6 +1387,8 @@ func _close_sell_one_net_dialog() -> void:
 func _set_banner_visible(flag: bool) -> void:
 	if is_instance_valid(_sell_one_net_result_banner):
 		_sell_one_net_result_banner.visible = flag
+		if flag:
+			_play_sfx("cash_gain")
 		if flag and UIKit.animations_enabled:
 			UIKit.animate_pop_in(_sell_one_net_result_banner)
 			UIKit.animate_shine(_sell_one_net_banner_title)
@@ -1437,6 +1442,7 @@ func _on_transfer_pressed() -> void:
 		message_label.text = "没人出价。先下一网，让外面的人看到货，自然有人开口。"
 		return
 
+	_play_sfx("card_select")
 	_open_transfer_offer_dialog()
 
 func _open_transfer_offer_dialog() -> void:
@@ -1469,6 +1475,8 @@ func _confirm_accept_transfer() -> void:
 	UIKit.animate_shine(transfer_offer_highlight_label)
 	_close_transfer_dialog()
 	var ledger := _get_transfer_decision_ledger()
+	var transfer_profit_loss := int(ledger.get("transfer_profit_loss", 0))
+	_play_sfx("cash_loss" if transfer_profit_loss < 0 else "cash_gain")
 	game_state.apply_transfer(int(ledger.get("offer_price", 0)), int(ledger.get("transfer_profit_loss", 0)))
 	UIController.show_settlement(screen_container, game_state)
 
@@ -1477,6 +1485,7 @@ func _on_cancel_loss_transfer_confirm() -> void:
 		accept_transfer_button.disabled = false
 
 func _on_reject_transfer_pressed() -> void:
+	_play_sfx("ui_tap_soft")
 	_close_transfer_dialog()
 	message_label.text = "没接。这口塘的账，你自己算到底。"
 	_render()
@@ -1497,6 +1506,7 @@ func _on_sell_one_net_pressed() -> void:
 		_render()
 		return
 
+	_play_sfx("card_select")
 	_hide_detail_panels()
 	_show_sell_one_net_dialog()
 
@@ -1528,11 +1538,13 @@ func _on_sell_one_net_accept_pressed() -> void:
 	_render()
 
 func _on_sell_one_net_reject_pressed() -> void:
+	_play_sfx("ui_tap_soft")
 	_close_sell_one_net_dialog()
 	message_label.text = "不卖了。再看看行情，说不定后面更高。"
 	_render()
 
 func _on_harvest_self_pressed() -> void:
+	_play_sfx("card_select")
 	_close_transfer_dialog()
 	_open_work_plan_page()
 
@@ -1548,7 +1560,14 @@ func _show_global_confirm(config: Dictionary) -> void:
 		return
 	popup_manager.call("show_confirm", config)
 
+
+func _play_sfx(effect_id: String) -> void:
+	var sfx := get_tree().root.get_node_or_null("SfxManager")
+	if sfx != null and sfx.has_method("play"):
+		sfx.call("play", effect_id)
+
 func _on_work_plan_back_pressed() -> void:
+	_play_sfx("ui_tap_soft")
 	message_label.text = ""
 	_show_choice_page()
 	_render()
@@ -1556,6 +1575,7 @@ func _on_work_plan_back_pressed() -> void:
 func _on_work_plan_pressed(plan_id: String) -> void:
 	var cost := game_state.get_work_cost(plan_id)
 	if not game_state.can_pay(cost):
+		_play_sfx("cash_loss")
 		message_label.text = "钱不够，干不了这个方案。"
 		_update_work_buttons()
 		return
@@ -1566,14 +1586,41 @@ func _on_work_plan_pressed(plan_id: String) -> void:
 			"body": "抽干了就不能再下了，这口塘的账到此为止。",
 			"cancel_text": "再想想",
 			"confirm_text": "抽干收尾",
-			"on_confirm": Callable(self, "_execute_work_plan").bind(plan_id)
+			"on_confirm": Callable(self, "_play_fishing_work_animation").bind(plan_id)
 		})
 		return
+	_play_fishing_work_animation(plan_id)
+
+
+func _play_fishing_work_animation(plan_id: String) -> void:
+	_play_sfx("net_cast")
+	if not UIKit.animations_enabled:
+		_execute_work_plan(plan_id)
+		return
+
+	fishing_work_dim_overlay.modulate.a = 0.0
+	fishing_work_dim_overlay.visible = true
+	fishing_work_animation_overlay.visible = true
+	fishing_work_animation_overlay.reset()
+
+	var fade_in := create_tween()
+	fade_in.tween_property(fishing_work_dim_overlay, "modulate:a", 1.0, 0.12)
+
+	fishing_work_animation_overlay.play()
+	await fishing_work_animation_overlay.animation_finished
+
+	var fade_out := create_tween()
+	fade_out.tween_property(fishing_work_dim_overlay, "modulate:a", 0.0, 0.12)
+	await fade_out.finished
+
+	fishing_work_dim_overlay.visible = false
+	fishing_work_animation_overlay.visible = false
 	_execute_work_plan(plan_id)
 
 func _execute_work_plan(plan_id: String) -> void:
 	var cost := game_state.get_work_cost(plan_id)
 	if not game_state.can_pay(cost):
+		_play_sfx("cash_loss")
 		message_label.text = "钱不够，干不了这个方案。"
 		_update_work_buttons()
 		return
@@ -1635,12 +1682,16 @@ func _show_harvest_result(result: Dictionary) -> void:
 	var round_profit := fish_revenue - net_cost
 	if caught_fish_king:
 		harvest_result_title.text = "鱼王出水！"
+		_play_sfx("fish_king")
 	elif round_profit > 0:
 		harvest_result_title.text = "这一网赚了"
+		_play_sfx("harvest_reveal")
 	elif round_profit == 0:
 		harvest_result_title.text = "这一网平了"
+		_play_sfx("harvest_reveal")
 	else:
 		harvest_result_title.text = "这一网亏了"
+		_play_sfx("harvest_reveal")
 
 	_render_harvest_catch_rows(result)
 	harvest_fish_revenue_value.text = "%d 元" % fish_revenue
@@ -1740,6 +1791,7 @@ func _on_harvest_result_continue_pressed() -> void:
 	var result := pending_harvest_result
 	pending_harvest_result = {}
 	if not game_state.apply_harvest(result):
+		_play_sfx("cash_loss")
 		message_label.text = "钱不够，干不了这个方案。"
 		_update_work_buttons()
 		return

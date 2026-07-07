@@ -369,13 +369,21 @@ func _on_dim_overlay_input(event: InputEvent) -> void:
 		hide_popup(true)
 
 
+func _play_sfx(effect_id: String) -> void:
+	var sfx := get_tree().root.get_node_or_null("SfxManager")
+	if sfx != null and sfx.has_method("play"):
+		sfx.call("play", effect_id)
+
+
 func _on_cancel_pressed() -> void:
+	_play_sfx("ui_tap_soft")
 	hide_popup(true)
 
 
 func _on_confirm_pressed() -> void:
 	if is_submitting or confirm_button.disabled:
 		return
+	_play_sfx("ui_tap_soft")
 	is_submitting = true
 	confirm_button.disabled = true
 	hide_popup(false)

@@ -3,12 +3,21 @@ extends TextureRect
 
 ## Sprite-sheet-based frame animator for Control-based UI.
 ## Slices a grid sprite sheet and cycles through [total_frames] frames at [fps].
+## Supports square grids via [member grid_size] or non-square grids via [member columns] / [member rows].
 ## Emits [signal animation_finished] when a non-looping animation reaches its last frame.
 
 signal animation_finished
 
+@export_group("Grid Layout")
 @export var spritesheet: Texture2D
+## Number of columns when using a non-square grid. Leave 0 to use [member grid_size] for both axes.
+@export var columns: int = 0
+## Number of rows when using a non-square grid. Leave 0 to use [member grid_size] for both axes.
+@export var rows: int = 0
+## Legacy square-grid size. Ignored when [member columns] and [member rows] are both set.
 @export var grid_size: int = 5
+
+@export_group("Playback")
 @export var total_frames: int = 24
 @export var fps: float = 12.0
 @export var autoplay: bool = true
@@ -69,12 +78,26 @@ func reset() -> void:
 	_update_frame()
 
 
+func _get_columns() -> int:
+	return columns if columns > 0 else grid_size
+
+
+func _get_rows() -> int:
+	return rows if rows > 0 else grid_size
+
+
 func _update_frame() -> void:
 	if spritesheet == null:
 		return
 
-	var frame_w: float = spritesheet.get_width() / float(grid_size)
-	var frame_h: float = spritesheet.get_height() / float(grid_size)
-	var col: int = _frame_index % grid_size
-	var row: int = _frame_index / grid_size
+	var cols: int = _get_columns()
+	var rows_count: int = _get_rows()
+	if cols <= 0 or rows_count <= 0:
+		push_error("SpriteSheetAnimator: invalid grid dimensions on %s" % get_path())
+		return
+
+	var frame_w: float = spritesheet.get_width() / float(cols)
+	var frame_h: float = spritesheet.get_height() / float(rows_count)
+	var col: int = _frame_index % cols
+	var row: int = _frame_index / cols
 	_atlas.region = Rect2(col * frame_w, row * frame_h, frame_w, frame_h)

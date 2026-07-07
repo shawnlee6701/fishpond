@@ -315,9 +315,17 @@ func _create_stat_block(title: String, value: String, node_name: String) -> Pane
 	return block
 
 
+func _play_sfx(effect_id: String) -> void:
+	var sfx := get_tree().root.get_node_or_null("SfxManager")
+	if sfx != null and sfx.has_method("play"):
+		sfx.call("play", effect_id)
+
+
 func _on_view_pressed(pond: Dictionary) -> void:
+	_play_sfx("card_select")
 	UIController.show_pond_detail(screen_container, game_state, pond)
 
 
 func _on_history_pressed() -> void:
+	_play_sfx("card_flip")
 	UIController.show_settlement_history(screen_container, game_state)

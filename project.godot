@@ -18,6 +18,7 @@ config/icon="res://icon.svg"
 [autoload]
 
 BgmManager="*res://scripts/bgm_manager.gd"
+SfxManager="*res://scripts/sfx_manager.gd"
 PopupManager="*res://scripts/popup_manager.gd"
 MusicToggleButton="*res://scripts/music_toggle_button.gd"
 

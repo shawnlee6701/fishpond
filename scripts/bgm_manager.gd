@@ -11,7 +11,7 @@ signal playback_paused
 signal playback_resumed
 
 ## Linear volume multiplier for the music (0.0 = silent, 1.0 = full).
-@export_range(0.0, 1.0, 0.01) var volume_linear: float = 0.8
+@export_range(0.0, 1.0, 0.01) var volume_linear: float = 0.35
 
 const _TRACK_PATHS: Array[String] = [
 	"res://music/bgm_01.mp3",

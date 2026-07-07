@@ -335,6 +335,7 @@ func _create_catch_summary(catch_details: Array) -> Label:
 	return label
 
 func _toggle_record(header: Button, detail: VBoxContainer) -> void:
+	_play_sfx("card_flip")
 	detail.visible = not detail.visible
 	var arrow := header.get_node("RecordHeaderRow/ExpandArrow") as Label
 	arrow.text = "▼" if detail.visible else "▶"
@@ -365,7 +366,15 @@ func _format_full_time(timestamp: String) -> String:
 func _is_day_finished() -> bool:
 	return game_state.settlement_recorded and not game_state.current_pond.is_empty()
 
+
+func _play_sfx(effect_id: String) -> void:
+	var sfx := get_tree().root.get_node_or_null("SfxManager")
+	if sfx != null and sfx.has_method("play"):
+		sfx.call("play", effect_id)
+
+
 func _on_bottom_pressed() -> void:
+	_play_sfx("card_select" if _is_day_finished() else "ui_tap_soft")
 	if _is_day_finished():
 		game_state.advance_to_next_day()
 		UIController.show_pond_list(screen_container, game_state, true)
